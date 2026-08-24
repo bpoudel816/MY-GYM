@@ -1,5 +1,5 @@
 export const firebaseConfig = {
-  apiKey: "AIzaSyB855zKmWhD_XVmLevx3j9V3qZtHmrflWg",
+  apiKey: "AIzaSyB855zKmWHD_XVmLevx3j9V3qZtHmrflWg",
   authDomain: "my-gym-a1da5.firebaseapp.com",
   projectId: "my-gym-a1da5",
   storageBucket: "my-gym-a1da5.firebasestorage.app",
