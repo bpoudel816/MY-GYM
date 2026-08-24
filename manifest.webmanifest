@@ -1,0 +1,17 @@
+{
+  "name": "MY GYM",
+  "short_name": "MY GYM",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "description": "Private workout tracking, cloud progress, and approved friend connections.",
+  "icons": [
+    {
+      "src": "my-gym-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

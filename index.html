@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090d16" />
+  <title>MY GYM</title>
+  <link rel="icon" href="my-gym-icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="MY GYM">
+        <span class="brand-icon">
+          <svg viewBox="0 0 64 64" aria-hidden="true">
+            <rect x="8" y="24" width="8" height="16" rx="3"></rect>
+            <rect x="18" y="19" width="7" height="26" rx="3"></rect>
+            <rect x="39" y="19" width="7" height="26" rx="3"></rect>
+            <rect x="48" y="24" width="8" height="16" rx="3"></rect>
+            <rect x="24" y="29" width="16" height="6" rx="3"></rect>
+          </svg>
+        </span>
+        <span>
+          <small>TRAIN • TRACK • CONNECT</small>
+          <strong>MY GYM</strong>
+        </span>
+      </a>
+      <span class="day-pill">DAY 1</span>
+    </header>
+
+    <section id="authView" class="auth-layout">
+      <div class="hero">
+        <div class="mini-pill">CLOUD FITNESS TRACKER</div>
+        <h1>Your gym life,<br><span>beautifully tracked.</span></h1>
+        <p>
+          Log workouts, follow your progress across devices, and share read-only progress
+          with friends you approve.
+        </p>
+
+        <div class="feature-row">
+          <article>
+            <div class="feature-icon">↗</div>
+            <strong>Progress</strong>
+            <span>Strength, history & trends</span>
+          </article>
+          <article>
+            <div class="feature-icon">☁</div>
+            <strong>Cloud Sync</strong>
+            <span>Use the same account anywhere</span>
+          </article>
+          <article>
+            <div class="feature-icon">◎</div>
+            <strong>Connections</strong>
+            <span>Approved friends, view only</span>
+          </article>
+        </div>
+      </div>
+
+      <div class="auth-card">
+        <div class="segmented" role="tablist">
+          <button id="loginTab" class="segment active" type="button">Log in</button>
+          <button id="registerTab" class="segment" type="button">Create account</button>
+        </div>
+
+        <section id="loginPanel" class="panel active">
+          <div class="panel-heading">
+            <p class="eyebrow">WELCOME BACK</p>
+            <h2>Continue your progress</h2>
+          </div>
+
+          <form id="loginForm">
+            <label>Email
+              <input id="loginEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
+            </label>
+            <label>Password
+              <input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" required />
+            </label>
+            <button class="primary" type="submit">Log in <span>→</span></button>
+          </form>
+        </section>
+
+        <section id="registerPanel" class="panel">
+          <div class="panel-heading">
+            <p class="eyebrow">NEW TO MY GYM?</p>
+            <h2>Create your account</h2>
+          </div>
+
+          <form id="registerForm">
+            <label>Display name
+              <input id="registerName" type="text" autocomplete="name" maxlength="40" placeholder="Your name" required />
+            </label>
+            <label>Email
+              <input id="registerEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
+            </label>
+            <label>Password
+              <input id="registerPassword" type="password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters" required />
+            </label>
+            <button class="primary" type="submit">Create account <span>→</span></button>
+          </form>
+          <p class="fine-print">Your password is handled by Firebase Authentication, not stored in this website's code.</p>
+        </section>
+
+        <div id="authMessage" class="message" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="dashboardView" class="dashboard hidden">
+      <div class="welcome-card">
+        <div>
+          <p class="eyebrow">MY GYM ACCOUNT</p>
+          <h2>Welcome, <span id="userName">Athlete</span>.</h2>
+          <p id="userEmail" class="muted"></p>
+        </div>
+        <button id="logoutBtn" class="ghost" type="button">Log out</button>
+      </div>
+
+      <div class="dashboard-grid">
+        <article class="start-card">
+          <div class="orb">MG</div>
+          <div>
+            <p class="eyebrow">TODAY</p>
+            <h3>Ready to train?</h3>
+            <p>Workout logging arrives in Day 2. Today confirms your account and cloud foundation work.</p>
+          </div>
+          <button class="primary disabled-look" type="button" disabled>Start workout soon</button>
+        </article>
+
+        <article class="metric">
+          <span>WORKOUTS</span>
+          <strong>0</strong>
+          <small>Cloud-ready</small>
+        </article>
+        <article class="metric">
+          <span>STREAK</span>
+          <strong>0</strong>
+          <small>Days</small>
+        </article>
+        <article class="metric">
+          <span>CONNECTIONS</span>
+          <strong>0</strong>
+          <small>Coming later</small>
+        </article>
+      </div>
+
+      <div class="success-banner">
+        <span>✓</span>
+        <div>
+          <strong>Day 1 foundation is working</strong>
+          <p>If you can log out and log back in from the live GitHub Pages link, Firebase Authentication is connected correctly.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>MY GYM • Browser-built PWA foundation</footer>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
