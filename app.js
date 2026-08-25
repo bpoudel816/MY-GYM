@@ -295,7 +295,10 @@ $("finishThisExerciseBtn").addEventListener("click",()=>{
   showToast("Exercise finished. Choose the next body part or finish the whole workout.","success");
 });
 $("finishWholeWorkoutBtn").addEventListener("click",async()=>{
-  if(!workout||!workout.exercises.length){showToast("Finish at least one exercise first.","error");return}
+  if(!workout||!workout.exercises.length||workout.exercises.every(ex=>!(ex.sets||[]).length)){
+    showToast("A workout needs at least one completed exercise with a set.","error");
+    return;
+  }
   const endedAt=new Date();
   try{
     await addDoc(collection(db,"users",user.uid,"workouts"),{
@@ -321,8 +324,9 @@ function updateTimer(){
 
 async function loadAllData(){
   await Promise.all([loadWorkouts(),loadCalendarStatuses(),loadBodyWeights(),loadMeals(),loadCalorieSettings()]);
-  renderWorkoutList($("recentList"),workoutsCache.slice(0,5));
-  renderWorkoutList($("historyList"),workoutsCache);
+  const visible = visibleWorkouts();
+  renderWorkoutList($("recentList"),visible.slice(0,5));
+  renderWorkoutList($("historyList"),visible);
   updateMetrics();updateProgressMetrics();renderCalendar();renderBodyWeightProfile();renderProgressControls();renderAllCharts();renderCaloriesForSelectedDate();
 }
 
@@ -594,7 +598,7 @@ function destroyChart(name){
 function renderProgressControls(){
   const select=$("progressExerciseSelect");
   if(!select)return;
-  const names=[...new Set(workoutsCache.flatMap(w=>(w.exercises||[]).map(ex=>ex.name)).filter(Boolean))].sort();
+  const names=[...new Set(visibleWorkouts().flatMap(w=>(w.exercises||[]).map(ex=>ex.name)).filter(Boolean))].sort();
   const current=select.value;
   select.innerHTML="";
   if(!names.length){
@@ -615,7 +619,7 @@ $("progressExerciseSelect").addEventListener("change",()=>renderAllCharts());
 
 function exerciseHistory(name){
   const rows=[];
-  workoutsCache.slice().reverse().forEach(w=>{
+  visibleWorkouts().slice().reverse().forEach(w=>{
     const d=toDate(w.startedAt);
     (w.exercises||[]).filter(ex=>ex.name===name).forEach(ex=>{
       const sets=ex.sets||[];
@@ -701,7 +705,7 @@ function renderAllCharts(){
 
   if($("frequencyChart")){
     const weekly={};
-    workoutsCache.forEach(w=>{
+    visibleWorkouts().forEach(w=>{
       const d=toDate(w.startedAt);
       if(!d)return;
       const monday=new Date(d);
@@ -721,6 +725,19 @@ function renderAllCharts(){
 }
 
 
+
+function workoutSetCount(w){
+  return (w.exercises||[]).reduce((sum,ex)=>sum+(ex.sets?.length||0),0);
+}
+
+function isEmptyWorkout(w){
+  return !(w.exercises||[]).length || workoutSetCount(w)===0;
+}
+
+function visibleWorkouts(){
+  return workoutsCache.filter(w=>!isEmptyWorkout(w));
+}
+
 function compactSetText(exercise){
   const unit=(exercise.weightMode||"total")==="perArm"?"lb/arm":"lb";
   return (exercise.sets||[]).map(set=>`${Number(set.weight||0)} ${unit} × ${Number(set.reps||0)}`).join(" • ");
@@ -739,18 +756,20 @@ function renderWorkoutList(container,list){
   });
 }
 function updateMetrics(){
-  $("workoutCount").textContent=workoutsCache.length;
-  $("streakCount").textContent=calculateStreak(workoutsCache);
-  if(workoutsCache.length){
-    const latest=workoutsCache[0],d=toDate(latest.startedAt);
+  const visible=visibleWorkouts();
+  $("workoutCount").textContent=visible.length;
+  $("streakCount").textContent=calculateStreak(visible);
+  if(visible.length){
+    const latest=visible[0],d=toDate(latest.startedAt);
     $("lastWorkoutMetric").textContent=latest.exercises?.length||0;
     $("lastWorkoutDate").textContent=d?d.toLocaleDateString(undefined,{month:"short",day:"numeric"}):"Saved";
   }else{$("lastWorkoutMetric").textContent="—";$("lastWorkoutDate").textContent="No workouts"}
 }
 function updateProgressMetrics(){
-  $("progressWorkoutCount").textContent=workoutsCache.length;
-  $("progressSetCount").textContent=workoutsCache.reduce((n,w)=>n+(w.exercises||[]).reduce((m,e)=>m+(e.sets?.length||0),0),0);
-  const names=new Set();workoutsCache.forEach(w=>(w.exercises||[]).forEach(e=>names.add(e.name)));
+  const visible=visibleWorkouts();
+  $("progressWorkoutCount").textContent=visible.length;
+  $("progressSetCount").textContent=visible.reduce((n,w)=>n+(w.exercises||[]).reduce((m,e)=>m+(e.sets?.length||0),0),0);
+  const names=new Set();visible.forEach(w=>(w.exercises||[]).forEach(e=>names.add(e.name)));
   $("progressExerciseCount").textContent=names.size;
 }
 function calculateStreak(list){
@@ -769,7 +788,7 @@ function showHistoryPanel(name){
   document.querySelectorAll(".history-tab").forEach(btn=>btn.classList.toggle("active",btn.dataset.history===name));
   ["calendarPanel","workoutsPanel","progressPanel"].forEach(id=>$(id).classList.add("hidden"));
   $(`${name}Panel`).classList.remove("hidden");
-  if(name==="workouts")renderWorkoutList($("historyList"),workoutsCache);
+  if(name==="workouts")renderWorkoutList($("historyList"),visibleWorkouts());
   if(name==="calendar")renderCalendar();
 }
 $("prevMonthBtn").addEventListener("click",()=>{calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()-1,1);renderCalendar()});
@@ -778,7 +797,7 @@ $("nextMonthBtn").addEventListener("click",()=>{calendarCursor=new Date(calendar
 function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function workoutMap(){
   const map={};
-  workoutsCache.forEach(w=>{const d=toDate(w.startedAt);if(!d)return;const key=dateKey(d);(map[key]||=[]).push(w)});
+  visibleWorkouts().forEach(w=>{const d=toDate(w.startedAt);if(!d)return;const key=dateKey(d);(map[key]||=[]).push(w)});
   return map;
 }
 function inferredStatusForDate(d,map){
@@ -870,11 +889,15 @@ function closeEditModal(){$("editModal").classList.add("hidden");editingWorkout=
 $("closeEditBtn").addEventListener("click",closeEditModal);$("editBackdrop").addEventListener("click",closeEditModal);
 function renderEditExercises(){
   const list=$("editExerciseList");list.innerHTML="";
-  editingWorkout.exercises.forEach(ex=>{
+  editingWorkout.exercises.forEach((ex,exIndex)=>{
     const card=document.createElement("div");card.className="edit-exercise";
     const showMode=ex.independent||ex.type==="MTS";
-    card.innerHTML=`<h4>${ex.name}</h4>${showMode?`<div class="mode-toggle"><button class="mode ${ex.weightMode==="perArm"?"active":""}" data-mode="perArm">Per Arm</button><button class="mode ${ex.weightMode==="total"?"active":""}" data-mode="total">Total / Both Arms</button></div>`:""}<div class="edit-sets"></div><button class="secondary full add-edit-set" type="button">+ Add set</button>`;
+    card.innerHTML=`<div class="row"><h4>${ex.name}</h4><button class="danger remove-edit-exercise" type="button">Remove Exercise</button></div>${showMode?`<div class="mode-toggle"><button class="mode ${ex.weightMode==="perArm"?"active":""}" data-mode="perArm">Per Arm</button><button class="mode ${ex.weightMode==="total"?"active":""}" data-mode="total">Total / Both Arms</button></div>`:""}<div class="edit-sets"></div><button class="secondary full add-edit-set" type="button">+ Add set</button>`;
     card.querySelectorAll("[data-mode]").forEach(btn=>btn.addEventListener("click",()=>{ex.weightMode=btn.dataset.mode;renderEditExercises()}));
+    card.querySelector(".remove-edit-exercise").addEventListener("click",()=>{
+      editingWorkout.exercises.splice(exIndex,1);
+      renderEditExercises();
+    });
     const setsWrap=card.querySelector(".edit-sets");
     ex.sets.forEach((set,setIndex)=>{
       const row=document.createElement("div");row.className="edit-set-row";
@@ -887,6 +910,14 @@ function renderEditExercises(){
 }
 $("saveWorkoutChangesBtn").addEventListener("click",async()=>{
   if(!editingWorkout)return;
+
+  const hasData=editingWorkout.exercises.some(ex=>(ex.sets||[]).length>0);
+  if(!editingWorkout.exercises.length||!hasData){
+    const remove=confirm("This workout has no exercises or sets left. Delete the whole workout?");
+    if(remove)await deleteEditingWorkout();
+    return;
+  }
+
   try{
     const newStart=new Date($("editWorkoutDateTime").value);
     await updateDoc(doc(db,"users",user.uid,"workouts",editingWorkout.id),{
@@ -895,6 +926,97 @@ $("saveWorkoutChangesBtn").addEventListener("click",async()=>{
     });
     closeEditModal();await loadAllData();showToast("Workout changes saved.","success");
   }catch(err){console.error(err);showToast("Could not save workout changes.","error")}
+});
+
+async function deleteEditingWorkout(){
+  if(!editingWorkout||!user)return;
+  try{
+    await deleteDoc(doc(db,"users",user.uid,"workouts",editingWorkout.id));
+    closeEditModal();
+    await loadAllData();
+    showToast("Workout deleted.","success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not delete workout.","error");
+  }
+}
+
+$("deleteWorkoutBtn").addEventListener("click",async()=>{
+  if(!editingWorkout)return;
+  if(!confirm("Delete this workout permanently? This cannot be undone."))return;
+  await deleteEditingWorkout();
+});
+
+
+async function deleteDocsInCollection(collectionName){
+  const snap=await getDocs(collection(db,"users",user.uid,collectionName));
+  if(snap.empty)return 0;
+
+  let deleted=0;
+  const docs=snap.docs;
+  for(let i=0;i<docs.length;i+=400){
+    const batch=writeBatch(db);
+    docs.slice(i,i+400).forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    deleted+=Math.min(400,docs.length-i);
+  }
+  return deleted;
+}
+
+$("deleteEmptyWorkoutsBtn").addEventListener("click",async()=>{
+  if(!user)return;
+  const empty=workoutsCache.filter(isEmptyWorkout);
+  if(!empty.length){
+    showToast("No empty/test workouts found.","success");
+    return;
+  }
+  if(!confirm(`Delete ${empty.length} empty/test workout${empty.length===1?"":"s"} permanently?`))return;
+
+  try{
+    for(let i=0;i<empty.length;i+=400){
+      const batch=writeBatch(db);
+      empty.slice(i,i+400).forEach(w=>batch.delete(doc(db,"users",user.uid,"workouts",w.id)));
+      await batch.commit();
+    }
+    await loadAllData();
+    showToast(`${empty.length} empty/test workout${empty.length===1?"":"s"} deleted.`,"success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not delete empty workouts.","error");
+  }
+});
+
+$("deleteAllTrackedDataBtn").addEventListener("click",async()=>{
+  if(!user)return;
+
+  const typed=prompt('This deletes ALL tracked MY GYM data but keeps your login account. Type DELETE to continue:');
+  if(typed!=="DELETE"){
+    if(typed!==null)showToast("Nothing deleted. You must type DELETE exactly.","error");
+    return;
+  }
+
+  const second=confirm("Final confirmation: permanently delete all workouts, calendar statuses, body weight, calories/meals, and nutrition settings?");
+  if(!second)return;
+
+  try{
+    await deleteDocsInCollection("workouts");
+    await deleteDocsInCollection("calendarDays");
+    await deleteDocsInCollection("bodyWeights");
+    await deleteDocsInCollection("meals");
+    await deleteDocsInCollection("settings");
+
+    workoutsCache=[];
+    calendarStatuses={};
+    bodyWeightCache=[];
+    mealCache=[];
+    calorieTarget=0;
+
+    await loadAllData();
+    showToast("All tracked data deleted. Your login account was kept.","success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not delete all tracked data.","error");
+  }
 });
 
 function toLocalInputValue(d){const adjusted=new Date(d.getTime()-d.getTimezoneOffset()*60000);return adjusted.toISOString().slice(0,16)}

@@ -350,6 +350,30 @@
             <div id="bodyWeightHistory" class="weight-history empty">No entries yet.</div>
           </div>
         </div>
+
+        <div class="card danger-zone">
+          <p class="eyebrow danger-eyebrow">DANGER ZONE</p>
+          <h3>Testing & data cleanup</h3>
+          <p class="muted">These tools clean your Firebase data but keep your MY GYM login account.</p>
+
+          <div class="danger-grid">
+            <div class="danger-action">
+              <div>
+                <strong>Delete empty/test workouts</strong>
+                <p class="muted mini">Removes saved workouts that contain 0 exercises or 0 sets.</p>
+              </div>
+              <button id="deleteEmptyWorkoutsBtn" class="danger" type="button">Delete Empty Workouts</button>
+            </div>
+
+            <div class="danger-action critical">
+              <div>
+                <strong>Delete all tracked data</strong>
+                <p class="muted mini">Deletes workouts, calendar statuses, body-weight entries, meals, and nutrition settings. Your login account stays active.</p>
+              </div>
+              <button id="deleteAllTrackedDataBtn" class="danger danger-solid" type="button">Delete All Tracked Data</button>
+            </div>
+          </div>
+        </div>
       </section>
     </section>
 
@@ -362,7 +386,10 @@
         </div>
         <label>Workout date & time<input id="editWorkoutDateTime" type="datetime-local"></label>
         <div id="editExerciseList" class="edit-list"></div>
-        <button id="saveWorkoutChangesBtn" class="primary full">Save Changes</button>
+        <div class="edit-workout-actions">
+          <button id="deleteWorkoutBtn" class="danger danger-solid" type="button">Delete Workout</button>
+          <button id="saveWorkoutChangesBtn" class="primary" type="button">Save Changes</button>
+        </div>
       </div>
     </div>
 
@@ -370,7 +397,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="ui.js?v=stable5"></script>
-  <script type="module" src="app.js?v=stable5"></script>
+  <script src="ui.js?v=final1"></script>
+  <script type="module" src="app.js?v=final1"></script>
 </body>
 </html>

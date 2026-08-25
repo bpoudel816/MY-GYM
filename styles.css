@@ -51,3 +51,19 @@
   .target-entry-row{grid-template-columns:1fr auto}
   .target-entry-row .secondary{grid-column:1/-1}
 }
+
+
+.danger-zone{margin-top:14px;border-color:#ff71842d;background:linear-gradient(145deg,#1a151e,#100f17)}
+.danger-eyebrow{color:#ff8e9a}
+.danger-grid{display:grid;gap:12px;margin-top:16px}
+.danger-action{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:15px;border-radius:16px;background:#0b111b;border:1px solid #ffffff0d}
+.danger-action.critical{border-color:#ff71842b;background:#2a11170f}
+.danger-action strong{display:block;margin-bottom:4px}
+.danger-solid{background:#b93345;color:white;border-color:#d44a5d}
+.edit-workout-actions{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:18px}
+.edit-workout-actions .primary{width:100%}
+@media(max-width:650px){
+  .danger-action{align-items:flex-start;flex-direction:column}
+  .danger-action button{width:100%}
+  .edit-workout-actions{grid-template-columns:1fr}
+}
