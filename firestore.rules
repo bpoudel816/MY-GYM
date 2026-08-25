@@ -26,6 +26,18 @@ service cloud.firestore {
           if request.auth != null
           && request.auth.uid == userId;
       }
+
+      match /meals/{mealId} {
+        allow create, read, update, delete:
+          if request.auth != null
+          && request.auth.uid == userId;
+      }
+
+      match /settings/{settingId} {
+        allow create, read, update, delete:
+          if request.auth != null
+          && request.auth.uid == userId;
+      }
     }
 
     match /{document=**} {

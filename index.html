@@ -68,6 +68,7 @@
         <button data-screen="home" class="navbtn active">Home</button>
         <button data-screen="workout" class="navbtn">Workout</button>
         <button data-screen="history" class="navbtn">History</button>
+        <button data-screen="calories" class="navbtn">Calories</button>
         <button data-screen="profile" class="navbtn">Profile</button>
       </nav>
 
@@ -250,6 +251,81 @@
         </section>
       </section>
 
+
+      <section id="caloriesScreen" class="screen hidden">
+        <div class="history-head">
+          <div>
+            <p class="eyebrow">CALORIES</p>
+            <h2>Daily calorie tracker</h2>
+            <p class="muted">Enter what you ate and the calories yourself. MY GYM will keep the daily total.</p>
+          </div>
+        </div>
+
+        <div class="calorie-dashboard">
+          <div class="card calorie-total-card">
+            <p class="eyebrow">SELECTED DAY</p>
+            <h3 id="calorieSelectedDateLabel">Today</h3>
+            <div class="calorie-total-line">
+              <strong id="calorieDayTotal">0</strong>
+              <span>kcal</span>
+            </div>
+            <div id="calorieTargetProgress" class="calorie-target-progress">
+              <div class="calorie-progress-track">
+                <div id="calorieProgressFill" class="calorie-progress-fill"></div>
+              </div>
+              <p id="calorieRemainingText" class="muted mini">No daily target set.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <p class="eyebrow">DAILY TARGET</p>
+            <h3>Optional calorie goal</h3>
+            <div class="target-entry-row">
+              <input id="dailyCalorieTargetInput" type="number" min="0" step="10" placeholder="2000">
+              <span>kcal</span>
+              <button id="saveCalorieTargetBtn" class="secondary" type="button">Save target</button>
+            </div>
+            <p id="currentCalorieTargetText" class="muted mini">No target set.</p>
+          </div>
+        </div>
+
+        <div class="card calorie-entry-card">
+          <div class="calorie-entry-head">
+            <div>
+              <p class="eyebrow">ADD MEAL</p>
+              <h3>What did you eat?</h3>
+            </div>
+            <input id="calorieEntryDate" class="date-input" type="date">
+          </div>
+
+          <div class="calorie-entry-grid">
+            <label>Meal / food
+              <input id="mealNameInput" type="text" maxlength="100" placeholder="Chicken and rice">
+            </label>
+
+            <label>Calories
+              <input id="mealCaloriesInput" type="number" min="0" step="1" placeholder="650">
+            </label>
+
+            <label>Time
+              <input id="mealTimeInput" type="time">
+            </label>
+
+            <button id="saveMealBtn" class="primary meal-save-btn" type="button">Add meal</button>
+          </div>
+        </div>
+
+        <div class="card calorie-list-card">
+          <div class="calorie-list-head">
+            <div>
+              <p class="eyebrow">MEALS</p>
+              <h3 id="mealListDateLabel">Today</h3>
+            </div>
+          </div>
+          <div id="mealList" class="meal-list empty">No meals logged for this day.</div>
+        </div>
+      </section>
+
       <section id="profileScreen" class="screen hidden">
         <div class="card">
           <p class="eyebrow">PROFILE</p>
@@ -294,7 +370,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="ui.js?v=stable4"></script>
-  <script type="module" src="app.js?v=stable4"></script>
+  <script src="ui.js?v=stable5"></script>
+  <script type="module" src="app.js?v=stable5"></script>
 </body>
 </html>

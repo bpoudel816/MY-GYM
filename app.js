@@ -96,7 +96,7 @@ const EXERCISES = {
 };
 
 let user=null, workout=null, activeExercise=null, timerHandle=null;
-let workoutsCache=[], calendarStatuses={}, bodyWeightCache=[], calendarCursor=new Date();
+let workoutsCache=[], calendarStatuses={}, bodyWeightCache=[], mealCache=[], calorieTarget=0, calorieSelectedDate=new Date(), calendarCursor=new Date();
 let selectedCalendarKey=null, editingWorkout=null;
 
 function showMessage(text, success=false) {
@@ -112,10 +112,11 @@ function showToast(text,type=""){
   el.classList.remove("hidden");
 }
 function showScreen(name){
-  ["homeScreen","workoutScreen","historyScreen","profileScreen"].forEach(id=>$(id).classList.add("hidden"));
+  ["homeScreen","workoutScreen","historyScreen","caloriesScreen","profileScreen"].forEach(id=>$(id).classList.add("hidden"));
   $(`${name}Screen`).classList.remove("hidden");
   document.querySelectorAll(".navbtn").forEach(btn=>btn.classList.toggle("active",btn.dataset.screen===name));
   if(name==="history"){showHistoryPanel("calendar");renderCalendar();}
+  if(name==="calories"){initializeCaloriesScreen();}
 }
 document.querySelectorAll(".navbtn").forEach(btn=>btn.addEventListener("click",()=>showScreen(btn.dataset.screen)));
 
@@ -319,10 +320,10 @@ function updateTimer(){
 }
 
 async function loadAllData(){
-  await Promise.all([loadWorkouts(),loadCalendarStatuses(),loadBodyWeights()]);
+  await Promise.all([loadWorkouts(),loadCalendarStatuses(),loadBodyWeights(),loadMeals(),loadCalorieSettings()]);
   renderWorkoutList($("recentList"),workoutsCache.slice(0,5));
   renderWorkoutList($("historyList"),workoutsCache);
-  updateMetrics();updateProgressMetrics();renderCalendar();renderBodyWeightProfile();renderProgressControls();renderAllCharts();
+  updateMetrics();updateProgressMetrics();renderCalendar();renderBodyWeightProfile();renderProgressControls();renderAllCharts();renderCaloriesForSelectedDate();
 }
 
 async function loadWorkouts(){
@@ -343,6 +344,204 @@ async function loadBodyWeights(){
   const q=query(collection(db,"users",user.uid,"bodyWeights"),orderBy("loggedAt","desc"),limit(200));
   const snap=await getDocs(q);
   bodyWeightCache=snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+
+async function loadMeals(){
+  if(!user)return;
+  const q=query(collection(db,"users",user.uid,"meals"),orderBy("mealDate","desc"),limit(500));
+  const snap=await getDocs(q);
+  mealCache=snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+
+async function loadCalorieSettings(){
+  if(!user)return;
+  try{
+    const snap=await getDoc(doc(db,"users",user.uid,"settings","nutrition"));
+    calorieTarget=snap.exists()?Number(snap.data().dailyCalorieTarget||0):0;
+  }catch(err){
+    console.error(err);
+    calorieTarget=0;
+  }
+}
+
+
+
+function localDateKey(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function localDateFromKey(key){
+  const [y,m,d]=key.split("-").map(Number);
+  return new Date(y,m-1,d);
+}
+
+function initializeCaloriesScreen(){
+  if(!$("calorieEntryDate"))return;
+  const key=localDateKey(calorieSelectedDate);
+  $("calorieEntryDate").value=key;
+  if(!$("mealTimeInput").value){
+    const now=new Date();
+    $("mealTimeInput").value=`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+  }
+  renderCaloriesForSelectedDate();
+}
+
+$("calorieEntryDate").addEventListener("change",()=>{
+  if(!$("calorieEntryDate").value)return;
+  calorieSelectedDate=localDateFromKey($("calorieEntryDate").value);
+  renderCaloriesForSelectedDate();
+});
+
+$("saveCalorieTargetBtn").addEventListener("click",async()=>{
+  const value=Number($("dailyCalorieTargetInput").value||0);
+  if(value<0){showToast("Enter a valid calorie target.","error");return}
+  try{
+    await setDoc(doc(db,"users",user.uid,"settings","nutrition"),{
+      dailyCalorieTarget:value,
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    calorieTarget=value;
+    $("dailyCalorieTargetInput").value="";
+    renderCaloriesForSelectedDate();
+    showToast(value>0?"Daily calorie target saved.":"Daily target cleared.","success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not save calorie target. Check Firestore rules.","error");
+  }
+});
+
+$("saveMealBtn").addEventListener("click",async()=>{
+  const name=$("mealNameInput").value.trim();
+  const calories=Number($("mealCaloriesInput").value||0);
+  const dateKey=$("calorieEntryDate").value||localDateKey(new Date());
+  const time=$("mealTimeInput").value||"";
+  if(!name){showToast("Enter the meal or food name.","error");return}
+  if(calories<=0){showToast("Enter calories greater than 0.","error");return}
+  try{
+    await addDoc(collection(db,"users",user.uid,"meals"),{
+      name,
+      calories,
+      mealDate:dateKey,
+      mealTime:time,
+      createdAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    });
+    $("mealNameInput").value="";
+    $("mealCaloriesInput").value="";
+    await loadMeals();
+    calorieSelectedDate=localDateFromKey(dateKey);
+    renderCaloriesForSelectedDate();
+    showToast("Meal added.","success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not save meal. Check Firestore rules.","error");
+  }
+});
+
+function mealsForDate(key){
+  return mealCache
+    .filter(m=>m.mealDate===key)
+    .sort((a,b)=>(a.mealTime||"").localeCompare(b.mealTime||""));
+}
+
+function prettyMealTime(value){
+  if(!value)return "Time not set";
+  const [h,m]=value.split(":").map(Number);
+  const d=new Date();
+  d.setHours(h,m,0,0);
+  return d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+}
+
+function renderCaloriesForSelectedDate(){
+  if(!$("mealList"))return;
+  const key=localDateKey(calorieSelectedDate);
+  const date=localDateFromKey(key);
+  const todayKey=localDateKey(new Date());
+  const label=key===todayKey?"Today":date.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+  $("calorieSelectedDateLabel").textContent=label;
+  $("mealListDateLabel").textContent=label;
+
+  if($("calorieEntryDate").value!==key)$("calorieEntryDate").value=key;
+
+  const meals=mealsForDate(key);
+  const total=meals.reduce((sum,m)=>sum+Number(m.calories||0),0);
+  $("calorieDayTotal").textContent=Math.round(total);
+
+  if(calorieTarget>0){
+    $("currentCalorieTargetText").textContent=`Current target: ${Math.round(calorieTarget)} kcal/day`;
+    const remaining=calorieTarget-total;
+    $("calorieRemainingText").textContent=remaining>=0
+      ? `${Math.round(remaining)} kcal remaining`
+      : `${Math.abs(Math.round(remaining))} kcal over target`;
+    $("calorieProgressFill").style.width=`${Math.min(100,(total/calorieTarget)*100)}%`;
+  }else{
+    $("currentCalorieTargetText").textContent="No target set.";
+    $("calorieRemainingText").textContent="No daily target set.";
+    $("calorieProgressFill").style.width="0%";
+  }
+
+  const wrap=$("mealList");
+  wrap.innerHTML="";
+  wrap.classList.remove("empty");
+  if(!meals.length){
+    wrap.classList.add("empty");
+    wrap.textContent="No meals logged for this day.";
+    return;
+  }
+
+  meals.forEach(meal=>{
+    const row=document.createElement("div");
+    row.className="meal-row";
+    row.innerHTML=`
+      <div class="meal-main">
+        <strong>${meal.name}</strong>
+        <span>${prettyMealTime(meal.mealTime)}</span>
+      </div>
+      <div class="meal-calories">${Math.round(Number(meal.calories||0))} kcal</div>
+      <div class="meal-actions">
+        <button class="meal-action-btn edit" type="button">Edit</button>
+        <button class="meal-action-btn delete" type="button">Delete</button>
+      </div>
+    `;
+    row.querySelector(".edit").addEventListener("click",()=>editMeal(meal));
+    row.querySelector(".delete").addEventListener("click",()=>deleteMeal(meal));
+    wrap.appendChild(row);
+  });
+}
+
+async function editMeal(meal){
+  const newName=prompt("Meal / food name:",meal.name||"");
+  if(newName===null)return;
+  const newCaloriesText=prompt("Calories:",String(Number(meal.calories||0)));
+  if(newCaloriesText===null)return;
+  const newCalories=Number(newCaloriesText);
+  if(!newName.trim()||newCalories<=0){showToast("Meal name and calories are required.","error");return}
+  try{
+    await updateDoc(doc(db,"users",user.uid,"meals",meal.id),{
+      name:newName.trim(),
+      calories:newCalories,
+      updatedAt:serverTimestamp()
+    });
+    await loadMeals();
+    renderCaloriesForSelectedDate();
+    showToast("Meal updated.","success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not update meal.","error");
+  }
+}
+
+async function deleteMeal(meal){
+  if(!confirm(`Delete "${meal.name}"?`))return;
+  try{
+    await deleteDoc(doc(db,"users",user.uid,"meals",meal.id));
+    await loadMeals();
+    renderCaloriesForSelectedDate();
+    showToast("Meal deleted.","success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not delete meal.","error");
+  }
 }
 
 
