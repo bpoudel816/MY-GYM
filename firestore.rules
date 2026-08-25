@@ -3,16 +3,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Day 1:
-    // Every signed-in user can create/read/update ONLY their own profile document.
-    // Friends and workout sharing rules will be added in a later phase.
     match /users/{userId} {
       allow create, read, update: if request.auth != null
                                   && request.auth.uid == userId;
       allow delete: if false;
+
+      match /workouts/{workoutId} {
+        allow create, read, update, delete: if request.auth != null
+                                            && request.auth.uid == userId;
+      }
     }
 
-    // Everything else is blocked for now.
     match /{document=**} {
       allow read, write: if false;
     }
