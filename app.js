@@ -1086,7 +1086,10 @@ function renderProgressControls(){
   if(current&&names.includes(current))select.value=current;
 }
 
-$("progressExerciseSelect").addEventListener("change",()=>renderAllCharts());
+$("progressExerciseSelect").addEventListener("change",()=>{
+  renderAllCharts();
+  updateSelectedExerciseMetrics();
+});
 
 function exerciseHistory(name){
   const rows=[];
@@ -1113,6 +1116,24 @@ function exerciseHistory(name){
   return rows;
 }
 
+
+function updateSelectedExerciseMetrics(){
+  const select=$("progressExerciseSelect");
+  const name=select?.value||"";
+  const hist=name?exerciseHistory(name):[];
+  const unit=weightUnitLabel();
+
+  if($("progressBestWeight")){
+    const best=hist.length?Math.max(...hist.map(r=>Number(r.weight)||0)):0;
+    $("progressBestWeight").textContent=best?`${formatNumber(best)} ${unit}`:"—";
+  }
+
+  if($("progressBestOneRm")){
+    const best=hist.length?Math.max(...hist.map(r=>Number(r.oneRm)||0)):0;
+    $("progressBestOneRm").textContent=best?`${formatNumber(best)} ${unit}`:"—";
+  }
+}
+
 function chartDefaults(){
   return {
     responsive:true,
@@ -1126,6 +1147,7 @@ function chartDefaults(){
 }
 
 function renderAllCharts(){
+  updateSelectedExerciseMetrics();
   if(typeof Chart==="undefined")return;
   const select=$("progressExerciseSelect");
   const name=select?.value||"";

@@ -10,7 +10,7 @@
   <title>MY GYM</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="my-gym-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=friends1">
+  <link rel="stylesheet" href="styles.css?v=progressfinal1">
 </head>
 <body>
   <main class="shell">
@@ -205,6 +205,7 @@
               <span><i class="dot rest-dot"></i>Rest</span>
               <span><i class="dot skipped-dot"></i>Missed</span>
             </div>
+            <p class="muted mini calendar-tip">Past days without a workout automatically appear Missed. Tap any day to change it to Rest or clear a manual status.</p>
           </div>
 
           <div id="selectedDayPanel" class="card selected-day">
@@ -232,6 +233,8 @@
             <div class="card metric"><small>TOTAL WORKOUTS</small><strong id="progressWorkoutCount">0</strong></div>
             <div class="card metric"><small>TOTAL SETS</small><strong id="progressSetCount">0</strong></div>
             <div class="card metric"><small>EXERCISES</small><strong id="progressExerciseCount">0</strong></div>
+            <div class="card metric"><small>BEST WEIGHT</small><strong id="progressBestWeight">—</strong></div>
+            <div class="card metric"><small>BEST EST. 1RM</small><strong id="progressBestOneRm">—</strong></div>
           </div>
           <div class="card progress-controls">
             <div>
@@ -500,6 +503,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="ui.js?v=friends1"></script>
-  <script type="module" src="app.js?v=friends1"></script>
+  <script type="module" src="app.js?v=progressfinal1"></script>
 </body>
 </html>

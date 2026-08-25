@@ -314,3 +314,27 @@ body{
   .friend-metrics{grid-template-columns:1fr 1fr 1fr}
   .friend-code-box strong{font-size:22px}
 }
+
+/* ===== PROGRESS + CALENDAR FINALIZATION ===== */
+.progress-grid{grid-template-columns:repeat(5,1fr)}
+.progress-grid .metric strong{font-variant-numeric:tabular-nums}
+.calendar-tip{margin:10px 2px 0;line-height:1.45}
+.calendar-day{position:relative;min-height:58px}
+.calendar-day.workout-day:after,.calendar-day.rest-day:after,.calendar-day.missed-day:after{
+  content:"";position:absolute;left:50%;bottom:7px;transform:translateX(-50%);
+  width:5px;height:5px;border-radius:50%;
+}
+.calendar-day.workout-day:after{background:#55ddb9;box-shadow:0 0 10px #55ddb977}
+.calendar-day.rest-day:after{background:#f0c24f;box-shadow:0 0 10px #f0c24f66}
+.calendar-day.missed-day:after{background:#ef7180;box-shadow:0 0 10px #ef718066}
+.calendar-day.today{outline:2px solid #806cff70;outline-offset:2px}
+.selected-day{background:linear-gradient(145deg,#141d2a,#0a1019)}
+.graph-card{min-height:330px}
+.graph-card canvas{max-height:255px}
+.graph-grid{align-items:stretch}
+@media(max-width:950px){.progress-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){
+  .progress-grid{grid-template-columns:1fr 1fr}
+  .progress-grid .metric:last-child{grid-column:1/-1}
+  .calendar-day{min-height:48px}
+}
