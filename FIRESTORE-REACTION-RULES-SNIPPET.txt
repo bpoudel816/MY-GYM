@@ -1,0 +1,27 @@
+ADD THIS BLOCK INSIDE:
+
+match /users/{userId} {
+
+Place it after your existing match /workouts/{workoutId} block.
+
+------------------------------------------------------------
+
+match /workouts/{workoutId}/reactions/{reactorId} {
+  allow read: if isSelf(userId) || isApprovedViewer(userId);
+
+  allow create, update: if signedIn()
+    && request.auth.uid == reactorId
+    && isApprovedViewer(userId)
+    && request.resource.data.fromUid == request.auth.uid
+    && request.resource.data.type in ["clap", "thumbs"];
+
+  allow delete: if signedIn()
+    && request.auth.uid == reactorId
+    && isApprovedViewer(userId);
+}
+
+------------------------------------------------------------
+
+This is the ONLY new Firestore permission required by this update.
+Profile photos use the existing private users/{userId} document permission.
+Quotes, routine detection, fireworks and clap sound do not require Firestore changes.

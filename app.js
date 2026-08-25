@@ -98,6 +98,8 @@ const EXERCISES = {
 let user=null, workout=null, activeExercise=null, timerHandle=null, currentDisplayName="Athlete", myFriendCode="";
 let workoutsCache=[], calendarStatuses={}, bodyWeightCache=[], mealCache=[], calorieTarget=0, calorieSelectedDate=new Date(), calendarCursor=new Date();
 let selectedCalendarKey=null, editingWorkout=null;
+let currentProfilePhoto="";
+let celebrationAudioContext=null;
 let calendarTrackingStart=null;
 let currentTheme="dark";
 
@@ -155,6 +157,332 @@ async function ensureCalendarTrackingStart(){
   }
 }
 
+
+const DAILY_QUOTES=[
+  "Consistency makes ordinary days powerful.",
+  "One good set at a time.",
+  "Your future strength is built today.",
+  "Progress loves repetition.",
+  "Train the habit, not just the muscle.",
+  "Small improvements become big results.",
+  "Show up first. Motivation can catch up.",
+  "Strong days begin with one decision.",
+  "Keep the promise you made to yourself.",
+  "Effort today becomes confidence tomorrow.",
+  "The workout you finish matters more than the one you planned.",
+  "Build strength one honest rep at a time.",
+  "You do not need perfect conditions to make progress.",
+  "Make today another vote for the person you want to become.",
+  "Discipline turns goals into routines.",
+  "A short workout still moves you forward.",
+  "Your pace is yours. Keep moving.",
+  "Finish stronger than you started.",
+  "The goal is progress you can repeat.",
+  "Today's work is tomorrow's baseline.",
+  "Do the next useful thing.",
+  "Consistency beats intensity you cannot sustain.",
+  "Strong routines make strong results.",
+  "Keep stacking good sessions.",
+  "You are training more than muscles today.",
+  "Start with the first rep.",
+  "Let progress be boring and dependable.",
+  "Do enough today to be proud tonight.",
+  "Momentum comes from action.",
+  "A completed workout is a win.",
+  "Keep showing up."
+];
+
+function quoteIndexForDate(d=new Date()){
+  const key=localDateKey(d);
+  let hash=0;
+  for(const ch of key)hash=(hash*31+ch.charCodeAt(0))>>>0;
+  return hash%DAILY_QUOTES.length;
+}
+function renderDailyQuote(){
+  if(!$("dailyQuoteText"))return;
+  const now=new Date();
+  $("dailyQuoteText").textContent=`“${DAILY_QUOTES[quoteIndexForDate(now)]}”`;
+  $("dailyQuoteDate").textContent=now.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+}
+
+function initialsFromName(name){
+  const bits=String(name||"MY GYM").trim().split(/\s+/).filter(Boolean);
+  return (bits.slice(0,2).map(x=>x[0]?.toUpperCase()||"").join("")||"MG").slice(0,2);
+}
+function applyProfilePhoto(photoData,name=currentDisplayName){
+  currentProfilePhoto=String(photoData||"");
+  const initial=initialsFromName(name);
+  ["homeAvatarFallback","profileAvatarFallback"].forEach(id=>{if($(id))$(id).textContent=initial});
+  ["homeProfilePhoto","profilePhoto"].forEach(id=>{
+    const img=$(id);
+    if(!img)return;
+    if(currentProfilePhoto){
+      img.src=currentProfilePhoto;
+      img.classList.remove("hidden");
+    }else{
+      img.removeAttribute("src");
+      img.classList.add("hidden");
+    }
+  });
+  ["homeAvatarFallback","profileAvatarFallback"].forEach(id=>{
+    const el=$(id); if(el)el.classList.toggle("hidden",Boolean(currentProfilePhoto));
+  });
+  if($("removeProfilePhotoBtn"))$("removeProfilePhotoBtn").classList.toggle("hidden",!currentProfilePhoto);
+}
+
+function imageFileToProfileData(file){
+  return new Promise((resolve,reject)=>{
+    if(!file||!file.type?.startsWith("image/")){reject(new Error("Choose an image file."));return}
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error("Could not read image."));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error("Could not open image."));
+      img.onload=()=>{
+        const size=320;
+        const canvas=document.createElement("canvas");
+        canvas.width=size;canvas.height=size;
+        const ctx=canvas.getContext("2d");
+        const crop=Math.min(img.width,img.height);
+        const sx=(img.width-crop)/2,sy=(img.height-crop)/2;
+        ctx.drawImage(img,sx,sy,crop,crop,0,0,size,size);
+        let quality=.78;
+        let data=canvas.toDataURL("image/jpeg",quality);
+        while(data.length>180000 && quality>.45){
+          quality-=.08;
+          data=canvas.toDataURL("image/jpeg",quality);
+        }
+        resolve(data);
+      };
+      img.src=String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function workoutPatternLabel(w){
+  const cats=new Set((w.exercises||[]).map(ex=>String(ex.category||"")).filter(Boolean));
+  if(!cats.size){
+    for(const ex of (w.exercises||[])){
+      const name=String(ex.name||"").toLowerCase();
+      if(name.includes("leg")||name.includes("squat")||name.includes("calf")||name.includes("hip"))cats.add("Legs");
+      else if(name.includes("chest")||name.includes("pec"))cats.add("Chest");
+      else if(name.includes("row")||name.includes("pulldown")||name.includes("back"))cats.add("Back");
+      else if(name.includes("shoulder")||name.includes("lateral")||name.includes("rear delt"))cats.add("Shoulders");
+      else if(name.includes("curl")||name.includes("triceps")||name.includes("biceps"))cats.add("Arms");
+      else if(name.includes("treadmill")||name.includes("bike")||name.includes("stair")||name.includes("elliptical")||name.includes("rowing"))cats.add("Cardio");
+    }
+  }
+  const upper=["Chest","Back","Shoulders","Arms"].some(c=>cats.has(c));
+  const lower=cats.has("Legs");
+  const cardio=cats.has("Cardio");
+  if(lower&&upper)return "Full Body";
+  if(lower&&!upper)return "Lower";
+  if(cardio&&!upper&&!lower)return "Cardio";
+  if(upper){
+    const push=cats.has("Chest")||cats.has("Shoulders");
+    const pull=cats.has("Back");
+    if(push&&!pull)return "Push";
+    if(pull&&!push)return "Pull";
+    return "Upper";
+  }
+  if(cats.has("Core"))return "Core";
+  return "Workout";
+}
+
+function recentMeaningfulRoutine(){
+  const byDay=new Map();
+  for(const w of visibleWorkouts()){
+    const d=toDate(w.startedAt);
+    if(!d)continue;
+    const key=localDateKey(d);
+    const arr=byDay.get(key)||[];
+    arr.push(w);
+    byDay.set(key,arr);
+  }
+  const days=[];
+  const today=new Date();
+  for(let offset=29;offset>=0;offset--){
+    const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()-offset);
+    const key=localDateKey(d);
+    if(calendarTrackingStart && key<calendarTrackingStart)continue;
+    if(byDay.has(key)){
+      const labels=[...new Set(byDay.get(key).map(workoutPatternLabel))];
+      days.push({key,label:labels.length===1?labels[0]:"Mixed"});
+    }else{
+      const status=String(calendarStatuses[key]?.status||"").toLowerCase();
+      if(status==="rest")days.push({key,label:"Rest"});
+    }
+  }
+  return days.slice(-14);
+}
+
+function detectRoutinePattern(){
+  const entries=recentMeaningfulRoutine();
+  const labels=entries.map(x=>x.label);
+  if(labels.length<3)return {kind:"learning",sequence:labels.slice(-5)};
+  for(let len=2;len<=Math.min(7,Math.floor(labels.length/2));len++){
+    const a=labels.slice(-len);
+    const b=labels.slice(-2*len,-len);
+    if(a.length===b.length && a.every((v,i)=>v===b[i])){
+      return {kind:"repeat",sequence:a,cycles:2};
+    }
+  }
+  return {kind:"recent",sequence:labels.slice(-6)};
+}
+function renderDetectedPattern(){
+  if(!$("patternSequence"))return;
+  const result=detectRoutinePattern();
+  const seq=result.sequence||[];
+  $("patternSequence").innerHTML=seq.length
+    ?seq.map(label=>`<span class="pattern-chip pattern-${label.toLowerCase().replace(/\s+/g,"-")}">${label}</span>`).join('<span class="pattern-arrow">→</span>')
+    :'<span class="pattern-chip muted-chip">Keep logging workouts</span>';
+  if(result.kind==="repeat"){
+    $("patternTitle").textContent="Repeating pattern detected";
+    $("patternDescription").textContent=`This sequence appears to be repeating from your recent workout and Rest history.`;
+  }else if(result.kind==="recent"){
+    $("patternTitle").textContent="Recent training pattern";
+    $("patternDescription").textContent="This is what you have actually been doing recently. MY GYM will update it as your routine changes.";
+  }else{
+    $("patternTitle").textContent="Learning your routine";
+    $("patternDescription").textContent="Keep logging workouts and Rest days. MY GYM will recognize your pattern automatically.";
+  }
+}
+
+function primeCelebrationAudio(){
+  try{
+    if(!celebrationAudioContext){
+      const Ctx=window.AudioContext||window.webkitAudioContext;
+      if(Ctx)celebrationAudioContext=new Ctx();
+    }
+    celebrationAudioContext?.resume?.();
+  }catch(_){}
+}
+function playClapSound(){
+  const ctx=celebrationAudioContext;
+  if(!ctx)return;
+  try{
+    const now=ctx.currentTime;
+    for(let i=0;i<7;i++){
+      const start=now+i*.105+Math.random()*.035;
+      const length=.07;
+      const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*length),ctx.sampleRate);
+      const data=buffer.getChannelData(0);
+      for(let j=0;j<data.length;j++){
+        const env=Math.pow(1-j/data.length,3);
+        data[j]=(Math.random()*2-1)*env;
+      }
+      const source=ctx.createBufferSource();
+      source.buffer=buffer;
+      const filter=ctx.createBiquadFilter();
+      filter.type="bandpass";filter.frequency.value=1100+Math.random()*900;filter.Q.value=.8;
+      const gain=ctx.createGain();gain.gain.value=.18+Math.random()*.08;
+      source.connect(filter).connect(gain).connect(ctx.destination);
+      source.start(start);
+    }
+  }catch(_){}
+}
+function spawnFireworks(){
+  const layer=$("fireworksLayer");
+  if(!layer)return;
+  layer.innerHTML="";
+  const colors=["#8b5cf6","#ec4899","#22c55e","#38bdf8","#f59e0b","#f43f5e"];
+  for(let burst=0;burst<5;burst++){
+    const cx=15+Math.random()*70,cy=12+Math.random()*46;
+    for(let i=0;i<18;i++){
+      const piece=document.createElement("i");
+      const angle=(Math.PI*2*i/18)+(Math.random()*.15);
+      const dist=55+Math.random()*90;
+      piece.className="firework-piece";
+      piece.style.setProperty("--x",`${cx}%`);
+      piece.style.setProperty("--y",`${cy}%`);
+      piece.style.setProperty("--dx",`${Math.cos(angle)*dist}px`);
+      piece.style.setProperty("--dy",`${Math.sin(angle)*dist}px`);
+      piece.style.setProperty("--c",colors[(i+burst)%colors.length]);
+      piece.style.setProperty("--delay",`${burst*.15}s`);
+      layer.appendChild(piece);
+    }
+  }
+}
+function showWorkoutCelebration(savedWorkout){
+  const overlay=$("celebrationOverlay");
+  if(!overlay)return;
+  const exercises=savedWorkout.exercises||[];
+  const sets=exercises.reduce((n,ex)=>n+(ex.sets?.length||0),0);
+  const volume=exercises.reduce((sum,ex)=>sum+(ex.sets||[]).reduce((s,set)=>s+Number(set.weight||0)*Number(set.reps||0),0),0);
+  const mins=Math.max(1,Math.round(Number(savedWorkout.durationSeconds||0)/60));
+  $("celebrationStats").innerHTML=`
+    <div><strong>${exercises.length}</strong><span>Exercises</span></div>
+    <div><strong>${sets}</strong><span>Sets</span></div>
+    <div><strong>${mins}</strong><span>Minutes</span></div>
+    <div><strong>${Math.round(volume).toLocaleString()}</strong><span>Volume</span></div>`;
+  overlay.classList.remove("hidden");
+  spawnFireworks();
+  playClapSound();
+}
+function closeCelebration(){
+  $("celebrationOverlay")?.classList.add("hidden");
+  if($("fireworksLayer"))$("fireworksLayer").innerHTML="";
+}
+
+async function loadReactionSummary(ownerUid,workoutId){
+  const snap=await getDocs(collection(db,"users",ownerUid,"workouts",workoutId,"reactions"));
+  let clap=0,thumbs=0,mine="";
+  snap.docs.forEach(d=>{
+    const type=String(d.data().type||"");
+    if(type==="clap")clap++;
+    if(type==="thumbs")thumbs++;
+    if(user&&d.id===user.uid)mine=type;
+  });
+  return {clap,thumbs,mine};
+}
+async function refreshFriendReactionBar(ownerUid,workoutId,bar){
+  if(!bar)return;
+  try{
+    const data=await loadReactionSummary(ownerUid,workoutId);
+    bar.querySelector('[data-reaction="clap"] span').textContent=String(data.clap);
+    bar.querySelector('[data-reaction="thumbs"] span').textContent=String(data.thumbs);
+    bar.querySelectorAll(".react-btn").forEach(btn=>btn.classList.toggle("active",btn.dataset.reaction===data.mine));
+  }catch(err){
+    console.error("Reaction load failed:",err);
+  }
+}
+async function toggleFriendReaction(ownerUid,workoutId,type,bar){
+  if(!user)return;
+  const ref=doc(db,"users",ownerUid,"workouts",workoutId,"reactions",user.uid);
+  try{
+    const current=await getDoc(ref);
+    if(current.exists() && current.data().type===type){
+      await deleteDoc(ref);
+    }else{
+      await setDoc(ref,{
+        type,
+        fromUid:user.uid,
+        fromName:currentDisplayName,
+        createdAt:serverTimestamp(),
+        updatedAt:serverTimestamp()
+      },{merge:true});
+    }
+    await refreshFriendReactionBar(ownerUid,workoutId,bar);
+    showToast(type==="clap"?"👏 Reaction updated.":"👍 Reaction updated.","success");
+  }catch(err){
+    console.error("Reaction save failed:",err);
+    showToast("Could not save reaction. Update the Firestore reaction rule.","error");
+  }
+}
+async function refreshReceivedReactionSummary(workoutId,wrap){
+  if(!wrap||!user)return;
+  try{
+    const data=await loadReactionSummary(user.uid,workoutId);
+    const total=data.clap+data.thumbs;
+    wrap.classList.toggle("hidden",total===0);
+    if(total){
+      wrap.querySelector(".received-clap").textContent=`👏 ${data.clap}`;
+      wrap.querySelector(".received-thumbs").textContent=`👍 ${data.thumbs}`;
+    }
+  }catch(_){}
+}
+
 function showMessage(text, success=false) {
   $("authMessage").textContent=text;
   $("authMessage").className=success?"message success":"message";
@@ -203,6 +531,37 @@ $("profileConnectionsBtn")?.addEventListener("click",()=>showScreen("connections
 $("themeDarkBtn")?.addEventListener("click",()=>saveTheme("dark"));
 $("themeLightBtn")?.addEventListener("click",()=>saveTheme("light"));
 
+
+$("changeProfilePhotoBtn")?.addEventListener("click",()=>$("profilePhotoInput")?.click());
+$("profilePhotoInput")?.addEventListener("change",async e=>{
+  const file=e.target.files?.[0];
+  if(!file||!user)return;
+  const btn=$("changeProfilePhotoBtn");
+  const old=btn.textContent;
+  btn.disabled=true;btn.textContent="Saving...";
+  try{
+    const data=await imageFileToProfileData(file);
+    await setDoc(doc(db,"users",user.uid),{profilePhoto:data,updatedAt:serverTimestamp()},{merge:true});
+    applyProfilePhoto(data,currentDisplayName);
+    showToast("Profile photo saved.","success");
+  }catch(err){
+    console.error(err);
+    showToast(err.message||"Could not save profile photo.","error");
+  }finally{
+    btn.disabled=false;btn.textContent=old;e.target.value="";
+  }
+});
+$("removeProfilePhotoBtn")?.addEventListener("click",async()=>{
+  if(!user||!currentProfilePhoto)return;
+  try{
+    await setDoc(doc(db,"users",user.uid),{profilePhoto:"",updatedAt:serverTimestamp()},{merge:true});
+    applyProfilePhoto("",currentDisplayName);
+    showToast("Profile photo removed.","success");
+  }catch(err){console.error(err);showToast("Could not remove profile photo.","error")}
+});
+$("closeCelebrationBtn")?.addEventListener("click",closeCelebration);
+$("celebrationOverlay")?.addEventListener("click",e=>{if(e.target===$("celebrationOverlay"))closeCelebration()});
+
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
   try{await signInWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value)}
@@ -238,11 +597,17 @@ onAuthStateChanged(auth,async currentUser=>{
     return;
   }
   let name=currentUser.displayName||"Athlete";
+  let profileData={};
   try{
     const snap=await getDoc(doc(db,"users",currentUser.uid));
-    if(snap.exists()&&snap.data().displayName)name=snap.data().displayName;
+    if(snap.exists()){
+      profileData=snap.data()||{};
+      if(profileData.displayName)name=profileData.displayName;
+    }
   }catch(_){}
   currentDisplayName=name;
+  applyProfilePhoto(profileData.profilePhoto||"",name);
+  renderDailyQuote();
   $("userName").textContent=name;$("profileName").textContent=name;
   $("userEmail").textContent=currentUser.email||"";$("profileEmail").textContent=currentUser.email||"";
   $("authView").classList.add("hidden");$("appView").classList.remove("hidden");
@@ -731,7 +1096,7 @@ async function openFriendProgress(friendUid,friendName){
     list.forEach(w=>(w.exercises||[]).forEach(ex=>names.add(ex.name)));
     $("friendExerciseCount").textContent=String(names.size);
 
-    renderReadOnlyFriendWorkouts($("friendWorkoutList"),list);
+    renderReadOnlyFriendWorkouts($("friendWorkoutList"),list,friendUid);
     panel.scrollIntoView({behavior:"smooth",block:"start"});
   }catch(err){
     console.error(err);
@@ -740,7 +1105,7 @@ async function openFriendProgress(friendUid,friendName){
   }
 }
 
-function renderReadOnlyFriendWorkouts(container,list){
+function renderReadOnlyFriendWorkouts(container,list,friendUid){
   container.innerHTML="";
   container.classList.remove("empty");
 
@@ -773,8 +1138,22 @@ function renderReadOnlyFriendWorkouts(container,list){
         <span class="pill">${w.exercises?.length||0} exercises</span>
         <span class="pill">${sets} sets</span>
       </div>
-      <div class="exercise-summary">${details}</div>`;
+      <div class="exercise-summary">${details}</div>
+      <div class="friend-reactions">
+        <span class="reaction-label">Encourage</span>
+        <button class="react-btn" data-reaction="clap" type="button">👏 <span>0</span></button>
+        <button class="react-btn" data-reaction="thumbs" type="button">👍 <span>0</span></button>
+      </div>`;
+
+    const bar=card.querySelector(".friend-reactions");
+    bar.querySelectorAll(".react-btn").forEach(btn=>{
+      btn.addEventListener("click",e=>{
+        e.stopPropagation();
+        toggleFriendReaction(friendUid,w.id,btn.dataset.reaction,bar);
+      });
+    });
     container.appendChild(card);
+    refreshFriendReactionBar(friendUid,w.id,bar);
   });
 }
 
@@ -981,6 +1360,7 @@ $("finishThisExerciseBtn").addEventListener("click",()=>{
   showToast("Exercise finished. Choose the next body part or finish the whole workout.","success");
 });
 $("finishWholeWorkoutBtn").addEventListener("click",async()=>{
+  primeCelebrationAudio();
   if(activeExercise){
     showToast("Finish or remove the current exercise before finishing the whole workout.","error");
     return;
@@ -1010,10 +1390,17 @@ $("finishWholeWorkoutBtn").addEventListener("click",async()=>{
   }
 
   // At this point the workout is definitely saved.
+  const completedWorkout={
+    startedAt:workout.startedAt,
+    endedAt,
+    durationSeconds:Math.max(1,Math.round((endedAt-workout.startedAt)/1000)),
+    exercises:workout.exercises
+  };
   workout=null;
   activeExercise=null;
   stopTimer();
   showScreen("home");
+  showWorkoutCelebration(completedWorkout);
   showToast("Workout saved to your cloud account.","success");
 
   // Refresh data AFTER success. A refresh failure must never be reported as a save failure.
@@ -1042,7 +1429,7 @@ async function loadAllData(){
   const visible = visibleWorkouts();
   renderWorkoutList($("recentList"),visible.slice(0,5));
   renderWorkoutList($("historyList"),visible);
-  updateMetrics();updateProgressMetrics();renderCalendar();renderBodyWeightProfile();renderProgressControls();renderAllCharts();renderCaloriesForSelectedDate();
+  updateMetrics();updateProgressMetrics();renderCalendar();renderBodyWeightProfile();renderProgressControls();renderAllCharts();renderCaloriesForSelectedDate();renderDetectedPattern();
 }
 
 async function loadWorkouts(){
@@ -1499,8 +1886,9 @@ function renderWorkoutList(container,list){
     const mins=Math.max(1,Math.round((w.durationSeconds||0)/60));
     const details=(w.exercises||[]).map(ex=>`<div class="exercise-summary-row"><strong>${ex.name}</strong><div class="set-summary">${compactSetText(ex)||"No set details"}</div></div>`).join("");
     const card=document.createElement("article");card.className="workout-card";
-    card.innerHTML=`<div class="workout-top-line"><div><h4>${d?d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}):"Workout"}</h4><span class="muted mini">${d?d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):""}</span></div><span class="pill">${mins} min</span></div><div class="summary"><span class="pill">${w.exercises?.length||0} exercises</span><span class="pill">${sets} sets</span><span class="pill">Tap to edit</span></div><div class="exercise-summary">${details}</div>`;
+    card.innerHTML=`<div class="workout-top-line"><div><h4>${d?d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}):"Workout"}</h4><span class="muted mini">${d?d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):""}</span></div><span class="pill">${mins} min</span></div><div class="summary"><span class="pill">${w.exercises?.length||0} exercises</span><span class="pill">${sets} sets</span><span class="pill">Tap to edit</span></div><div class="received-reactions hidden"><span class="received-label">Friends</span><span class="received-clap">👏 0</span><span class="received-thumbs">👍 0</span></div><div class="exercise-summary">${details}</div>`;
     card.addEventListener("click",()=>openEditWorkout(w));container.appendChild(card);
+    if(w.id)refreshReceivedReactionSummary(w.id,card.querySelector(".received-reactions"));
   });
 }
 function updateMetrics(){

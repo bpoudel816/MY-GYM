@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="my-gym-icon-192.png">
   <link rel="icon" href="my-gym-icon-192.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=iconpolish6">
+  <link rel="stylesheet" href="styles.css?v=motivate7">
 </head>
 <body>
   <main class="shell">
@@ -87,10 +87,16 @@
 
       <section id="homeScreen" class="screen">
         <div class="card welcome">
-          <div>
-            <p class="eyebrow">MY GYM ACCOUNT</p>
-            <h2>Welcome, <span id="userName">Athlete</span>.</h2>
-            <p id="userEmail" class="muted"></p>
+          <div class="welcome-identity">
+            <div class="profile-avatar profile-avatar-home">
+              <img id="homeProfilePhoto" class="profile-photo hidden" alt="Profile photo">
+              <span id="homeAvatarFallback" class="profile-avatar-fallback">MG</span>
+            </div>
+            <div>
+              <p class="eyebrow">MY GYM ACCOUNT</p>
+              <h2>Welcome, <span id="userName">Athlete</span>.</h2>
+              <p id="userEmail" class="muted"></p>
+            </div>
           </div>
           <button id="logoutBtn" class="secondary">Log out</button>
         </div>
@@ -112,6 +118,34 @@
           <div class="card metric"><small>WORKOUTS</small><strong id="workoutCount">0</strong></div>
           <div class="card metric"><small>STREAK</small><strong id="streakCount">0</strong></div>
           <div class="card metric"><small>LAST</small><strong id="lastWorkoutMetric">—</strong><span id="lastWorkoutDate" class="muted mini">No workouts</span></div>
+        </div>
+
+        <div class="home-insight-grid">
+          <div class="card daily-quote-card">
+            <div class="insight-card-head">
+              <div>
+                <p class="eyebrow">DAILY MOTIVATION</p>
+                <h3>Today's push</h3>
+              </div>
+              <span class="motivation-icon">🔥</span>
+            </div>
+            <p id="dailyQuoteText" class="daily-quote-text">Show up. Do the work. Repeat.</p>
+            <span id="dailyQuoteDate" class="muted mini"></span>
+          </div>
+
+          <div class="card pattern-card">
+            <div class="insight-card-head">
+              <div>
+                <p class="eyebrow">YOUR CURRENT PATTERN</p>
+                <h3 id="patternTitle">Learning your routine</h3>
+              </div>
+              <span class="pattern-icon">↻</span>
+            </div>
+            <div id="patternSequence" class="pattern-sequence">
+              <span class="pattern-chip muted-chip">Keep logging workouts</span>
+            </div>
+            <p id="patternDescription" class="muted mini">MY GYM will recognize the routine you actually follow.</p>
+          </div>
         </div>
 
         <h3>Latest workouts</h3>
@@ -450,10 +484,23 @@
       </section>
 
       <section id="profileScreen" class="screen hidden">
-        <div class="card">
-          <p class="eyebrow">PROFILE</p>
-          <h2 id="profileName">Athlete</h2>
-          <p id="profileEmail" class="muted"></p>
+        <div class="card profile-identity-card">
+          <div class="profile-identity-main">
+            <div class="profile-avatar profile-avatar-large">
+              <img id="profilePhoto" class="profile-photo hidden" alt="Profile photo">
+              <span id="profileAvatarFallback" class="profile-avatar-fallback">MG</span>
+            </div>
+            <div class="profile-identity-copy">
+              <p class="eyebrow">PROFILE</p>
+              <h2 id="profileName">Athlete</h2>
+              <p id="profileEmail" class="muted"></p>
+            </div>
+          </div>
+          <div class="profile-photo-actions">
+            <input id="profilePhotoInput" class="hidden-file-input" type="file" accept="image/*">
+            <button id="changeProfilePhotoBtn" class="secondary" type="button">Change Photo</button>
+            <button id="removeProfilePhotoBtn" class="link-btn" type="button">Remove</button>
+          </div>
         </div>
 
         <div class="profile-grid">
@@ -575,11 +622,23 @@
       </div>
     </div>
 
+    <div id="celebrationOverlay" class="celebration-overlay hidden" aria-live="polite">
+      <div id="fireworksLayer" class="fireworks-layer" aria-hidden="true"></div>
+      <div class="celebration-card">
+        <div class="celebration-trophy">🏆</div>
+        <p class="eyebrow">WORKOUT COMPLETE</p>
+        <h2>Great work!</h2>
+        <div id="celebrationStats" class="celebration-stats"></div>
+        <p class="celebration-message">You showed up today. Keep building.</p>
+        <button id="closeCelebrationBtn" class="primary" type="button">Awesome 💪</button>
+      </div>
+    </div>
+
     <div id="toast" class="toast hidden"></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="ui.js?v=iconpolish6"></script>
-  <script type="module" src="app.js?v=iconpolish6"></script>
+  <script src="ui.js?v=motivate7"></script>
+  <script type="module" src="app.js?v=motivate7"></script>
 </body>
 </html>

@@ -29,6 +29,21 @@ service cloud.firestore {
         allow read: if isSelf(userId) || isApprovedViewer(userId);
       }
 
+      // Friends may react to shared workouts, but cannot modify the workout itself.
+      match /workouts/{workoutId}/reactions/{reactorId} {
+        allow read: if isSelf(userId) || isApprovedViewer(userId);
+
+        allow create, update: if signedIn()
+          && request.auth.uid == reactorId
+          && isApprovedViewer(userId)
+          && request.resource.data.fromUid == request.auth.uid
+          && request.resource.data.type in ["clap", "thumbs"];
+
+        allow delete: if signedIn()
+          && request.auth.uid == reactorId
+          && isApprovedViewer(userId);
+      }
+
       // Body weight can also be viewed by approved friends for progress charts,
       // but friends cannot modify it.
       match /bodyWeights/{entryId} {
