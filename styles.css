@@ -840,44 +840,21 @@ input:focus,select:focus{
   .rep-center{height:42px;font-size:15px!important}
 }
 
-/* ===== SIMPLIFIED FINAL NAV + CURRENT WORKOUT ===== */
-.nav{max-width:520px}
+/* ===== EMERGENCY FINAL UI FIX ===== */
 .profile-tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-.profile-tool-card{min-height:170px;display:flex;flex-direction:column;align-items:flex-start}
-.profile-tool-card p.muted{flex:1;line-height:1.5}
+.profile-tool-card{display:flex;flex-direction:column;min-height:165px}
+.profile-tool-card .muted{flex:1}
 .wide{width:100%}
-
 .current-workout-summary{
-  margin-bottom:16px;padding:16px;border-radius:20px;
-  border:1px solid #53dfba22;
+  margin-bottom:16px;padding:16px;border-radius:20px;border:1px solid #53dfba22;
   background:radial-gradient(circle at 100% 0,#53dfba12,transparent 36%),linear-gradient(150deg,#121b27,#0b111b);
-  box-shadow:0 14px 34px #0004;
 }
 .current-workout-summary-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
 .current-workout-summary-head h3{margin:3px 0 0}
 .current-workout-items{display:grid;gap:7px}
-.current-workout-chip{
-  display:flex;justify-content:space-between;align-items:center;gap:10px;
-  padding:10px 11px;border-radius:12px;background:#090f18;border:1px solid #ffffff0d;
-}
+.current-workout-chip{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 11px;border-radius:12px;background:#090f18;border:1px solid #ffffff0d}
 .current-workout-chip strong{font-size:12px}
 .current-workout-chip small{color:#7f8ca0}
 .current-workout-chip .complete{color:#59dfbb;font-weight:900}
 .current-workout-chip .active-now{color:#a99eff;font-weight:900}
-
-/* More vivid artwork */
-.category:hover .category-art svg,.exercise:hover .machine-visual svg{transform:scale(1.035);filter:drop-shadow(0 16px 16px #0008) saturate(1.18)}
-.category-art svg,.machine-visual svg{transition:transform .2s ease,filter .2s ease}
-.exercise[data-category="Chest"] .machine-visual{border-color:#a968ff2b}
-.exercise[data-category="Back"] .machine-visual{border-color:#409cff2b}
-.exercise[data-category="Shoulders"] .machine-visual{border-color:#ffb84b2b}
-.exercise[data-category="Arms"] .machine-visual{border-color:#dc61ff2b}
-.exercise[data-category="Legs"] .machine-visual{border-color:#3de0a42b}
-.exercise[data-category="Core"] .machine-visual{border-color:#ff855c2b}
-.exercise[data-category="Cardio"] .machine-visual{border-color:#40d7df2b}
-
-@media(max-width:650px){
-  .profile-tools-grid{grid-template-columns:1fr}
-  .profile-tool-card{min-height:145px}
-  .current-workout-summary{padding:13px;border-radius:17px}
-}
+@media(max-width:650px){.profile-tools-grid{grid-template-columns:1fr}}

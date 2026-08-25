@@ -112,19 +112,26 @@ function showToast(text,type=""){
   el.classList.remove("hidden");
 }
 function showScreen(name){
-  ["homeScreen","workoutScreen","historyScreen","caloriesScreen","connectionsScreen","profileScreen"].forEach(id=>$(id).classList.add("hidden"));
-  $(`${name}Screen`).classList.remove("hidden");
+  ["homeScreen","workoutScreen","historyScreen","caloriesScreen","connectionsScreen","profileScreen"].forEach(id=>{
+    const el=$(id);
+    if(el)el.classList.add("hidden");
+  });
+  const screen=$(`${name}Screen`);
+  if(!screen)return;
+  screen.classList.remove("hidden");
 
   document.querySelectorAll(".navbtn[data-screen]").forEach(btn=>{
     btn.classList.toggle("active",btn.dataset.screen===name);
   });
 
-  // Workout is launched from Home/Profile; Connections is managed from Profile.
   if(name==="workout"){
+    document.querySelectorAll(".navbtn[data-screen]").forEach(btn=>btn.classList.remove("active"));
     document.querySelector('.navbtn[data-screen="home"]')?.classList.add("active");
     renderCurrentWorkoutSummary();
   }
+
   if(name==="connections"){
+    document.querySelectorAll(".navbtn[data-screen]").forEach(btn=>btn.classList.remove("active"));
     document.querySelector('.navbtn[data-screen="profile"]')?.classList.add("active");
   }
 
@@ -743,22 +750,15 @@ function renderCurrentWorkoutSummary(){
   const count=$("currentWorkoutCount");
   if(!box||!list||!count)return;
 
-  const completed=workout?.exercises||[];
-  const rows=completed.map(ex=>({
-    name:ex.name,
-    sets:(ex.sets||[]).length,
-    state:"complete"
+  const rows=(workout?.exercises||[]).map(ex=>({
+    name:ex.name, sets:(ex.sets||[]).length, active:false
   }));
 
   if(activeExercise){
-    rows.push({
-      name:activeExercise.name,
-      sets:(activeExercise.sets||[]).length,
-      state:"active"
-    });
+    rows.push({name:activeExercise.name,sets:(activeExercise.sets||[]).length,active:true});
   }
 
-  if(!workout && !activeExercise){
+  if(!workout&&!activeExercise){
     box.classList.add("hidden");
     list.innerHTML="";
     count.textContent="0 exercises";
@@ -767,12 +767,11 @@ function renderCurrentWorkoutSummary(){
 
   box.classList.remove("hidden");
   count.textContent=`${rows.length} exercise${rows.length===1?"":"s"}`;
-  list.innerHTML=rows.length ? rows.map(r=>`
+  list.innerHTML=rows.length?rows.map(r=>`
     <div class="current-workout-chip">
       <span><strong>${r.name}</strong><small> • ${r.sets} set${r.sets===1?"":"s"}</small></span>
-      <span class="${r.state==="complete"?"complete":"active-now"}">${r.state==="complete"?"✓ Added":"In progress"}</span>
-    </div>`).join("") :
-    `<div class="empty">Choose a body part below, then select your first exercise.</div>`;
+      <span class="${r.active?"active-now":"complete"}">${r.active?"In progress":"✓ Added"}</span>
+    </div>`).join(""):`<div class="empty">Choose a body part and your first exercise below.</div>`;
 }
 
 function adjustWeight(setIndex,delta){
