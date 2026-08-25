@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="my-gym-icon-192.png">
   <link rel="icon" href="my-gym-icon-192.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=motivate7">
+  <link rel="stylesheet" href="styles.css?v=allprogress10">
 </head>
 <body>
   <main class="shell">
@@ -285,8 +285,8 @@
             <div class="card metric"><small>TOTAL WORKOUTS</small><strong id="progressWorkoutCount">0</strong></div>
             <div class="card metric"><small>TOTAL SETS</small><strong id="progressSetCount">0</strong></div>
             <div class="card metric"><small>EXERCISES</small><strong id="progressExerciseCount">0</strong></div>
-            <div class="card metric"><small>BEST WEIGHT</small><strong id="progressBestWeight">—</strong></div>
-            <div class="card metric"><small>BEST EST. 1RM</small><strong id="progressBestOneRm">—</strong></div>
+            <div class="card metric"><small id="progressBestPrimaryLabel">BEST WEIGHT</small><strong id="progressBestWeight">—</strong></div>
+            <div class="card metric"><small id="progressBestSecondaryLabel">BEST EST. 1RM</small><strong id="progressBestOneRm">—</strong></div>
           </div>
           <div class="card progress-controls">
             <div>
@@ -298,20 +298,20 @@
 
           <div class="graph-grid">
             <div class="card graph-card">
-              <p class="eyebrow">STRENGTH</p>
-              <h3>Weight & reps</h3>
+              <p id="strengthChartEyebrow" class="eyebrow">STRENGTH</p>
+              <h3 id="strengthChartTitle">Weight & reps</h3>
               <canvas id="strengthChart" height="240"></canvas>
             </div>
 
             <div class="card graph-card">
-              <p class="eyebrow">VOLUME</p>
-              <h3>Total work</h3>
+              <p id="volumeChartEyebrow" class="eyebrow">VOLUME</p>
+              <h3 id="volumeChartTitle">Total work</h3>
               <canvas id="volumeChart" height="240"></canvas>
             </div>
 
             <div class="card graph-card">
-              <p class="eyebrow">ESTIMATED 1RM</p>
-              <h3>Strength trend</h3>
+              <p id="oneRmChartEyebrow" class="eyebrow">ESTIMATED 1RM</p>
+              <h3 id="oneRmChartTitle">Strength trend</h3>
               <canvas id="oneRmChart" height="240"></canvas>
             </div>
 
@@ -639,6 +639,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="ui.js?v=motivate7"></script>
-  <script type="module" src="app.js?v=motivate7"></script>
+  <script type="module" src="app.js?v=allprogress10"></script>
 </body>
 </html>

@@ -1481,3 +1481,110 @@ input,textarea,select{background:var(--input)!important;color:var(--text)!import
 @media(prefers-reduced-motion:reduce){
   .firework-piece{animation:none!important;display:none}
 }
+
+
+/* ===== CARDIO-SPECIFIC ENTRY + LIGHT MODE REP VISIBILITY ===== */
+.cardio-entry-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  width:100%;
+}
+.cardio-field-card{
+  min-width:0;
+  padding:14px 10px;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--surface-2);
+  text-align:center;
+}
+.cardio-field-label{
+  display:block;
+  min-height:32px;
+  margin-bottom:8px;
+  font-size:11px;
+  font-weight:900;
+  line-height:1.2;
+  color:var(--muted);
+}
+.cardio-stepper{
+  display:grid;
+  grid-template-columns:42px minmax(54px,1fr) 42px;
+  gap:6px;
+  align-items:center;
+}
+.cardio-step{
+  width:42px;height:42px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface-3);
+  color:var(--text);
+  font-size:22px;
+  font-weight:900;
+}
+.cardio-center{
+  width:100%;
+  min-width:0;
+  height:44px;
+  padding:0 4px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface);
+  color:var(--text);
+  text-align:center;
+  font-size:16px;
+  font-weight:900;
+  -webkit-text-fill-color:var(--text);
+  opacity:1;
+}
+
+/* iPhone/light-mode: make repetition number unmistakably visible */
+:root[data-theme="light"] .rep-center,
+:root[data-theme="light"] .weight-center,
+:root[data-theme="light"] .cardio-center{
+  color:#111827 !important;
+  -webkit-text-fill-color:#111827 !important;
+  background:#ffffff !important;
+  border-color:#aeb9c8 !important;
+  opacity:1 !important;
+  font-weight:900 !important;
+}
+:root[data-theme="light"] .rep-unit-label,
+:root[data-theme="light"] .weight-unit-label,
+:root[data-theme="light"] .cardio-field-label{
+  color:#475569 !important;
+  font-weight:850 !important;
+}
+:root[data-theme="light"] .rep-step,
+:root[data-theme="light"] .round-step,
+:root[data-theme="light"] .cardio-step{
+  color:#111827 !important;
+  -webkit-text-fill-color:#111827 !important;
+  background:#eef2f7 !important;
+  border-color:#cbd5e1 !important;
+}
+@media(max-width:650px){
+  .cardio-entry-grid{grid-template-columns:1fr;gap:10px}
+  .cardio-field-card{
+    display:grid;
+    grid-template-columns:minmax(90px,.8fr) minmax(0,1.5fr);
+    align-items:center;
+    gap:10px;
+    text-align:left;
+  }
+  .cardio-field-label{min-height:0;margin:0}
+  .cardio-stepper{grid-template-columns:44px minmax(62px,1fr) 44px}
+  .cardio-step{width:44px;height:44px}
+}
+
+
+/* ===== CARDIO PROGRESS GRAPH FIX ===== */
+:root[data-theme="light"] .graph-card h3,
+:root[data-theme="light"] .progress-controls h3,
+:root[data-theme="light"] .metric strong,
+:root[data-theme="light"] .metric small{
+  color:#111827 !important;
+}
+:root[data-theme="light"] .graph-card .eyebrow{
+  color:#5b21b6 !important;
+}

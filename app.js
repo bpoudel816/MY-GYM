@@ -1238,8 +1238,72 @@ function getDefaultReps(name){
   return last&&last.reps>0?last.reps:8;
 }
 
+
+function cardioFieldConfig(name){
+  const n=String(name||"").toLowerCase();
+  if(n.includes("stair")) return [
+    {key:"stairs",label:"Stairs",step:10,default:100},
+    {key:"minutes",label:"Time (min)",step:1,default:10},
+    {key:"floors",label:"Floors",step:1,default:5}
+  ];
+  if(n.includes("treadmill")) return [
+    {key:"distance",label:"Distance (mi)",step:.1,default:1},
+    {key:"minutes",label:"Time (min)",step:1,default:15},
+    {key:"incline",label:"Incline %",step:.5,default:0}
+  ];
+  if(n.includes("elliptical")) return [
+    {key:"distance",label:"Distance (mi)",step:.1,default:1},
+    {key:"minutes",label:"Time (min)",step:1,default:15},
+    {key:"resistance",label:"Resistance",step:1,default:5}
+  ];
+  if(n.includes("recumbent")||n.includes("bike")) return [
+    {key:"distance",label:"Distance (mi)",step:.1,default:2},
+    {key:"minutes",label:"Time (min)",step:1,default:15},
+    {key:"resistance",label:"Resistance",step:1,default:5}
+  ];
+  if(n.includes("rowing")) return [
+    {key:"distance",label:"Distance (m)",step:100,default:1000},
+    {key:"minutes",label:"Time (min)",step:1,default:10},
+    {key:"resistance",label:"Resistance",step:1,default:5}
+  ];
+  return [
+    {key:"distance",label:"Distance",step:.1,default:1},
+    {key:"minutes",label:"Time (min)",step:1,default:10},
+    {key:"level",label:"Level",step:1,default:1}
+  ];
+}
+function isCardioExercise(ex=activeExercise){return ex?.category==="Cardio";}
+function cardioSessionFromLast(name){
+  const records=visibleWorkouts().slice().sort((a,b)=>(toDate(b.startedAt)||0)-(toDate(a.startedAt)||0));
+  for(const w of records){
+    const ex=(w.exercises||[]).find(x=>x.name===name && x.cardio);
+    if(ex?.cardio)return ex.cardio;
+  }
+  return null;
+}
+function adjustCardioField(key,delta){
+  activeExercise.cardio=activeExercise.cardio||{};
+  const next=Math.max(0,Number(activeExercise.cardio[key]||0)+delta);
+  activeExercise.cardio[key]=Math.round(next*100)/100;
+  renderSets();
+}
 function startExercise(category,item){
   if(!workout){workout={startedAt:new Date(),exercises:[]};startTimer();}
+  if(category==="Cardio"){
+    const fields=cardioFieldConfig(item.name);
+    const last=cardioSessionFromLast(item.name)||{};
+    const cardio={};
+    fields.forEach(f=>cardio[f.key]=Number(last[f.key]??f.default));
+    activeExercise={
+      category,name:item.name,type:item.type,independent:false,
+      weightMode:"total",cardio,sets:[]
+    };
+    $("lastWeightHint").textContent=Object.keys(last).length
+      ?"Last cardio session loaded — adjust today's numbers below."
+      :"Enter today's cardio results.";
+    renderActiveExercise();
+    return;
+  }
   const last=getLastExerciseRecord(item.name);
   const defaultWeight=getDefaultWeight(item.name);
   const defaultReps=getDefaultReps(item.name);
@@ -1259,7 +1323,7 @@ function renderActiveExercise(){
   $("categoryView").classList.add("hidden");$("exerciseView").classList.add("hidden");$("activeView").classList.remove("hidden");
   $("activeExerciseMeta").textContent=`${activeExercise.category.toUpperCase()} • ${activeExercise.type}`;
   $("activeExerciseName").textContent=activeExercise.name;
-  $("weightModeWrap").classList.toggle("hidden",!activeExercise.independent);
+  $("weightModeWrap").classList.toggle("hidden",isCardioExercise()||!activeExercise.independent);
   $("perArmBtn").classList.toggle("active",activeExercise.weightMode==="perArm");
   $("totalBtn").classList.toggle("active",activeExercise.weightMode==="total");
   renderSets();
@@ -1312,6 +1376,32 @@ function adjustReps(setIndex,delta){
 function renderSets(){
   renderCurrentWorkoutSummary();
   const list=$("setList");list.innerHTML="";
+  const addBtn=$("addSetBtn");
+  if(isCardioExercise()){
+    if(addBtn)addBtn.classList.add("hidden");
+    const fields=cardioFieldConfig(activeExercise.name);
+    const panel=document.createElement("div");
+    panel.className="cardio-entry-grid";
+    fields.forEach(f=>{
+      const value=Number(activeExercise.cardio?.[f.key]??f.default);
+      const box=document.createElement("div");
+      box.className="cardio-field-card";
+      box.innerHTML=`
+        <span class="cardio-field-label">${f.label}</span>
+        <div class="cardio-stepper">
+          <button class="cardio-step cardio-minus" type="button" aria-label="Decrease ${f.label}">−</button>
+          <input class="cardio-center" type="number" min="0" step="${f.step}" value="${value}">
+          <button class="cardio-step cardio-plus" type="button" aria-label="Increase ${f.label}">+</button>
+        </div>`;
+      box.querySelector(".cardio-minus").addEventListener("click",()=>adjustCardioField(f.key,-f.step));
+      box.querySelector(".cardio-plus").addEventListener("click",()=>adjustCardioField(f.key,f.step));
+      box.querySelector("input").addEventListener("input",e=>activeExercise.cardio[f.key]=Math.max(0,Number(e.target.value||0)));
+      panel.appendChild(box);
+    });
+    list.appendChild(panel);
+    return;
+  }
+  if(addBtn)addBtn.classList.remove("hidden");
   activeExercise.sets.forEach((set,index)=>{
     const row=document.createElement("div");row.className="set-row";
     row.innerHTML=`
@@ -1338,7 +1428,6 @@ function renderSets(){
     row.querySelector(".plus").addEventListener("click",()=>adjustWeight(index,5));
     row.querySelector(".rep-minus").addEventListener("click",()=>adjustReps(index,-1));
     row.querySelector(".rep-plus").addEventListener("click",()=>adjustReps(index,1));
-
     const inputs=row.querySelectorAll("input");
     inputs[0].addEventListener("input",e=>set.weight=Number(e.target.value||0));
     inputs[1].addEventListener("input",e=>set.reps=Number(e.target.value||0));
@@ -1347,12 +1436,21 @@ function renderSets(){
   });
 }
 $("addSetBtn").addEventListener("click",()=>{
+  if(isCardioExercise())return;
   const last=activeExercise.sets[activeExercise.sets.length-1]||{weight:30,reps:8};
   activeExercise.sets.push({weight:Number(last.weight||30),reps:Number(last.reps||8),done:false});
   renderSets();
 });
 $("removeCurrentExerciseBtn").addEventListener("click",()=>{activeExercise=null;showCategoryView()});
 $("finishThisExerciseBtn").addEventListener("click",()=>{
+  if(isCardioExercise()){
+    const values=Object.values(activeExercise.cardio||{}).map(Number);
+    if(!values.some(v=>v>0)){showToast("Enter your cardio results first.","error");return}
+    workout.exercises.push({...activeExercise,completed:true,sets:[]});
+    activeExercise=null;showCategoryView();
+    showToast("Cardio finished. Choose the next exercise or finish the whole workout.","success");
+    return;
+  }
   const entered=activeExercise.sets.filter(s=>Number(s.weight||0)>0||Number(s.reps||0)>0);
   if(!entered.length){showToast("Enter at least one set first.","error");return}
   workout.exercises.push({...activeExercise,completed:true,sets:entered.map(s=>({weight:Number(s.weight||0),reps:Number(s.reps||0),done:Boolean(s.done)}))});
@@ -1366,7 +1464,7 @@ $("finishWholeWorkoutBtn").addEventListener("click",async()=>{
     return;
   }
 
-  if(!workout||!workout.exercises.length||workout.exercises.every(ex=>!(ex.sets||[]).length)){
+  if(!workout||!workout.exercises.length||workout.exercises.every(ex=>!(ex.sets||[]).length&&!ex.cardio)){
     showToast("A workout needs at least one completed exercise with a set.","error");
     return;
   }
@@ -1700,7 +1798,7 @@ function destroyChart(name){
 function renderProgressControls(){
   const select=$("progressExerciseSelect");
   if(!select)return;
-  const names=[...new Set(visibleWorkouts().flatMap(w=>(w.exercises||[]).map(ex=>ex.name)).filter(Boolean))].sort();
+  const names=[...new Set(workoutsCache.flatMap(w=>(Array.isArray(w.exercises)?w.exercises:[]).map(ex=>ex?.name)).filter(Boolean))].sort();
   const current=select.value;
   select.innerHTML="";
   if(!names.length){
@@ -1722,23 +1820,27 @@ $("progressExerciseSelect").addEventListener("change",()=>{
   updateSelectedExerciseMetrics();
 });
 
-function exerciseHistory(name){
+function selectedExerciseIsCardio(name){
+  return workoutsCache.some(w=>(w.exercises||[]).some(ex=>ex.name===name && Boolean(ex.cardio)));
+}
+
+function strengthExerciseHistory(name){
   const rows=[];
-  visibleWorkouts().slice().reverse().forEach(w=>{
+  workoutsCache.slice().reverse().forEach(w=>{
     const d=toDate(w.startedAt);
-    (w.exercises||[]).filter(ex=>ex.name===name).forEach(ex=>{
-      const sets=ex.sets||[];
+    (w.exercises||[]).filter(ex=>ex.name===name && !ex.cardio).forEach(ex=>{
+      const sets=Array.isArray(ex.sets)?ex.sets.filter(Boolean):[];
       if(!sets.length)return;
-      const maxSet=sets.reduce((best,s)=>Number(s.weight||0)>Number(best.weight||0)?s:best,sets[0]);
-      const totalVolume=sets.reduce((sum,s)=>sum+(Number(s.weight||0)*Number(s.reps||0)),0);
+      const maxSet=sets.reduce((best,s)=>Number(s.weight??s.lbs??0)>Number(best.weight??best.lbs??0)?s:best,sets[0]);
+      const totalVolume=sets.reduce((sum,s)=>sum+(Number(s.weight??s.lbs??0)*Number(s.reps??s.rep??0)),0);
       const best1rm=Math.max(...sets.map(s=>{
-        const wt=Number(s.weight||0),reps=Number(s.reps||0);
+        const wt=Number(s.weight??s.lbs??0),reps=Number(s.reps??s.rep??0);
         return wt>0?wt*(1+reps/30):0;
       }));
       rows.push({
         date:d,
-        weight:Number(maxSet.weight||0),
-        reps:Number(maxSet.reps||0),
+        weight:Number(maxSet.weight??maxSet.lbs??0),
+        reps:Number(maxSet.reps??maxSet.rep??0),
         volume:totalVolume,
         oneRm:best1rm
       });
@@ -1747,23 +1849,60 @@ function exerciseHistory(name){
   return rows;
 }
 
+function cardioProgressFields(name){
+  return cardioFieldConfig(name);
+}
+
+function cardioExerciseHistory(name){
+  const fields=cardioProgressFields(name);
+  const rows=[];
+  workoutsCache.slice().reverse().forEach(w=>{
+    const d=toDate(w.startedAt);
+    (w.exercises||[]).filter(ex=>ex.name===name && ex.cardio).forEach(ex=>{
+      const row={date:d};
+      fields.forEach(f=>row[f.key]=Number(ex.cardio?.[f.key]||0));
+      rows.push(row);
+    });
+  });
+  return rows;
+}
+
+function exerciseHistory(name){
+  return selectedExerciseIsCardio(name)?cardioExerciseHistory(name):strengthExerciseHistory(name);
+}
+
 
 function updateSelectedExerciseMetrics(){
   const select=$("progressExerciseSelect");
   const name=select?.value||"";
+  const cardio=name&&selectedExerciseIsCardio(name);
   const hist=name?exerciseHistory(name):[];
-  const unit=weightUnitLabel();
 
+  if(cardio){
+    const fields=cardioProgressFields(name);
+    const f1=fields[0],f2=fields[1];
+    if($("progressBestPrimaryLabel"))$("progressBestPrimaryLabel").textContent=`BEST ${f1.label.toUpperCase()}`;
+    if($("progressBestSecondaryLabel"))$("progressBestSecondaryLabel").textContent=`BEST ${f2.label.toUpperCase()}`;
+    const best1=hist.length?Math.max(...hist.map(r=>Number(r[f1.key])||0)):0;
+    const best2=hist.length?Math.max(...hist.map(r=>Number(r[f2.key])||0)):0;
+    if($("progressBestWeight"))$("progressBestWeight").textContent=best1?formatNumber(best1):"—";
+    if($("progressBestOneRm"))$("progressBestOneRm").textContent=best2?formatNumber(best2):"—";
+    return;
+  }
+
+  if($("progressBestPrimaryLabel"))$("progressBestPrimaryLabel").textContent="BEST WEIGHT";
+  if($("progressBestSecondaryLabel"))$("progressBestSecondaryLabel").textContent="BEST EST. 1RM";
+  const unit=weightUnitLabel();
   if($("progressBestWeight")){
     const best=hist.length?Math.max(...hist.map(r=>Number(r.weight)||0)):0;
     $("progressBestWeight").textContent=best?`${formatNumber(best)} ${unit}`:"—";
   }
-
   if($("progressBestOneRm")){
     const best=hist.length?Math.max(...hist.map(r=>Number(r.oneRm)||0)):0;
     $("progressBestOneRm").textContent=best?`${formatNumber(best)} ${unit}`:"—";
   }
 }
+
 
 function chartDefaults(){
   return {
@@ -1782,6 +1921,7 @@ function renderAllCharts(){
   if(typeof Chart==="undefined")return;
   const select=$("progressExerciseSelect");
   const name=select?.value||"";
+  const cardio=name&&selectedExerciseIsCardio(name);
   const hist=name?exerciseHistory(name):[];
   const labels=hist.map(r=>r.date?r.date.toLocaleDateString(undefined,{month:"short",day:"numeric"}):"");
 
@@ -1791,31 +1931,73 @@ function renderAllCharts(){
   destroyChart("bodyWeight");
   destroyChart("frequency");
 
-  if($("strengthChart")){
-    charts.strength=new Chart($("strengthChart"),{
-      type:"line",
-      data:{labels,datasets:[
-        {label:"Weight",data:hist.map(r=>r.weight),tension:.3},
-        {label:"Reps",data:hist.map(r=>r.reps),tension:.3}
-      ]},
-      options:chartDefaults()
-    });
-  }
+  if(cardio){
+    const fields=cardioProgressFields(name);
+    const f1=fields[0],f2=fields[1],f3=fields[2];
 
-  if($("volumeChart")){
-    charts.volume=new Chart($("volumeChart"),{
-      type:"bar",
-      data:{labels,datasets:[{label:"Volume",data:hist.map(r=>r.volume)}]},
-      options:chartDefaults()
-    });
-  }
+    if($("strengthChartEyebrow"))$("strengthChartEyebrow").textContent="CARDIO";
+    if($("strengthChartTitle"))$("strengthChartTitle").textContent=`${f1.label} & ${f2.label}`;
+    if($("volumeChartEyebrow"))$("volumeChartEyebrow").textContent="CARDIO";
+    if($("volumeChartTitle"))$("volumeChartTitle").textContent=f3.label;
+    if($("oneRmChartEyebrow"))$("oneRmChartEyebrow").textContent="SESSIONS";
+    if($("oneRmChartTitle"))$("oneRmChartTitle").textContent="Session trend";
 
-  if($("oneRmChart")){
-    charts.oneRm=new Chart($("oneRmChart"),{
-      type:"line",
-      data:{labels,datasets:[{label:"Estimated 1RM",data:hist.map(r=>Math.round(r.oneRm*10)/10),tension:.3}]},
-      options:chartDefaults()
-    });
+    if($("strengthChart")){
+      charts.strength=new Chart($("strengthChart"),{
+        type:"line",
+        data:{labels,datasets:[
+          {label:f1.label,data:hist.map(r=>r[f1.key]),tension:.3},
+          {label:f2.label,data:hist.map(r=>r[f2.key]),tension:.3}
+        ]},
+        options:chartDefaults()
+      });
+    }
+    if($("volumeChart")){
+      charts.volume=new Chart($("volumeChart"),{
+        type:"bar",
+        data:{labels,datasets:[{label:f3.label,data:hist.map(r=>r[f3.key])}]},
+        options:chartDefaults()
+      });
+    }
+    if($("oneRmChart")){
+      charts.oneRm=new Chart($("oneRmChart"),{
+        type:"line",
+        data:{labels,datasets:[{label:"Session",data:hist.map((_,i)=>i+1),tension:.3}]},
+        options:chartDefaults()
+      });
+    }
+  }else{
+    if($("strengthChartEyebrow"))$("strengthChartEyebrow").textContent="STRENGTH";
+    if($("strengthChartTitle"))$("strengthChartTitle").textContent="Weight & reps";
+    if($("volumeChartEyebrow"))$("volumeChartEyebrow").textContent="VOLUME";
+    if($("volumeChartTitle"))$("volumeChartTitle").textContent="Total work";
+    if($("oneRmChartEyebrow"))$("oneRmChartEyebrow").textContent="ESTIMATED 1RM";
+    if($("oneRmChartTitle"))$("oneRmChartTitle").textContent="Strength trend";
+
+    if($("strengthChart")){
+      charts.strength=new Chart($("strengthChart"),{
+        type:"line",
+        data:{labels,datasets:[
+          {label:"Weight",data:hist.map(r=>r.weight),tension:.3},
+          {label:"Reps",data:hist.map(r=>r.reps),tension:.3}
+        ]},
+        options:chartDefaults()
+      });
+    }
+    if($("volumeChart")){
+      charts.volume=new Chart($("volumeChart"),{
+        type:"bar",
+        data:{labels,datasets:[{label:"Volume",data:hist.map(r=>r.volume)}]},
+        options:chartDefaults()
+      });
+    }
+    if($("oneRmChart")){
+      charts.oneRm=new Chart($("oneRmChart"),{
+        type:"line",
+        data:{labels,datasets:[{label:"Estimated 1RM",data:hist.map(r=>Math.round(r.oneRm*10)/10),tension:.3}]},
+        options:chartDefaults()
+      });
+    }
   }
 
   if($("bodyWeightChart")){
@@ -1849,17 +2031,20 @@ function renderAllCharts(){
 }
 
 
-
 function workoutSetCount(w){
   return (w.exercises||[]).reduce((sum,ex)=>sum+(ex.sets?.length||0),0);
 }
-
+function workoutHasRecordedExercise(w){
+  return Array.isArray(w?.exercises) && w.exercises.length>0;
+}
 function isEmptyWorkout(w){
-  return !(w.exercises||[]).length || workoutSetCount(w)===0;
+  return !workoutHasRecordedExercise(w);
 }
 
 function visibleWorkouts(){
-  return workoutsCache.filter(w=>!isEmptyWorkout(w));
+  // Progress must include every saved workout that contains an exercise.
+  // This preserves current strength/cardio sessions AND older/Track IT imported history.
+  return workoutsCache.filter(w=>Array.isArray(w?.exercises) && w.exercises.length>0);
 }
 
 function compactSetText(exercise){
@@ -1869,8 +2054,11 @@ function compactSetText(exercise){
     if(c.time)parts.push(c.time);
     else if(Number(c.timeMinutes||0)>0||Number(c.timeSeconds||0)>0)parts.push(`${Number(c.timeMinutes||0)}:${String(Number(c.timeSeconds||0)).padStart(2,"0")}`);
     if(c.distance)parts.push(`${c.distance} distance`);
-    if(c.incline!=="")parts.push(`incline ${c.incline}`);
+    if(c.minutes)parts.push(`${c.minutes} min`);
+    if(c.incline!==undefined&&c.incline!=="")parts.push(`incline ${c.incline}`);
     if(c.stairs)parts.push(`${c.stairs} stairs`);
+    if(c.floors)parts.push(`${c.floors} floors`);
+    if(c.resistance)parts.push(`resistance ${c.resistance}`);
     if(c.level)parts.push(`level ${c.level}`);
     return parts.join(" • ")||"Cardio";
   }
