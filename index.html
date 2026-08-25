@@ -30,7 +30,7 @@
           <strong>MY GYM</strong>
         </span>
       </a>
-      <span class="day-pill">DAY 2</span>
+      <span class="day-pill">WORKOUT UX</span>
     </header>
 
     <section id="authView" class="auth-layout">
@@ -52,10 +52,7 @@
         </div>
 
         <section id="loginPanel" class="panel active">
-          <div class="panel-heading">
-            <p class="eyebrow">WELCOME BACK</p>
-            <h2>Continue your progress</h2>
-          </div>
+          <div class="panel-heading"><p class="eyebrow">WELCOME BACK</p><h2>Continue your progress</h2></div>
           <form id="loginForm">
             <label>Email<input id="loginEmail" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
             <label>Password<input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" required /></label>
@@ -65,10 +62,7 @@
         </section>
 
         <section id="registerPanel" class="panel">
-          <div class="panel-heading">
-            <p class="eyebrow">NEW TO MY GYM?</p>
-            <h2>Create your account</h2>
-          </div>
+          <div class="panel-heading"><p class="eyebrow">NEW TO MY GYM?</p><h2>Create your account</h2></div>
           <form id="registerForm">
             <label>Display name<input id="registerName" type="text" autocomplete="name" maxlength="40" placeholder="Your name" required /></label>
             <label>Email<input id="registerEmail" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
@@ -78,11 +72,7 @@
         </section>
 
         <section id="resetPanel" class="panel">
-          <div class="panel-heading">
-            <p class="eyebrow">PASSWORD RESET</p>
-            <h2>Reset your password</h2>
-            <p class="muted small">Enter your MY GYM email. Firebase will send you a reset link.</p>
-          </div>
+          <div class="panel-heading"><p class="eyebrow">PASSWORD RESET</p><h2>Reset your password</h2><p class="muted small">Enter your MY GYM email. Firebase will send you a reset link.</p></div>
           <form id="resetForm">
             <label>Email<input id="resetEmail" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
             <button class="primary" type="submit">Send reset email <span>→</span></button>
@@ -104,22 +94,14 @@
 
       <section id="homeScreen" class="app-screen">
         <div class="welcome-card">
-          <div>
-            <p class="eyebrow">MY GYM ACCOUNT</p>
-            <h2>Welcome, <span id="userName">Athlete</span>.</h2>
-            <p id="userEmail" class="muted"></p>
-          </div>
+          <div><p class="eyebrow">MY GYM ACCOUNT</p><h2>Welcome, <span id="userName">Athlete</span>.</h2><p id="userEmail" class="muted"></p></div>
           <button id="logoutBtn" class="ghost" type="button">Log out</button>
         </div>
 
         <div class="dashboard-grid">
           <article class="start-card">
             <div class="orb">MG</div>
-            <div>
-              <p class="eyebrow">TODAY</p>
-              <h3>Ready to train?</h3>
-              <p>Start a workout, add exercises and sets, then save everything to your cloud account.</p>
-            </div>
+            <div><p class="eyebrow">TODAY</p><h3>Ready to train?</h3><p>Start a workout, complete exercises one by one, then end the overall workout when you are done.</p></div>
             <button id="startWorkoutBtn" class="primary" type="button">Start workout <span>→</span></button>
           </article>
           <article class="metric"><span>WORKOUTS</span><strong id="workoutCount">0</strong><small>Saved</small></article>
@@ -133,12 +115,12 @@
 
       <section id="workoutScreen" class="app-screen hidden">
         <div id="workoutLanding">
-          <div class="page-heading"><div><p class="eyebrow">WORKOUT</p><h2>Choose a body part</h2><p class="muted">Add exercises from any category during the same workout.</p></div></div>
+          <div class="page-heading"><div><p class="eyebrow">WORKOUT</p><h2>Choose a body part</h2><p class="muted">Choose a category, then select a machine or exercise.</p></div></div>
           <div id="categoryGrid" class="category-grid"></div>
         </div>
 
         <div id="exercisePicker" class="hidden">
-          <div class="page-heading">
+          <div class="page-heading exercise-picker-heading">
             <button id="backToCategoriesBtn" class="ghost compact" type="button">← Body parts</button>
             <div><p class="eyebrow" id="selectedCategoryLabel">CATEGORY</p><h2>Choose an exercise</h2></div>
           </div>
@@ -146,15 +128,22 @@
         </div>
 
         <div id="activeWorkout" class="hidden">
-          <div class="active-workout-head">
-            <div><p class="eyebrow">ACTIVE WORKOUT</p><h2 id="activeWorkoutTitle">Workout</h2><p class="muted" id="workoutTimer">00:00</p></div>
-            <button id="cancelWorkoutBtn" class="danger-ghost" type="button">Cancel</button>
+          <div class="workout-topbar">
+            <div class="workout-title-block">
+              <p class="eyebrow">ACTIVE WORKOUT</p>
+              <div class="active-title-row">
+                <h2 id="activeWorkoutTitle">Workout</h2>
+                <span id="workoutTimer" class="timer-pill">00:00</span>
+              </div>
+              <p class="muted">Finish this exercise when its sets are done. You will return to body parts automatically.</p>
+            </div>
+            <div class="top-workout-actions">
+              <button id="finishWorkoutBtn" class="finish-workout-top" type="button">Finish Whole Workout</button>
+              <button id="cancelWorkoutBtn" class="danger-ghost" type="button">Cancel</button>
+            </div>
           </div>
+
           <div id="exerciseSessionList" class="session-list"></div>
-          <div class="workout-actions">
-            <button id="addExerciseBtn" class="ghost" type="button">+ Add exercise</button>
-            <button id="finishWorkoutBtn" class="primary" type="button">Finish workout <span>✓</span></button>
-          </div>
         </div>
       </section>
 
@@ -173,8 +162,16 @@
       </section>
     </section>
 
+    <div id="workoutEditor" class="editor-overlay hidden">
+      <div class="editor-card">
+        <div class="editor-head"><div><p class="eyebrow">EDIT SAVED WORKOUT</p><h2>Edit workout</h2></div><button id="closeEditorBtn" class="ghost compact" type="button">Close</button></div>
+        <label>Workout date & time<input id="editWorkoutDate" type="datetime-local"></label>
+        <div id="editExerciseList" class="session-list"></div>
+        <div class="editor-actions"><button id="editorAddExerciseBtn" class="ghost" type="button">+ Add exercise</button><button id="saveWorkoutEditsBtn" class="finish-workout-top" type="button">Save Changes</button></div>
+      </div>
+    </div>
     <div id="toast" class="toast hidden"></div>
-    <footer>MY GYM • Day 2 cloud workout engine</footer>
+    <footer>MY GYM • Workout UX upgrade</footer>
   </main>
   <script type="module" src="app.js"></script>
 </body>
