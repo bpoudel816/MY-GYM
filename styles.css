@@ -940,3 +940,154 @@ body{background:radial-gradient(circle at 10% -10%,#7c46ff22,transparent 30%),ra
   .trackit-preview-grid{grid-template-columns:1fr 1fr}
   .import-actions .secondary{width:100%;min-height:50px}
 }
+
+
+/* ===== MY GYM VISUAL THEME 4 ===== */
+:root,
+:root[data-theme="dark"]{
+  --app-bg:#050912;
+  --surface:#101927;
+  --surface-2:#09131f;
+  --surface-3:#172333;
+  --text:#f7f9fd;
+  --muted:#8f9bb0;
+  --border:#ffffff17;
+  --input:#07101a;
+  --shadow:#0006;
+}
+:root[data-theme="light"]{
+  --app-bg:#f3f6fa;
+  --surface:#ffffff;
+  --surface-2:#f5f7fb;
+  --surface-3:#edf1f7;
+  --text:#111722;
+  --muted:#657084;
+  --border:#1b263719;
+  --input:#ffffff;
+  --shadow:#26354b18;
+}
+html,body{background:var(--app-bg)!important;color:var(--text)!important}
+body{
+  background:
+    radial-gradient(circle at 7% -4%,#724dff18,transparent 27%),
+    radial-gradient(circle at 100% 0,#20bcff10,transparent 25%),
+    var(--app-bg)!important;
+}
+.card,.panel,.exercise,.category,.workout-card,.connection-row,.import-card,.theme-card,.calendar-shell,.progress-card{
+  background:var(--surface)!important;
+  color:var(--text)!important;
+  border-color:var(--border)!important;
+}
+.muted,.mini{color:var(--muted)!important}
+input,textarea,select{background:var(--input)!important;color:var(--text)!important;border-color:var(--border)!important}
+
+/* Bubble body parts */
+.category{
+  border-radius:24px!important;
+  padding:14px!important;
+  overflow:hidden;
+  transition:transform .18s ease,border-color .18s ease;
+}
+.category-art{
+  min-height:140px!important;
+  display:grid!important;
+  place-items:center!important;
+  background:transparent!important;
+}
+.body-bubble{
+  width:136px;height:136px;border-radius:50%;
+  display:grid;place-items:center;
+  filter:drop-shadow(0 14px 20px var(--shadow));
+}
+.body-bubble svg{width:132px;height:120px}
+.category-copy{text-align:center}
+.category-copy strong{font-size:15px}
+
+/* Exercise art */
+.exercise{border-radius:21px!important;overflow:hidden}
+.machine-visual{
+  min-height:165px!important;
+  background:radial-gradient(circle at 70% 10%,#735cff18,transparent 46%),var(--surface-2)!important;
+}
+.machine-visual svg{height:152px!important;filter:drop-shadow(0 10px 12px var(--shadow))}
+.exercise-signature text{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.03em}
+.machine-badge{background:var(--surface-3)!important;color:var(--text)!important;border-color:var(--border)!important}
+
+/* Theme selector */
+.theme-card{
+  margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:18px;
+}
+.theme-card h3{margin:3px 0 5px}
+.theme-toggle{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:220px}
+.theme-choice{
+  min-height:48px;border-radius:15px;border:1px solid var(--border);
+  background:var(--surface-2);color:var(--muted);font-weight:900;
+}
+.theme-choice.active{
+  color:#fff;background:linear-gradient(135deg,#774cff,#b237dd);
+  border-color:#a987ff;box-shadow:0 7px 18px #7549ff30;
+}
+
+/* Calendar colors */
+.calendar-day.workout-day{
+  background:#22c55e!important;color:#fff!important;border-color:#6bec94!important;
+}
+.calendar-day.rest-day{
+  background:#2587f8!important;color:#fff!important;border-color:#66adff!important;
+}
+.calendar-day.missed-day{
+  background:#ef4444!important;color:#fff!important;border-color:#ff7777!important;
+}
+
+/* Light mode */
+:root[data-theme="light"] .nav{
+  background:#ffffffef!important;border-color:#18233918!important;box-shadow:0 10px 28px #26364c1c;
+}
+:root[data-theme="light"] .navbtn{color:#667085!important}
+:root[data-theme="light"] .navbtn.active{color:#fff!important}
+:root[data-theme="light"] .current-workout-summary,
+:root[data-theme="light"] .trackit-preview,
+:root[data-theme="light"] .current-workout-chip,
+:root[data-theme="light"] .set-row{
+  background:var(--surface-2)!important;border-color:var(--border)!important;
+}
+
+/* iPhone safe sizing */
+@media(max-width:650px){
+  body{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+  .nav{bottom:calc(10px + env(safe-area-inset-bottom))}
+  .navbtn{min-height:60px;font-size:11px}
+  .category-grid{grid-template-columns:1fr 1fr!important}
+  .category{padding:10px!important}
+  .category-art{min-height:115px!important}
+  .body-bubble{width:110px;height:110px}
+  .body-bubble svg{width:108px;height:100px}
+  .machine-visual{min-height:148px!important}
+  .machine-visual svg{height:138px!important}
+  .theme-card{display:block}
+  .theme-toggle{width:100%;min-width:0;margin-top:12px}
+  .theme-choice{min-height:54px}
+
+  .set-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 52px!important;
+    gap:11px!important;
+    padding:14px!important;
+  }
+  .set-row>div:nth-child(2),.set-row>div:nth-child(3){
+    grid-column:1/-1;min-width:0;
+  }
+  .set-row>.check{grid-column:2;grid-row:1}
+  .weight-stepper,.rep-stepper{
+    display:grid!important;
+    grid-template-columns:52px minmax(80px,1fr) 52px!important;
+    gap:10px;width:100%;min-width:0;
+  }
+  .round-step,.rep-step{
+    width:52px!important;height:52px!important;min-width:52px!important;
+    border-radius:50%!important;font-size:24px;
+  }
+  .weight-center,.rep-center{
+    width:100%!important;min-width:0!important;height:52px!important;font-size:20px!important;text-align:center;
+  }
+}

@@ -98,6 +98,62 @@ const EXERCISES = {
 let user=null, workout=null, activeExercise=null, timerHandle=null, currentDisplayName="Athlete", myFriendCode="";
 let workoutsCache=[], calendarStatuses={}, bodyWeightCache=[], mealCache=[], calorieTarget=0, calorieSelectedDate=new Date(), calendarCursor=new Date();
 let selectedCalendarKey=null, editingWorkout=null;
+let calendarTrackingStart=null;
+let currentTheme="dark";
+
+
+function applyTheme(theme){
+  currentTheme=theme==="light"?"light":"dark";
+  document.documentElement.dataset.theme=currentTheme;
+  $("themeDarkBtn")?.classList.toggle("active",currentTheme==="dark");
+  $("themeLightBtn")?.classList.toggle("active",currentTheme==="light");
+}
+
+async function saveTheme(theme){
+  applyTheme(theme);
+  if(!user)return;
+  try{
+    await setDoc(doc(db,"users",user.uid,"settings","appearance"),{
+      theme:currentTheme,
+      updatedAt:serverTimestamp()
+    },{merge:true});
+    showToast(`${currentTheme==="light"?"Light":"Dark"} theme saved.`,"success");
+  }catch(err){
+    console.error("Theme save failed:",err);
+    showToast("Theme changed, but cloud save failed.","error");
+  }
+}
+
+async function loadTheme(){
+  if(!user){applyTheme("dark");return}
+  try{
+    const snap=await getDoc(doc(db,"users",user.uid,"settings","appearance"));
+    applyTheme(snap.exists()?snap.data().theme:"dark");
+  }catch(_){
+    applyTheme("dark");
+  }
+}
+
+async function ensureCalendarTrackingStart(){
+  if(!user)return;
+  const ref=doc(db,"users",user.uid,"settings","calendar");
+  try{
+    const snap=await getDoc(ref);
+    if(snap.exists() && snap.data().trackingStart){
+      calendarTrackingStart=String(snap.data().trackingStart);
+      return;
+    }
+    const today=dateKey(new Date());
+    calendarTrackingStart=today;
+    await setDoc(ref,{
+      trackingStart:today,
+      createdAt:serverTimestamp()
+    },{merge:true});
+  }catch(err){
+    console.error("Calendar tracking start failed:",err);
+    calendarTrackingStart=dateKey(new Date());
+  }
+}
 
 function showMessage(text, success=false) {
   $("authMessage").textContent=text;
@@ -144,6 +200,9 @@ document.querySelectorAll(".navbtn[data-screen]").forEach(btn=>btn.addEventListe
 $("profileWorkoutBtn")?.addEventListener("click",()=>showScreen("workout"));
 $("profileConnectionsBtn")?.addEventListener("click",()=>showScreen("connections"));
 
+$("themeDarkBtn")?.addEventListener("click",()=>saveTheme("dark"));
+$("themeLightBtn")?.addEventListener("click",()=>saveTheme("light"));
+
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
   try{await signInWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value)}
@@ -187,6 +246,8 @@ onAuthStateChanged(auth,async currentUser=>{
   $("userName").textContent=name;$("profileName").textContent=name;
   $("userEmail").textContent=currentUser.email||"";$("profileEmail").textContent=currentUser.email||"";
   $("authView").classList.add("hidden");$("appView").classList.remove("hidden");
+  await loadTheme();
+  await ensureCalendarTrackingStart();
   showScreen("home");
   await loadAllData();
   await ensureFriendCode();
@@ -194,18 +255,41 @@ onAuthStateChanged(auth,async currentUser=>{
 
 
 function categoryArtwork(category){
-  const colors={Chest:["#ff4f68","#ff7a59"],Back:["#2f7dff","#39c2ff"],Shoulders:["#ff9b2f","#ffc247"],Arms:["#d65cff","#ff66b2"],Legs:["#38d58b","#8ee650"],Core:["#ff7b39","#ffb02e"],Cardio:["#25cbe5","#4df0c3"]};
-  const [a,b]=colors[category]||colors.Chest;
-  const icons={
-    Chest:`<path d="M35 72c12-26 31-39 55-30 24-9 43 4 55 30-15 20-34 31-55 34-21-3-40-14-55-34z"/><path d="M90 43v55M55 64l35 19 35-19"/>`,
-    Back:`<path d="M38 73c11-25 30-38 52-31 22-7 41 6 52 31-14 19-31 30-52 34-21-4-38-15-52-34z"/><path d="M90 43v56M55 58l35 24 35-24M57 82l33 13 33-13"/>`,
-    Shoulders:`<circle cx="90" cy="34" r="13"/><path d="M34 78c12-20 30-30 56-30s44 10 56 30c-14 12-31 18-48 20l-8-18-8 18c-17-2-34-8-48-20z"/>`,
-    Arms:`<path d="M39 80c10-29 24-43 39-35 8 4 10 13 6 20 12-4 23 0 29 9 7 11 1 24-14 30-24 10-48 1-60-24z"/><path d="M141 80c-10-29-24-43-39-35-8 4-10 13-6 20 12-4 23 0 29 9 7 11 1 24-14 30-24 10-48 1-60-24z" opacity=".75"/>`,
-    Legs:`<path d="M64 18h22l8 38-14 48H55l14-49zM116 18H94l-8 38 14 48h25l-14-49z"/>`,
-    Core:`<path d="M63 18h54l7 21-12 64H68L56 39z"/><path d="M90 23v75M70 44h40M69 66h42M71 86h38"/>`,
-    Cardio:`<path d="M38 63c0-18 13-31 31-31 10 0 18 4 21 11 3-7 11-11 21-11 18 0 31 13 31 31 0 24-27 37-52 48-25-11-52-24-52-48z"/><path d="M49 67h22l8-19 13 37 10-25 7 7h22"/>`
+  const colors={
+    Chest:["#8b46ff","#d43cff"],
+    Back:["#1687ff","#34c5ff"],
+    Shoulders:["#ff8516","#ffc43d"],
+    Arms:["#e52f91","#ff62ba"],
+    Legs:["#4ac90f","#8be642"],
+    Core:["#ff3d35","#ff7938"],
+    Cardio:["#00bbc9","#32e5dc"]
   };
-  return `<svg viewBox="0 0 180 110" aria-hidden="true"><defs><linearGradient id="g-${category}" x1="0" x2="1"><stop stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><g fill="url(#g-${category})" stroke="#ffffff" stroke-opacity=".45" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">${icons[category]||icons.Chest}</g></svg>`;
+  const [a,b]=colors[category]||colors.Chest;
+
+  const icons={
+    Chest:`<path d="M48 43c8-12 18-18 31-18h22c13 0 23 6 31 18l11 17-17 12-12-16-5 38H71l-5-38-12 16-17-12z"/><path d="M73 45c5 8 11 12 17 12s12-4 17-12M90 30v55M70 66c6-4 13-6 20-6s14 2 20 6"/>`,
+    Back:`<path d="M50 39c9-11 19-16 31-16h18c12 0 22 5 31 16l13 20-17 11-12-14-8 40H74l-8-40-12 14-17-11z"/><path d="M90 29v62M69 48l21 16 21-16M70 71l20 13 20-13"/>`,
+    Shoulders:`<circle cx="90" cy="30" r="12"/><path d="M45 61c11-17 26-25 45-25s34 8 45 25l-13 14-19-11-5 31H82l-5-31-19 11z"/><path d="M57 61c8-9 19-14 33-14s25 5 33 14"/>`,
+    Arms:`<path d="M47 77c8-25 19-39 34-39 8 0 13 5 14 12 2-2 5-4 9-4 12 0 23 12 25 28-9 15-23 23-41 23-18 0-32-7-41-20z"/><path d="M72 57c8 3 14 9 18 18M90 75c6-7 14-11 23-11M61 82c14 5 33 5 50-1"/>`,
+    Legs:`<path d="M66 20h22l2 30-9 48H56l14-49zM114 20H92l-2 30 9 48h25l-14-49z"/><path d="M72 51h16M92 51h16M62 77h21M97 77h21"/>`,
+    Core:`<path d="M67 20h46l8 19-10 59H69L59 39z"/><path d="M90 24v69M70 44h40M68 63h44M70 82h40"/>`,
+    Cardio:`<path d="M39 60c0-17 12-29 29-29 10 0 18 4 22 12 4-8 12-12 22-12 17 0 29 12 29 29 0 22-24 35-51 48-27-13-51-26-51-48z"/><path d="M48 64h21l8-18 14 37 11-24 8 9h21"/>`
+  };
+
+  return `<div class="body-bubble">
+    <svg viewBox="0 0 180 120" aria-hidden="true">
+      <defs>
+        <linearGradient id="bubble-${category}" x1="0" y1="0" x2="1" y2="1">
+          <stop stop-color="${a}"/><stop offset="1" stop-color="${b}"/>
+        </linearGradient>
+      </defs>
+      <circle cx="90" cy="60" r="51" fill="url(#bubble-${category})" opacity=".28"/>
+      <circle cx="90" cy="60" r="48" fill="none" stroke="${a}" stroke-width="3"/>
+      <g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+        ${icons[category]||icons.Chest}
+      </g>
+    </svg>
+  </div>`;
 }
 function machineKind(name){
   const n=name.toLowerCase();
@@ -246,6 +330,36 @@ function machineKind(name){
   return "generic";
 }
 
+function exerciseShortTag(name){
+  const map={
+    "Chest Press":"CP","Incline Chest Press":"INC","Decline Chest Press":"DEC",
+    "Hammer Strength MTS Chest Press":"MTS","Hammer Strength MTS Incline Press":"MTS-I",
+    "Hammer Strength MTS Decline Press":"MTS-D","Hammer Strength Plate-Loaded Chest Press":"PL-C",
+    "Hammer Strength Plate-Loaded Incline Press":"PL-I","Pec Deck / Chest Fly":"PEC","Cable Fly":"CBL-F",
+    "Smith Machine Bench Press":"SMITH","Dumbbell Bench Press":"DB",
+    "Lat Pulldown":"LAT","Seated Row":"S-ROW","High Row":"H-ROW",
+    "Hammer Strength MTS High Row":"MTS-H","Hammer Strength MTS Front Pulldown":"MTS-P",
+    "Hammer Strength MTS Iso-Lateral Row":"ISO","Hammer Strength Plate-Loaded High Row":"PL-H",
+    "Hammer Strength Plate-Loaded Low Row":"PL-L","Assisted Pull-Up":"PULL","Cable Row":"C-ROW",
+    "Straight-Arm Pulldown":"S-ARM","Back Extension":"B-EXT",
+    "Shoulder Press":"S-PRS","Hammer Strength MTS Shoulder Press":"MTS-S",
+    "Hammer Strength Plate-Loaded Shoulder Press":"PL-S","Lateral Raise":"LAT-R",
+    "Rear Delt Fly":"REAR","Cable Lateral Raise":"C-LAT","Front Raise":"FRONT",
+    "Biceps Curl":"BICEP","Preacher Curl":"PRE","Cable Curl":"C-CURL",
+    "Hammer Strength Biceps Curl":"HS-B","Triceps Press":"TRI","Triceps Pushdown":"PUSH",
+    "Dip Machine":"DIP","Hammer Strength Triceps Extension":"HS-T",
+    "Leg Press":"LEG","45° Leg Press":"45°","Hack Squat":"HACK",
+    "Hammer Strength MTS Leg Press":"MTS-L","Hammer Strength Plate-Loaded Linear Leg Press":"LINEAR",
+    "Leg Extension":"L-EXT","Seated Leg Curl":"S-CURL","Lying Leg Curl":"L-CURL",
+    "Standing Leg Curl":"ST-C","Hip Abductor":"ABD","Hip Adductor":"ADD",
+    "Seated Calf Raise":"S-CALF","Standing Calf Raise":"CALF","Glute Drive / Hip Thrust":"GLUTE",
+    "Abdominal Crunch":"ABS","Torso Rotation":"ROT","Cable Crunch":"C-ABS",
+    "Hanging Knee Raise":"KNEE","Plank":"PLANK","Treadmill":"RUN","Stair Climber":"STAIR",
+    "Elliptical":"ELL","Stationary Bike":"BIKE","Recumbent Bike":"REC","Rowing Machine":"ROWER"
+  };
+  return map[name]||String(name||"EX").toUpperCase().slice(0,7);
+}
+
 function machineArtwork(item,category){
   const kind=machineKind(item.name);
   const c={
@@ -253,6 +367,7 @@ function machineArtwork(item,category){
     Legs:"#34c99a",Core:"#f47a50",Cardio:"#36cbd0"
   }[category]||"#8b6cff";
   const steel="#8d9bad",dark="#303947",light="#d2d9e2";
+  const uniqueTag=exerciseShortTag(item.name);
   const parts={
     chestpress:`<path d="M47 145V52M133 145V52M47 55h86" stroke="${steel}" stroke-width="7"/><rect x="69" y="81" width="42" height="52" rx="12" fill="${c}"/><rect x="67" y="134" width="46" height="15" rx="7" fill="${c}"/><path d="M72 84L50 68M108 84l22-16M49 68H32M131 68h17" stroke="${light}" stroke-width="7" stroke-linecap="round"/>`,
     inclinepress:`<path d="M50 146V51M130 146V51M50 54h80" stroke="${steel}" stroke-width="7"/><rect x="73" y="77" width="38" height="58" rx="11" fill="${c}" transform="rotate(-15 73 77)"/><path d="M74 81L51 58M107 76l23-24M50 58H33M130 52h16" stroke="${light}" stroke-width="7" stroke-linecap="round"/><path d="M65 144h55" stroke="${steel}" stroke-width="8"/>`,
@@ -290,10 +405,15 @@ function machineArtwork(item,category){
     rower:`<path d="M44 132h94M57 125l25-33h52M94 92l22-34" stroke="${steel}" stroke-width="7"/><rect x="52" y="106" width="43" height="14" rx="7" fill="${c}"/><path d="M116 58h23M126 58l13-17" stroke="${light}" stroke-width="6"/>`,
     generic:`<path d="M50 145V48M130 145V48M50 51h80" stroke="${steel}" stroke-width="7"/><rect x="69" y="87" width="42" height="42" rx="11" fill="${c}"/><path d="M65 78h50M90 51v35" stroke="${light}" stroke-width="7"/>`
   };
-  return `<div class="machine-visual">
+  return `<div class="machine-visual" data-exercise="${item.name}">
     <svg viewBox="0 0 180 170" aria-hidden="true">
+      <circle cx="90" cy="80" r="66" fill="${c}" opacity=".055"/>
       <path class="floor" d="M22 151h136"/>
       ${parts[kind]||parts.generic}
+      <g class="exercise-signature">
+        <rect x="111" y="12" width="56" height="25" rx="12.5" fill="${c}" opacity=".20" stroke="${c}" stroke-width="1.5"/>
+        <text x="139" y="29" text-anchor="middle" fill="${c}" font-size="9" font-weight="900">${uniqueTag}</text>
+      </g>
     </svg>
     <span class="machine-badge">${item.type}${item.independent?" • Independent":""}</span>
   </div>`;
@@ -1370,12 +1490,23 @@ function workoutMap(){
 }
 function inferredStatusForDate(d,map){
   const key=dateKey(d);
+
+  // Dates before the first day this updated MY GYM version was used stay untouched.
+  if(!calendarTrackingStart || key<calendarTrackingStart)return "clear";
+
   if(map[key]?.length)return "workout";
+
   const manual=calendarStatuses[key]?.status;
-  if(manual==="rest"||manual==="missed")return manual;
+  if(manual==="rest")return "rest";
+  if(manual==="missed"||manual==="skipped")return "missed";
+
   const today=new Date(),todayStart=new Date(today.getFullYear(),today.getMonth(),today.getDate());
   const dayStart=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+
+  // Only completed past days become skipped/missed automatically.
   if(dayStart<todayStart)return "missed";
+
+  // Today and future days stay neutral until workout/rest is recorded.
   return "clear";
 }
 function renderCalendar(){
