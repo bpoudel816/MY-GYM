@@ -186,15 +186,6 @@ async function loadWorkouts(){
   }catch(err){console.error(err);$("recentWorkoutList").textContent="Could not load workouts yet.";$("historyList").textContent="Could not load workouts yet."}
 }
 
-function formatSet(ex,set){
-  const mode=ex.weightMode||"total";
-  const weight=Number(set.weight||0);
-  const reps=Number(set.reps||0);
-  if(ex.type==="Cardio") return `${reps || 0}`;
-  if(mode==="perArm") return `${weight:g} lb/arm × ${reps}`.replace(":g","");
-  return `${weight:g} lb × ${reps}`.replace(":g","");
-}
-
 function compactSetText(ex){
   return (ex.sets||[]).map(s=>{
     const w=Number(s.weight||0),r=Number(s.reps||0);
@@ -260,7 +251,7 @@ function renderSelectedDay(workouts,date){
 }
 
 function openEditWorkout(w){
-  editingWorkout=JSON.parse(JSON.stringify(w,(k,v)=>v));
+  editingWorkout=structuredCloneSafe(w);
   editingWorkout.id=w.id;
   editingWorkout.startedAtDate=toDate(w.startedAt);
   $("editWorkoutTitle").textContent=editingWorkout.startedAtDate?.toLocaleString()||"Workout";
@@ -299,6 +290,15 @@ $("saveWorkoutChangesBtn").onclick=async()=>{
   }catch(err){console.error(err);toast(`Could not save changes (${err.code||"unknown"}).`,"error")}
 }
 
+function structuredCloneSafe(w){
+  return {
+    ...w,
+    exercises:(w.exercises||[]).map(ex=>({
+      ...ex,
+      sets:(ex.sets||[]).map(s=>({...s}))
+    }))
+  };
+}
 function toLocalInputValue(d){const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,16)}
 function toDate(v){if(!v)return null;if(typeof v.toDate==="function")return v.toDate();if(v instanceof Date)return v;if(typeof v.seconds==="number")return new Date(v.seconds*1000);if(v._seconds)return new Date(v._seconds*1000);return new Date(v)}
 function readableError(code=""){const m={"auth/email-already-in-use":"That email already has a MY GYM account.","auth/invalid-email":"Please enter a valid email address.","auth/weak-password":"Use a stronger password with at least 6 characters.","auth/invalid-credential":"Email or password is incorrect.","auth/user-not-found":"No account was found for that email.","auth/too-many-requests":"Too many attempts. Try again later.","auth/network-request-failed":"Network problem. Check your internet connection."};return m[code]||`Something went wrong (${code||"unknown error"}).`}
