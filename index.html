@@ -5,19 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#090d16">
   <title>MY GYM</title>
-  <link rel="stylesheet" href="styles.css?v=recovery1">
+  <link rel="stylesheet" href="styles.css?v=stable2">
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
-      <div class="brand"><strong>MY GYM</strong><small>RECOVERY BUILD</small></div>
+      <div class="brand">
+        <strong>MY GYM</strong>
+        <small>TRAIN • TRACK • CONNECT</small>
+      </div>
     </header>
 
     <section id="authView" class="auth-layout">
       <div class="hero">
         <p class="eyebrow">CLOUD FITNESS TRACKER</p>
         <h1>Your gym life,<br><span>beautifully tracked.</span></h1>
-        <p class="muted">Secure Firebase login and cloud workout history.</p>
+        <p class="muted">Secure login, cloud workout history, progress tracking, and approved friend sharing later.</p>
       </div>
 
       <div class="auth-card">
@@ -29,8 +32,8 @@
         <section id="loginPanel" class="panel active">
           <h2>Continue your progress</h2>
           <form id="loginForm">
-            <label>Email<input id="loginEmail" type="email" required></label>
-            <label>Password<input id="loginPassword" type="password" required></label>
+            <label>Email<input id="loginEmail" type="email" autocomplete="email" required></label>
+            <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
             <button class="primary" type="submit">Log in</button>
           </form>
           <button id="forgotPasswordBtn" class="link-btn" type="button">Forgot password?</button>
@@ -70,61 +73,159 @@
 
       <section id="homeScreen" class="screen">
         <div class="card welcome">
-          <div><p class="eyebrow">MY GYM ACCOUNT</p><h2>Welcome, <span id="userName">Athlete</span>.</h2><p id="userEmail" class="muted"></p></div>
+          <div>
+            <p class="eyebrow">MY GYM ACCOUNT</p>
+            <h2>Welcome, <span id="userName">Athlete</span>.</h2>
+            <p id="userEmail" class="muted"></p>
+          </div>
           <button id="logoutBtn" class="secondary">Log out</button>
         </div>
-        <div class="grid">
+
+        <div class="home-grid">
           <div class="card hero-card">
             <p class="eyebrow">TODAY</p>
             <h2>Ready to train?</h2>
-            <p class="muted">This recovery build restores login and cloud workout saving.</p>
+            <p class="muted">Finish each exercise, return to body parts, then finish the whole workout.</p>
             <button id="startWorkoutBtn" class="primary">Start workout</button>
           </div>
           <div class="card metric"><small>WORKOUTS</small><strong id="workoutCount">0</strong></div>
           <div class="card metric"><small>STREAK</small><strong id="streakCount">0</strong></div>
+          <div class="card metric"><small>LAST</small><strong id="lastWorkoutMetric">—</strong><span id="lastWorkoutDate" class="muted mini">No workouts</span></div>
         </div>
+
         <h3>Latest workouts</h3>
         <div id="recentList" class="list empty">No workouts saved yet.</div>
       </section>
 
       <section id="workoutScreen" class="screen hidden">
+        <div id="workoutTop" class="workout-top hidden">
+          <div>
+            <p class="eyebrow">ACTIVE WORKOUT</p>
+            <strong id="workoutStatus">0 exercises completed</strong>
+            <span id="timer" class="timer">00:00</span>
+          </div>
+          <div class="workout-top-actions">
+            <button id="finishWholeWorkoutBtn" class="finish-whole">Finish Whole Workout</button>
+            <button id="cancelWorkoutBtn" class="danger">Cancel</button>
+          </div>
+        </div>
+
         <div id="categoryView">
           <h2>Choose a body part</h2>
+          <p class="muted">After finishing an exercise, you return here automatically.</p>
           <div id="categoryGrid" class="category-grid"></div>
         </div>
+
         <div id="exerciseView" class="hidden">
           <button id="backBtn" class="secondary">← Body parts</button>
           <h2 id="categoryTitle">Exercises</h2>
           <div id="exerciseGrid" class="exercise-grid"></div>
         </div>
+
         <div id="activeView" class="hidden">
-          <div class="card">
-            <div class="row"><div><p class="eyebrow">ACTIVE WORKOUT</p><h2 id="activeExerciseName"></h2></div><span id="timer">00:00</span></div>
+          <div class="card active-card">
+            <div class="row">
+              <div>
+                <p id="activeExerciseMeta" class="eyebrow">EXERCISE</p>
+                <h2 id="activeExerciseName"></h2>
+              </div>
+              <button id="removeCurrentExerciseBtn" class="danger">Remove</button>
+            </div>
+
+            <div id="weightModeWrap" class="weight-mode hidden">
+              <span>Weight mode</span>
+              <div class="mode-toggle">
+                <button id="perArmBtn" class="mode active" type="button">Per Arm</button>
+                <button id="totalBtn" class="mode" type="button">Total / Both Arms</button>
+              </div>
+            </div>
+
             <div class="set-head"><span>SET</span><span>WEIGHT</span><span>REPS</span><span>✓</span></div>
             <div id="setList"></div>
             <button id="addSetBtn" class="secondary full">+ Add set</button>
-            <div class="actions">
-              <button id="addExerciseBtn" class="secondary">Add exercise</button>
-              <button id="finishWorkoutBtn" class="primary">Finish workout</button>
-            </div>
+            <button id="finishThisExerciseBtn" class="primary full finish-exercise">Finish This Exercise</button>
           </div>
         </div>
       </section>
 
       <section id="historyScreen" class="screen hidden">
-        <h2>Your workouts</h2>
-        <div id="historyList" class="list empty">No workouts saved yet.</div>
+        <div class="history-head">
+          <div>
+            <p class="eyebrow">HISTORY</p>
+            <h2>Your training</h2>
+          </div>
+        </div>
+
+        <div class="history-tabs">
+          <button data-history="calendar" class="history-tab active">Calendar</button>
+          <button data-history="workouts" class="history-tab">Workouts</button>
+          <button data-history="progress" class="history-tab">Progress</button>
+        </div>
+
+        <section id="calendarPanel" class="history-panel">
+          <div class="card calendar-card">
+            <div class="calendar-head">
+              <button id="prevMonthBtn" class="secondary compact">←</button>
+              <h3 id="calendarTitle"></h3>
+              <button id="nextMonthBtn" class="secondary compact">→</button>
+            </div>
+            <div class="weekdays">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+            <div class="legend">
+              <span><i class="dot workout-dot"></i>Workout</span>
+              <span><i class="dot rest-dot"></i>Rest</span>
+              <span><i class="dot skipped-dot"></i>Skipped</span>
+            </div>
+          </div>
+          <div id="selectedDayWorkouts" class="card selected-day">Tap a workout day to see details.</div>
+        </section>
+
+        <section id="workoutsPanel" class="history-panel hidden">
+          <div id="historyList" class="list empty">No workouts saved yet.</div>
+        </section>
+
+        <section id="progressPanel" class="history-panel hidden">
+          <div class="progress-grid">
+            <div class="card metric"><small>TOTAL WORKOUTS</small><strong id="progressWorkoutCount">0</strong></div>
+            <div class="card metric"><small>TOTAL SETS</small><strong id="progressSetCount">0</strong></div>
+            <div class="card metric"><small>EXERCISES</small><strong id="progressExerciseCount">0</strong></div>
+          </div>
+          <div class="card progress-placeholder">
+            <p class="eyebrow">GRAPHS</p>
+            <h3>Strength, reps, volume, body weight, estimated 1RM, workout frequency, and consistency</h3>
+            <p class="muted">The graph engine will be added after this stable feature-restoration round passes testing.</p>
+          </div>
+        </section>
       </section>
 
       <section id="profileScreen" class="screen hidden">
-        <div class="card"><p class="eyebrow">PROFILE</p><h2 id="profileName">Athlete</h2><p id="profileEmail" class="muted"></p></div>
+        <div class="card">
+          <p class="eyebrow">PROFILE</p>
+          <h2 id="profileName">Athlete</h2>
+          <p id="profileEmail" class="muted"></p>
+        </div>
       </section>
     </section>
+
+    <div id="editModal" class="modal hidden">
+      <div id="editBackdrop" class="modal-backdrop"></div>
+      <div class="modal-card">
+        <div class="row">
+          <div><p class="eyebrow">EDIT WORKOUT</p><h3 id="editWorkoutTitle">Workout</h3></div>
+          <button id="closeEditBtn" class="secondary compact">Close</button>
+        </div>
+        <label>Workout date & time<input id="editWorkoutDateTime" type="datetime-local"></label>
+        <div id="editExerciseList" class="edit-list"></div>
+        <button id="saveWorkoutChangesBtn" class="primary full">Save Changes</button>
+      </div>
+    </div>
 
     <div id="toast" class="toast hidden"></div>
   </main>
 
-  <script src="ui.js?v=recovery1"></script>
-  <script type="module" src="app.js?v=recovery1"></script>
+  <script src="ui.js?v=stable2"></script>
+  <script type="module" src="app.js?v=stable2"></script>
 </body>
 </html>
