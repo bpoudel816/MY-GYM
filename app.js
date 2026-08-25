@@ -779,11 +779,6 @@ function adjustWeight(setIndex,delta){
   set.weight=Math.max(0,Number(set.weight||0)+delta);
   renderSets();
 }
-function adjustWeight(setIndex,delta){
-  const set=activeExercise.sets[setIndex];
-  set.weight=Math.max(0,Number(set.weight||0)+delta);
-  renderSets();
-}
 
 function adjustReps(setIndex,delta){
   const set=activeExercise.sets[setIndex];
