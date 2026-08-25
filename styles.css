@@ -338,3 +338,620 @@ body{
   .progress-grid .metric:last-child{grid-column:1/-1}
   .calendar-day{min-height:48px}
 }
+
+
+/* =========================================================
+   MY GYM — FINAL VISUAL POLISH
+   Visual-only layer. No data/Firebase behavior changes.
+   ========================================================= */
+
+:root{
+  --bg:#070b12;
+  --panel:#101722;
+  --panel-soft:#0c121c;
+  --panel-high:#151e2c;
+  --line:#ffffff10;
+  --line-strong:#ffffff1c;
+  --text:#f7f9fc;
+  --muted:#8794a8;
+  --purple:#826dff;
+  --purple2:#a45cff;
+  --mint:#53dfba;
+  --cyan:#3dc9dc;
+  --amber:#efb653;
+  --red:#ed6e7d;
+  --shadow:0 18px 55px #00000042;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(circle at 8% -10%,#765fff1f 0,transparent 30%),
+    radial-gradient(circle at 102% 12%,#25b99413 0,transparent 30%),
+    linear-gradient(180deg,#080c14 0%,#070b12 100%);
+  color:var(--text);
+}
+
+.shell{width:min(1220px,calc(100% - 30px));padding-top:22px}
+
+/* Header */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:2px 2px 8px;margin-bottom:26px;
+}
+.topbar-badge{
+  font-size:9px;font-weight:950;letter-spacing:.17em;
+  color:#a99eff;border:1px solid #826dff2c;
+  background:#826dff0d;padding:8px 11px;border-radius:999px;
+}
+.brand-mark{
+  background:
+    radial-gradient(circle at 30% 20%,#ffffff3b,transparent 26%),
+    linear-gradient(145deg,#836dff,#4dd8b8);
+  border:1px solid #ffffff24;
+  box-shadow:0 13px 34px #6d5cff31,inset 0 1px #ffffff7a;
+}
+.brand-copy strong{letter-spacing:.12em}
+.brand-copy small{color:#7c899e}
+
+/* Navigation */
+.nav{
+  border-color:#ffffff12;
+  background:#080d15e8;
+  box-shadow:0 16px 45px #0007;
+}
+.navbtn{
+  color:#7d899d;transition:all .18s ease;
+  border:1px solid transparent;
+}
+.navbtn:hover{color:#e8ecf4;background:#ffffff06}
+.navbtn.active{
+  color:white;
+  background:
+    radial-gradient(circle at 50% -30%,#826dff25,transparent 60%),
+    #171f2d;
+  border-color:#ffffff0e;
+  box-shadow:0 8px 22px #0003,inset 0 1px #ffffff09;
+}
+
+/* Shared surfaces */
+.card,.workout-card,.category,.exercise,.auth-card{
+  border-color:#ffffff10;
+  background:
+    linear-gradient(150deg,#141d2a 0%,#0c121c 100%);
+  box-shadow:var(--shadow),inset 0 1px #ffffff05;
+}
+.card:hover{border-color:#ffffff15}
+.eyebrow{color:#a79cff}
+.muted{color:#8491a5}
+
+/* Home */
+.home-section-title{
+  display:flex;align-items:end;justify-content:space-between;
+  gap:14px;margin:22px 2px 12px;
+}
+.home-section-title h3{margin:3px 0 0;font-size:22px}
+.live-dot{
+  display:flex;align-items:center;gap:7px;
+  color:#69dfbe;font-size:10px;font-weight:900;
+  border:1px solid #53dfba25;background:#53dfba0a;
+  border-radius:999px;padding:7px 10px;
+}
+.live-dot i{
+  width:7px;height:7px;border-radius:50%;background:#53dfba;
+  box-shadow:0 0 12px #53dfbaaa;
+}
+.hero-card{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(circle at 85% 12%,#826dff24,transparent 38%),
+    linear-gradient(145deg,#151e2c,#0b111b);
+}
+.hero-card:after{
+  content:"";position:absolute;right:-40px;bottom:-70px;
+  width:210px;height:210px;border-radius:50%;
+  border:1px solid #826dff14;box-shadow:0 0 0 25px #826dff08,0 0 0 50px #826dff04;
+}
+.hero-card>*{position:relative;z-index:2}
+.metric{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(circle at 110% -10%,#826dff12,transparent 45%),
+    linear-gradient(150deg,#121a27,#0b111b);
+}
+.metric strong{letter-spacing:-.04em}
+
+/* Workout library */
+.section-hero{margin-top:4px}
+.category{
+  border-radius:23px;
+  background:
+    radial-gradient(circle at 75% 0,var(--cat-glow,#826dff24),transparent 36%),
+    linear-gradient(150deg,#141d2b,#0c121c);
+}
+.category-art{
+  border-radius:19px;
+  background:
+    radial-gradient(circle at 72% 12%,var(--cat-glow,#826dff22),transparent 40%),
+    linear-gradient(150deg,#172131,#0b111b);
+}
+.category-copy strong{letter-spacing:-.02em}
+.exercise{
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 85% 0,var(--machine-glow,#826dff22),transparent 34%),
+    linear-gradient(150deg,#141d2a,#0c121c);
+}
+.machine-visual{
+  border-radius:18px;
+  border-color:#ffffff0d;
+  background:
+    radial-gradient(circle at 78% 0,var(--machine-glow,#826dff22),transparent 37%),
+    linear-gradient(150deg,#172131,#0a1019);
+}
+.machine-badge{
+  border-color:#ffffff16;background:#060a10c9;
+  box-shadow:0 6px 20px #0004;
+}
+.exercise-info strong{letter-spacing:-.01em}
+
+/* Active workout */
+.workout-top{
+  border-color:#53dfba20;
+  background:
+    radial-gradient(circle at 85% -40%,#53dfba13,transparent 45%),
+    #0f1723ef;
+  box-shadow:0 16px 40px #0005;
+}
+.timer{
+  border:1px solid #53dfba26;background:#53dfba0a;
+  padding:5px 8px;border-radius:999px;
+}
+.active-card{
+  background:
+    radial-gradient(circle at 90% -5%,#826dff16,transparent 38%),
+    linear-gradient(150deg,#141d2a,#0b111b);
+}
+.weight-mode{
+  background:#090f18;
+  border-color:#ffffff0f;
+}
+.mode-toggle{
+  border:1px solid #ffffff0b;
+}
+.mode.active{
+  background:linear-gradient(145deg,#2a234a,#1e2940);
+  box-shadow:inset 0 0 0 1px #826dff2f;
+}
+.round-step{
+  background:linear-gradient(145deg,#263246,#111824);
+  border-color:#ffffff19;
+  box-shadow:0 8px 18px #0005,inset 0 1px #ffffff12;
+}
+.round-step:active{transform:scale(.92)}
+.weight-center{
+  border-color:#826dff48!important;
+  box-shadow:0 10px 24px #0004,inset 0 0 0 1px #826dff10;
+}
+.check{
+  transition:.14s ease;
+}
+.check.done{
+  background:#53dfba16;color:#6ce4c3;border-color:#53dfba2e;
+  box-shadow:0 0 16px #53dfba12;
+}
+.finish-exercise{
+  background:linear-gradient(135deg,#7863ff,#935ce9);
+  box-shadow:0 14px 30px #705cff2e;
+}
+.finish-whole{
+  background:linear-gradient(135deg,#5be5c1,#38cba6);
+  box-shadow:0 13px 28px #31bd9b27;
+}
+
+/* History */
+.history-tabs{
+  background:#080d15;border-color:#ffffff10;
+}
+.history-tab.active{
+  background:#171f2d;
+  color:#fff;
+}
+.workout-card{
+  background:
+    radial-gradient(circle at 100% 0,#826dff0d,transparent 35%),
+    linear-gradient(150deg,#121a27,#0b111b);
+}
+.workout-card:hover{
+  border-color:#826dff2f;
+  box-shadow:0 18px 42px #0005;
+}
+.exercise-summary-row{
+  background:#090f18;
+  border-color:#ffffff0b;
+  border-left-color:#826dff66;
+}
+.pill{
+  background:#ffffff06;border-color:#ffffff0f;
+}
+
+/* Calendar */
+.calendar-card{
+  background:
+    radial-gradient(circle at 100% 0,#826dff0c,transparent 38%),
+    linear-gradient(150deg,#121a27,#0b111b);
+}
+.calendar-day{
+  background:#090f18;
+  border-color:#ffffff0c;
+}
+.calendar-day:hover{
+  border-color:#826dff3b;
+  background:#101725;
+}
+.calendar-day.today{
+  outline-color:#826dff8a;
+}
+.selected-day{
+  border-color:#ffffff10;
+  box-shadow:var(--shadow);
+}
+
+/* Progress */
+.progress-controls{
+  background:
+    radial-gradient(circle at 100% 0,#826dff0f,transparent 36%),
+    linear-gradient(150deg,#121a27,#0b111b);
+}
+.progress-controls select{
+  border-color:#ffffff13;
+  background:#090f18;
+}
+.graph-card{
+  position:relative;overflow:hidden;
+  border-color:#ffffff10;
+  background:
+    radial-gradient(circle at 100% 0,#826dff0d,transparent 35%),
+    linear-gradient(150deg,#111925,#0a1019);
+}
+.graph-card:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,#ffffff02,transparent 24%);
+}
+
+/* Calories */
+.calorie-dashboard .card,
+.calorie-entry-card,.calorie-list-card{
+  background:
+    radial-gradient(circle at 100% 0,#53dfba0c,transparent 36%),
+    linear-gradient(150deg,#121a27,#0b111b);
+}
+.calorie-total-card{
+  border-color:#53dfba18;
+}
+.calorie-total-line strong{
+  font-size:56px;letter-spacing:-.05em;
+}
+.calorie-progress-track{
+  background:#080d15;border-color:#ffffff0b;
+}
+.calorie-progress-fill{
+  background:linear-gradient(90deg,#826dff,#53dfba);
+  box-shadow:0 0 16px #53dfba20;
+}
+.meal-row{
+  background:#090f18;
+}
+.meal-row:hover{border-color:#53dfba25}
+
+/* Connections */
+.connections-grid .card,.connections-content-grid .card,.friend-progress-panel{
+  background:
+    radial-gradient(circle at 100% 0,#826dff0e,transparent 34%),
+    linear-gradient(150deg,#121a27,#0b111b);
+}
+.friend-code-box strong{
+  background:
+    radial-gradient(circle at 50% -20%,#826dff26,transparent 52%),
+    #090f18;
+}
+.connection-row{
+  background:#090f18;
+}
+.connection-row:hover{border-color:#826dff26}
+.view-progress-btn{box-shadow:0 7px 18px #826dff10}
+
+/* Profile */
+.profile-grid .card{
+  background:
+    radial-gradient(circle at 100% 0,#826dff0b,transparent 35%),
+    linear-gradient(150deg,#121a27,#0b111b);
+}
+.body-weight-entry input{
+  background:#090f18;
+}
+.weight-history-row{background:#090f18}
+.danger-zone{
+  background:
+    radial-gradient(circle at 100% 0,#ed6e7d0c,transparent 38%),
+    linear-gradient(150deg,#18131b,#0f1017);
+}
+
+/* Auth */
+.auth-card{
+  border-color:#ffffff12;
+  background:
+    radial-gradient(circle at 100% 0,#826dff16,transparent 38%),
+    linear-gradient(150deg,#141d2a,#0b111b);
+}
+.auth-card input{background:#090f18}
+.primary{box-shadow:0 12px 26px #725eff24}
+
+/* Fine polish */
+button,input,select{transition:border-color .15s ease,background .15s ease,transform .12s ease,box-shadow .15s ease}
+button:active{transform:scale(.985)}
+input:focus,select:focus{
+  border-color:#826dff62!important;
+  box-shadow:0 0 0 3px #826dff11;
+}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#080d15}
+::-webkit-scrollbar-thumb{background:#283245;border-radius:999px;border:2px solid #080d15}
+::-webkit-scrollbar-thumb:hover{background:#39465e}
+
+/* Phone final polish */
+@media(max-width:650px){
+  .shell{width:calc(100% - 16px);padding-top:10px}
+  .topbar-badge{display:none}
+  .home-section-title{margin-top:16px}
+  .home-section-title h3{font-size:19px}
+  .live-dot{font-size:9px;padding:6px 8px}
+  .nav{left:6px;right:6px;bottom:6px}
+  .navbtn{font-size:10.5px}
+  .category-grid,.exercise-grid{gap:8px}
+  .category,.exercise{box-shadow:0 10px 26px #0004}
+  .category-art{height:98px}
+  .machine-visual{height:142px}
+  .active-card{padding:15px}
+  .workout-top{padding:12px}
+  .calorie-total-line strong{font-size:48px}
+}
+
+
+/* =========================================================
+   NAV / SAVE / DELETE / REP CONTROL FIX
+   ========================================================= */
+
+/* More menu */
+.more-menu{
+  position:fixed;
+  z-index:95;
+  top:92px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(390px,calc(100% - 24px));
+  padding:8px;
+  border-radius:18px;
+  border:1px solid #ffffff14;
+  background:#0b111bf2;
+  backdrop-filter:blur(22px);
+  box-shadow:0 22px 65px #0009;
+}
+.more-menu-item{
+  width:100%;
+  display:grid;
+  grid-template-columns:44px 1fr;
+  gap:11px;
+  align-items:center;
+  text-align:left;
+  padding:12px;
+  border:1px solid transparent;
+  background:transparent;
+  color:#fff;
+  border-radius:14px;
+  cursor:pointer;
+}
+.more-menu-item:hover{
+  background:#ffffff07;
+  border-color:#ffffff0e;
+}
+.more-menu-item strong{display:block;font-size:14px;margin-bottom:2px}
+.more-menu-item small{display:block;color:#7f8ca0;font-size:10px}
+.more-icon{
+  width:42px;height:42px;border-radius:13px;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#806cff22,#53dfba12);
+  border:1px solid #806cff28;
+  color:#b5aaff;
+  font-size:20px;font-weight:900;
+}
+.navbtn.more-active{
+  color:#fff;
+  background:radial-gradient(circle at 50% -30%,#826dff25,transparent 60%),#171f2d;
+  border-color:#ffffff0e;
+}
+
+/* Fancy rep stepper */
+.rep-stepper{
+  display:grid;
+  grid-template-columns:38px minmax(48px,70px) 38px;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+}
+.rep-step{
+  width:38px;height:38px;border-radius:50%;
+  border:1px solid #ffffff18;
+  background:linear-gradient(145deg,#263246,#111824);
+  color:#fff;
+  font-size:20px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 7px 16px #0004,inset 0 1px #ffffff10;
+}
+.rep-step:active{transform:scale(.92)}
+.rep-center{
+  width:100%!important;
+  min-width:0;
+  height:46px;
+  padding:6px!important;
+  border-radius:999px!important;
+  text-align:center;
+  font-weight:900!important;
+  font-size:16px!important;
+  background:
+    radial-gradient(circle at 50% -20%,#53dfba1f,transparent 52%),
+    linear-gradient(145deg,#172131,#0b111b)!important;
+  border:1px solid #53dfba30!important;
+}
+.rep-unit-label{
+  display:block;
+  text-align:center;
+  color:#718096;
+  font-size:9px;
+  font-weight:900;
+  margin-top:3px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+/* Confirmation feedback */
+.save-state-note{
+  color:#62e0be;
+  font-size:11px;
+  font-weight:850;
+}
+
+@media(max-width:650px){
+  .more-menu{
+    top:auto;
+    left:8px;
+    right:8px;
+    bottom:72px;
+    transform:none;
+    width:auto;
+    border-radius:18px;
+  }
+  .rep-stepper{
+    grid-template-columns:34px minmax(40px,60px) 34px;
+    gap:4px;
+  }
+  .rep-step{width:34px;height:34px;font-size:18px}
+  .rep-center{height:42px;font-size:15px!important}
+}
+
+
+/* ===== FINAL SIMPLIFIED APP STRUCTURE ===== */
+.nav{max-width:520px}
+.profile-tools-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;
+}
+.profile-tool-card{
+  min-height:180px;display:flex;flex-direction:column;align-items:flex-start;
+}
+.profile-tool-card h3{margin:4px 0 7px}
+.profile-tool-card p.muted{line-height:1.5;flex:1}
+.wide{width:100%}
+
+.current-workout-summary{
+  margin:0 0 16px;
+  padding:16px;
+  border:1px solid #53dfba22;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 100% 0,#53dfba12,transparent 36%),
+    linear-gradient(150deg,#121b27,#0b111b);
+  box-shadow:0 14px 34px #0004;
+}
+.current-workout-summary-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:10px;
+}
+.current-workout-summary-head h3{margin:3px 0 0}
+.current-workout-items{display:grid;gap:7px}
+.current-workout-chip{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 11px;border-radius:12px;
+  border:1px solid #ffffff0d;background:#090f18;
+}
+.current-workout-chip strong{font-size:12px}
+.current-workout-chip small{color:#7f8ca0}
+.current-workout-chip .complete{color:#59dfbb;font-weight:900}
+.current-workout-chip .active-now{color:#a99eff;font-weight:900}
+
+@media(max-width:650px){
+  .nav{left:8px;right:8px}
+  .navbtn{font-size:11px}
+  .profile-tools-grid{grid-template-columns:1fr}
+  .profile-tool-card{min-height:150px}
+  .current-workout-summary{padding:13px;border-radius:17px}
+}
+
+
+/* ===== FINAL ALL-ICONS POLISH ===== */
+.category-art svg,
+.machine-visual svg{
+  overflow:visible;
+}
+
+.category-art svg path,
+.machine-visual svg path,
+.category-art svg rect,
+.machine-visual svg rect,
+.category-art svg circle,
+.machine-visual svg circle,
+.category-art svg ellipse,
+.machine-visual svg ellipse{
+  transition:filter .2s ease, transform .2s ease;
+  transform-origin:center;
+}
+
+.category:hover .category-art svg,
+.exercise:hover .machine-visual svg{
+  transform:scale(1.035);
+  filter:drop-shadow(0 16px 16px #0008) saturate(1.18);
+}
+
+/* Category-specific vivid accents */
+.category[data-category="Chest"] .category-art{
+  background:radial-gradient(circle at 70% 15%,#a968ff42,transparent 40%),linear-gradient(145deg,#211a33,#0b111b);
+}
+.category[data-category="Back"] .category-art{
+  background:radial-gradient(circle at 70% 15%,#409cff42,transparent 40%),linear-gradient(145deg,#14263a,#0b111b);
+}
+.category[data-category="Shoulders"] .category-art{
+  background:radial-gradient(circle at 70% 15%,#ffb84b42,transparent 40%),linear-gradient(145deg,#2a2114,#0b111b);
+}
+.category[data-category="Arms"] .category-art{
+  background:radial-gradient(circle at 70% 15%,#dc61ff42,transparent 40%),linear-gradient(145deg,#291630,#0b111b);
+}
+.category[data-category="Legs"] .category-art{
+  background:radial-gradient(circle at 70% 15%,#3de0a442,transparent 40%),linear-gradient(145deg,#142922,#0b111b);
+}
+.category[data-category="Core"] .category-art{
+  background:radial-gradient(circle at 70% 15%,#ff855c42,transparent 40%),linear-gradient(145deg,#2b1b17,#0b111b);
+}
+.category[data-category="Cardio"] .category-art{
+  background:radial-gradient(circle at 70% 15%,#40d7df42,transparent 40%),linear-gradient(145deg,#13282c,#0b111b);
+}
+
+/* Machine cards become clearer and more colorful */
+.exercise[data-category="Chest"] .machine-visual{border-color:#a968ff24}
+.exercise[data-category="Back"] .machine-visual{border-color:#409cff24}
+.exercise[data-category="Shoulders"] .machine-visual{border-color:#ffb84b24}
+.exercise[data-category="Arms"] .machine-visual{border-color:#dc61ff24}
+.exercise[data-category="Legs"] .machine-visual{border-color:#3de0a424}
+.exercise[data-category="Core"] .machine-visual{border-color:#ff855c24}
+.exercise[data-category="Cardio"] .machine-visual{border-color:#40d7df24}
+
+.machine-badge{
+  font-weight:950;
+  letter-spacing:.08em;
+  color:#f0f4fb;
+}
+
+/* Better image contrast on phone */
+@media(max-width:650px){
+  .category-art svg{width:94%;height:94%}
+  .machine-visual svg{width:100%;height:100%}
+}

@@ -9,8 +9,9 @@
   <meta name="apple-mobile-web-app-title" content="MY GYM">
   <title>MY GYM</title>
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="my-gym-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=progressfinal1">
+  <link rel="apple-touch-icon" href="my-gym-icon-192.png">
+  <link rel="icon" href="my-gym-icon-192.png" type="image/png">
+  <link rel="stylesheet" href="styles.css?v=allicons1">
 </head>
 <body>
   <main class="shell">
@@ -26,6 +27,7 @@
           <small>TRAIN • TRACK • CONNECT</small>
         </span>
       </div>
+    <span class="topbar-badge">MY GYM CLOUD</span>
     </header>
 
     <section id="authView" class="auth-layout">
@@ -78,34 +80,10 @@
     <section id="appView" class="hidden">
       <nav class="nav">
         <button data-screen="home" class="navbtn active">Home</button>
-        <button data-screen="workout" class="navbtn">Workout</button>
         <button data-screen="history" class="navbtn">History</button>
         <button data-screen="calories" class="navbtn">Calories</button>
-        <button data-screen="connections" class="navbtn">Connections</button>
         <button data-screen="profile" class="navbtn">Profile</button>
       </nav>
-
-      <section id="homeScreen" class="screen">
-        <div class="card welcome">
-          <div>
-            <p class="eyebrow">MY GYM ACCOUNT</p>
-            <h2>Welcome, <span id="userName">Athlete</span>.</h2>
-            <p id="userEmail" class="muted"></p>
-          </div>
-          <button id="logoutBtn" class="secondary">Log out</button>
-        </div>
-
-        <div class="home-grid">
-          <div class="card hero-card">
-            <p class="eyebrow">TODAY</p>
-            <h2>Ready to train?</h2>
-            <p class="muted">Finish each exercise, return to body parts, then finish the whole workout.</p>
-            <button id="startWorkoutBtn" class="primary">Start workout</button>
-          </div>
-          <div class="card metric"><small>WORKOUTS</small><strong id="workoutCount">0</strong></div>
-          <div class="card metric"><small>STREAK</small><strong id="streakCount">0</strong></div>
-          <div class="card metric"><small>LAST</small><strong id="lastWorkoutMetric">—</strong><span id="lastWorkoutDate" class="muted mini">No workouts</span></div>
-        </div>
 
         <h3>Latest workouts</h3>
         <div id="recentList" class="list empty">No workouts saved yet.</div>
@@ -126,7 +104,18 @@
 
         <div id="categoryView">
           <div class="section-hero">
+            
+        <div id="currentWorkoutSummary" class="current-workout-summary hidden">
+          <div class="current-workout-summary-head">
             <div>
+              <p class="eyebrow">CURRENT WORKOUT</p>
+              <h3>Selected exercises</h3>
+            </div>
+            <span id="currentWorkoutCount" class="pill">0 exercises</span>
+          </div>
+          <div id="currentWorkoutItems" class="current-workout-items"></div>
+        </div>
+<div>
               <p class="eyebrow">WORKOUT LIBRARY</p>
               <h2>Choose a body part</h2>
               <p class="muted">Finish one exercise and MY GYM brings you back here for the next one.</p>
@@ -498,11 +487,26 @@
       </div>
     </div>
 
-    <div id="toast" class="toast hidden"></div>
+    
+        <div class="profile-tools-grid">
+          <div class="card profile-tool-card">
+            <p class="eyebrow">WORKOUT</p>
+            <h3>Workout & exercises</h3>
+            <p class="muted">Choose body parts and manage the exercises you use during training.</p>
+            <button id="profileWorkoutBtn" class="secondary wide" type="button">Open Workout Exercises</button>
+          </div>
+          <div class="card profile-tool-card">
+            <p class="eyebrow">CONNECTIONS</p>
+            <h3>Friends & shared progress</h3>
+            <p class="muted">Manage friend requests and view approved friends' progress.</p>
+            <button id="profileConnectionsBtn" class="secondary wide" type="button">Open Connections</button>
+          </div>
+        </div>
+<div id="toast" class="toast hidden"></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="ui.js?v=friends1"></script>
-  <script type="module" src="app.js?v=progressfinal1"></script>
+  <script src="ui.js?v=fixnav1"></script>
+  <script type="module" src="app.js?v=allicons1"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ import {
   sendPasswordResetEmail, signOut, onAuthStateChanged, updateProfile
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
-  getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc,
+  getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc, writeBatch,
   collection, query, where, orderBy, limit, getDocs, serverTimestamp, Timestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
@@ -111,15 +111,39 @@ function showToast(text,type=""){
   showToast._t=setTimeout(()=>el.classList.add("hidden"),2600);
   el.classList.remove("hidden");
 }
+
 function showScreen(name){
   ["homeScreen","workoutScreen","historyScreen","caloriesScreen","connectionsScreen","profileScreen"].forEach(id=>$(id).classList.add("hidden"));
   $(`${name}Screen`).classList.remove("hidden");
-  document.querySelectorAll(".navbtn").forEach(btn=>btn.classList.toggle("active",btn.dataset.screen===name));
+
+  document.querySelectorAll(".navbtn[data-screen]").forEach(btn=>{
+    btn.classList.toggle("active",btn.dataset.screen===name);
+  });
+
+  // Workout is launched from Home/Profile; Connections lives under Profile.
+  if(name==="workout"||name==="connections"){
+    document.querySelectorAll(".navbtn[data-screen]").forEach(btn=>btn.classList.remove("active"));
+    const parent=name==="connections"?"profile":"home";
+    document.querySelector(`.navbtn[data-screen="${parent}"]`)?.classList.add("active");
+  }
+
+  if(name==="workout")renderCurrentWorkoutSummary();
   if(name==="history"){showHistoryPanel("calendar");renderCalendar();}
   if(name==="calories"){initializeCaloriesScreen();}
   if(name==="connections"){loadConnectionsArea();}
 }
-document.querySelectorAll(".navbtn").forEach(btn=>btn.addEventListener("click",()=>showScreen(btn.dataset.screen)));
+document.querySelectorAll(".navbtn[data-screen]").forEach(btn=>btn.addEventListener("click",()=>showScreen(btn.dataset.screen)));
+
+$("profileWorkoutBtn")?.addEventListener("click",()=>{
+  showScreen("workout");
+});
+
+$("profileConnectionsBtn")?.addEventListener("click",()=>{
+  showScreen("connections");
+});
+
+
+
 
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -721,12 +745,115 @@ function renderActiveExercise(){
 $("perArmBtn").addEventListener("click",()=>{activeExercise.weightMode="perArm";renderActiveExercise()});
 $("totalBtn").addEventListener("click",()=>{activeExercise.weightMode="total";renderActiveExercise()});
 
+
+function renderCurrentWorkoutSummary(){
+  const box=$("currentWorkoutSummary");
+  const list=$("currentWorkoutItems");
+  const count=$("currentWorkoutCount");
+  if(!box||!list||!count)return;
+
+  const completed=workout?.exercises||[];
+  const rows=[...completed.map(ex=>({
+    name:ex.name,
+    sets:(ex.sets||[]).length,
+    state:"complete"
+  }))];
+
+  if(activeExercise){
+    rows.push({
+      name:activeExercise.name,
+      sets:(activeExercise.sets||[]).length,
+      state:"active"
+    });
+  }
+
+  if(!workout && !activeExercise){
+    box.classList.add("hidden");
+    list.innerHTML="";
+    count.textContent="0 exercises";
+    return;
+  }
+
+  box.classList.remove("hidden");
+  count.textContent=`${rows.length} exercise${rows.length===1?"":"s"}`;
+
+  if(!rows.length){
+    list.innerHTML=`<div class="empty">Choose a body part below, then select your first exercise.</div>`;
+    return;
+  }
+
+  list.innerHTML=rows.map(r=>`
+    <div class="current-workout-chip">
+      <span><strong>${r.name}</strong><small> • ${r.sets} set${r.sets===1?"":"s"}</small></span>
+      <span class="${r.state==="complete"?"complete":"active-now"}">${r.state==="complete"?"✓ Added":"In progress"}</span>
+    </div>
+  `).join("");
+}
+
 function adjustWeight(setIndex,delta){
   const set=activeExercise.sets[setIndex];
   set.weight=Math.max(0,Number(set.weight||0)+delta);
   renderSets();
 }
+
+function renderCurrentWorkoutSummary(){
+  const box=$("currentWorkoutSummary");
+  const list=$("currentWorkoutItems");
+  const count=$("currentWorkoutCount");
+  if(!box||!list||!count)return;
+
+  const completed=workout?.exercises||[];
+  const rows=[...completed.map(ex=>({
+    name:ex.name,
+    sets:(ex.sets||[]).length,
+    state:"complete"
+  }))];
+
+  if(activeExercise){
+    rows.push({
+      name:activeExercise.name,
+      sets:(activeExercise.sets||[]).length,
+      state:"active"
+    });
+  }
+
+  if(!workout && !activeExercise){
+    box.classList.add("hidden");
+    list.innerHTML="";
+    count.textContent="0 exercises";
+    return;
+  }
+
+  box.classList.remove("hidden");
+  count.textContent=`${rows.length} exercise${rows.length===1?"":"s"}`;
+
+  if(!rows.length){
+    list.innerHTML=`<div class="empty">Choose a body part below, then select your first exercise.</div>`;
+    return;
+  }
+
+  list.innerHTML=rows.map(r=>`
+    <div class="current-workout-chip">
+      <span><strong>${r.name}</strong><small> • ${r.sets} set${r.sets===1?"":"s"}</small></span>
+      <span class="${r.state==="complete"?"complete":"active-now"}">${r.state==="complete"?"✓ Added":"In progress"}</span>
+    </div>
+  `).join("");
+}
+
+function adjustWeight(setIndex,delta){
+  const set=activeExercise.sets[setIndex];
+  set.weight=Math.max(0,Number(set.weight||0)+delta);
+  renderSets();
+}
+
+function adjustReps(setIndex,delta){
+  const set=activeExercise.sets[setIndex];
+  set.reps=Math.max(0,Number(set.reps||0)+delta);
+  renderSets();
+}
+
 function renderSets(){
+  renderCurrentWorkoutSummary();
   const list=$("setList");list.innerHTML="";
   activeExercise.sets.forEach((set,index)=>{
     const row=document.createElement("div");row.className="set-row";
@@ -740,11 +867,21 @@ function renderSets(){
         </div>
         <span class="weight-unit-label">${activeExercise.weightMode==="perArm"?"lb / arm":"lb"}</span>
       </div>
-      <input class="rep-input" type="number" min="0" step="1" value="${Number(set.reps||0)}" aria-label="Reps">
+      <div>
+        <div class="rep-stepper">
+          <button class="rep-step rep-minus" type="button" aria-label="Decrease reps">−</button>
+          <input class="rep-center" type="number" min="0" step="1" value="${Number(set.reps||0)}" aria-label="Manual reps input">
+          <button class="rep-step rep-plus" type="button" aria-label="Increase reps">+</button>
+        </div>
+        <span class="rep-unit-label">reps</span>
+      </div>
       <button class="check ${set.done?"done":""}" type="button">${set.done?"✓":"○"}</button>
     `;
     row.querySelector(".minus").addEventListener("click",()=>adjustWeight(index,-5));
     row.querySelector(".plus").addEventListener("click",()=>adjustWeight(index,5));
+    row.querySelector(".rep-minus").addEventListener("click",()=>adjustReps(index,-1));
+    row.querySelector(".rep-plus").addEventListener("click",()=>adjustReps(index,1));
+
     const inputs=row.querySelectorAll("input");
     inputs[0].addEventListener("input",e=>set.weight=Number(e.target.value||0));
     inputs[1].addEventListener("input",e=>set.reps=Number(e.target.value||0));
@@ -766,19 +903,48 @@ $("finishThisExerciseBtn").addEventListener("click",()=>{
   showToast("Exercise finished. Choose the next body part or finish the whole workout.","success");
 });
 $("finishWholeWorkoutBtn").addEventListener("click",async()=>{
+  if(activeExercise){
+    showToast("Finish or remove the current exercise before finishing the whole workout.","error");
+    return;
+  }
+
   if(!workout||!workout.exercises.length||workout.exercises.every(ex=>!(ex.sets||[]).length)){
     showToast("A workout needs at least one completed exercise with a set.","error");
     return;
   }
+
   const endedAt=new Date();
+
+  // SAVE is isolated from all later UI refreshing.
   try{
     await addDoc(collection(db,"users",user.uid,"workouts"),{
-      startedAt:workout.startedAt,endedAt,createdAt:serverTimestamp(),
+      startedAt:workout.startedAt,
+      endedAt,
+      createdAt:serverTimestamp(),
       durationSeconds:Math.max(1,Math.round((endedAt-workout.startedAt)/1000)),
-      exerciseCount:workout.exercises.length,exercises:workout.exercises
+      exerciseCount:workout.exercises.length,
+      exercises:workout.exercises
     });
-    workout=null;activeExercise=null;stopTimer();await loadAllData();showScreen("home");showToast("Workout saved to your cloud account.","success");
-  }catch(err){console.error(err);showToast("Could not save workout.","error")}
+  }catch(err){
+    console.error("Workout save failed:",err);
+    showToast(`Could not save workout (${err.code||"unknown error"}).`,"error");
+    return;
+  }
+
+  // At this point the workout is definitely saved.
+  workout=null;
+  activeExercise=null;
+  stopTimer();
+  showScreen("home");
+  showToast("Workout saved to your cloud account.","success");
+
+  // Refresh data AFTER success. A refresh failure must never be reported as a save failure.
+  try{
+    await loadAllData();
+  }catch(err){
+    console.error("Workout saved, but refresh failed:",err);
+    showToast("Workout saved. Refresh the page if the new history does not appear yet.","success");
+  }
 });
 $("cancelWorkoutBtn").addEventListener("click",()=>{
   if(!confirm("Cancel the whole workout? Unsaved data will be lost."))return;
@@ -1442,20 +1608,24 @@ $("deleteWorkoutBtn").addEventListener("click",async()=>{
 
 
 async function deleteDocsInCollection(collectionName){
+  if(!user)throw new Error("No signed-in user");
+
   const snap=await getDocs(collection(db,"users",user.uid,collectionName));
   if(snap.empty)return 0;
 
   let deleted=0;
   const docs=snap.docs;
+
+  // Firestore batches allow up to 500 operations; use 400 for margin.
   for(let i=0;i<docs.length;i+=400){
+    const chunk=docs.slice(i,i+400);
     const batch=writeBatch(db);
-    docs.slice(i,i+400).forEach(d=>batch.delete(d.ref));
+    chunk.forEach(d=>batch.delete(d.ref));
     await batch.commit();
-    deleted+=Math.min(400,docs.length-i);
+    deleted+=chunk.length;
   }
   return deleted;
 }
-
 $("deleteEmptyWorkoutsBtn").addEventListener("click",async()=>{
   if(!user)return;
   const empty=workoutsCache.filter(isEmptyWorkout);
@@ -1482,21 +1652,27 @@ $("deleteEmptyWorkoutsBtn").addEventListener("click",async()=>{
 $("deleteAllTrackedDataBtn").addEventListener("click",async()=>{
   if(!user)return;
 
-  const typed=prompt('This deletes ALL tracked MY GYM data but keeps your login account. Type DELETE to continue:');
+  const typed=prompt('This deletes ALL tracked MY GYM fitness data but keeps your login account. Type DELETE to continue:');
   if(typed!=="DELETE"){
-    if(typed!==null)showToast("Nothing deleted. You must type DELETE exactly.","error");
+    if(typed!==null)showToast("Nothing deleted. Type DELETE exactly to confirm.","error");
     return;
   }
 
-  const second=confirm("Final confirmation: permanently delete all workouts, calendar statuses, body weight, calories/meals, and nutrition settings?");
+  const second=confirm("Final confirmation: permanently delete workouts, calendar statuses, body weight, calorie meals, and nutrition settings?");
   if(!second)return;
 
+  const btn=$("deleteAllTrackedDataBtn");
+  const oldText=btn.textContent;
+  btn.disabled=true;
+  btn.textContent="Deleting...";
+
   try{
-    await deleteDocsInCollection("workouts");
-    await deleteDocsInCollection("calendarDays");
-    await deleteDocsInCollection("bodyWeights");
-    await deleteDocsInCollection("meals");
-    await deleteDocsInCollection("settings");
+    const counts={};
+    counts.workouts=await deleteDocsInCollection("workouts");
+    counts.calendarDays=await deleteDocsInCollection("calendarDays");
+    counts.bodyWeights=await deleteDocsInCollection("bodyWeights");
+    counts.meals=await deleteDocsInCollection("meals");
+    counts.settings=await deleteDocsInCollection("settings");
 
     workoutsCache=[];
     calendarStatuses={};
@@ -1504,14 +1680,18 @@ $("deleteAllTrackedDataBtn").addEventListener("click",async()=>{
     mealCache=[];
     calorieTarget=0;
 
-    await loadAllData();
-    showToast("All tracked data deleted. Your login account was kept.","success");
+    try{await loadAllData()}catch(refreshErr){console.error("Post-delete refresh failed:",refreshErr)}
+
+    const total=Object.values(counts).reduce((a,b)=>a+b,0);
+    showToast(`${total} tracked record${total===1?"":"s"} deleted. Your login account was kept.`,"success");
   }catch(err){
-    console.error(err);
-    showToast("Could not delete all tracked data.","error");
+    console.error("Delete all tracked data failed:",err);
+    showToast(`Could not delete all tracked data (${err.code||err.message||"unknown error"}).`,"error");
+  }finally{
+    btn.disabled=false;
+    btn.textContent=oldText;
   }
 });
-
 function toLocalInputValue(d){const adjusted=new Date(d.getTime()-d.getTimezoneOffset()*60000);return adjusted.toISOString().slice(0,16)}
 function toDate(v){if(!v)return null;if(typeof v.toDate==="function")return v.toDate();if(v instanceof Date)return v;if(typeof v.seconds==="number")return new Date(v.seconds*1000);return new Date(v)}
 
