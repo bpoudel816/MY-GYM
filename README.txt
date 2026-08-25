@@ -1,23 +1,21 @@
-MY GYM RECOVERY BUILD
+MY GYM — FRIEND REQUEST FIX
 
-Replace:
-- index.html
-- styles.css
+Replace ONLY:
 - app.js
 
-Add:
+Keep:
+- index.html
+- styles.css
 - ui.js
+- firebase-config.js
+- firestore.rules
 
-DO NOT replace firebase-config.js.
-DO NOT change Firebase or Firestore rules.
+Why:
+The prior app tried to read a connection document before it existed.
+Firestore correctly denied that read, which caused "Could not send friend request."
 
-WHY:
-The previous build's JavaScript stopped before attaching button handlers.
-This recovery build separates Forgot Password UI into ui.js so that button works even if Firebase code fails.
-
-After upload:
-1. Wait for GitHub Pages deployment.
-2. Hard refresh (Ctrl+Shift+R).
-3. Click Forgot password FIRST.
-4. If reset panel opens, UI script is working.
-5. Then test Log in.
+After replacing app.js:
+1. Commit to main.
+2. Wait for GitHub Pages deployment.
+3. Hard refresh with Ctrl+Shift+R.
+4. Try sending the friend request again.

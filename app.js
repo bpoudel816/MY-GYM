@@ -381,12 +381,6 @@ $("sendFriendRequestBtn").addEventListener("click",async()=>{
     const target=codeSnap.data();
     if(target.uid===user.uid){showToast("That is your own friend code.","error");return}
 
-    const existingConnection=await getDoc(doc(db,"connections",`${target.uid}_${user.uid}`));
-    if(existingConnection.exists()){
-      showToast("You are already connected.","success");
-      return;
-    }
-
     await setDoc(doc(db,"users",target.uid,"friendRequests",user.uid),{
       fromUid:user.uid,
       targetUid:target.uid,
