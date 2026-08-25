@@ -9,8 +9,16 @@ service cloud.firestore {
       allow delete: if false;
 
       match /workouts/{workoutId} {
-        allow create, read, update, delete: if request.auth != null
-                                            && request.auth.uid == userId;
+        allow create, read, update, delete:
+          if request.auth != null
+          && request.auth.uid == userId;
+      }
+
+      // Calendar day status: rest / missed
+      match /calendarDays/{dayId} {
+        allow create, read, update, delete:
+          if request.auth != null
+          && request.auth.uid == userId;
       }
     }
 

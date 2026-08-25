@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#090d16">
   <title>MY GYM</title>
-  <link rel="stylesheet" href="styles.css?v=stable2">
+  <link rel="stylesheet" href="styles.css?v=stable3">
 </head>
 <body>
   <main class="shell">
@@ -20,7 +20,7 @@
       <div class="hero">
         <p class="eyebrow">CLOUD FITNESS TRACKER</p>
         <h1>Your gym life,<br><span>beautifully tracked.</span></h1>
-        <p class="muted">Secure login, cloud workout history, progress tracking, and approved friend sharing later.</p>
+        <p class="muted">Secure login, cloud workout history, calendar status, and progress tracking.</p>
       </div>
 
       <div class="auth-card">
@@ -128,6 +128,7 @@
               <div>
                 <p id="activeExerciseMeta" class="eyebrow">EXERCISE</p>
                 <h2 id="activeExerciseName"></h2>
+                <p id="lastWeightHint" class="muted mini"></p>
               </div>
               <button id="removeCurrentExerciseBtn" class="danger">Remove</button>
             </div>
@@ -140,8 +141,9 @@
               </div>
             </div>
 
-            <div class="set-head"><span>SET</span><span>WEIGHT</span><span>REPS</span><span>✓</span></div>
+            <div class="set-head fancy-set-head"><span>SET</span><span>WEIGHT</span><span>REPS</span><span>✓</span></div>
             <div id="setList"></div>
+
             <button id="addSetBtn" class="secondary full">+ Add set</button>
             <button id="finishThisExerciseBtn" class="primary full finish-exercise">Finish This Exercise</button>
           </div>
@@ -176,10 +178,24 @@
             <div class="legend">
               <span><i class="dot workout-dot"></i>Workout</span>
               <span><i class="dot rest-dot"></i>Rest</span>
-              <span><i class="dot skipped-dot"></i>Skipped</span>
+              <span><i class="dot skipped-dot"></i>Missed</span>
             </div>
           </div>
-          <div id="selectedDayWorkouts" class="card selected-day">Tap a workout day to see details.</div>
+
+          <div id="selectedDayPanel" class="card selected-day">
+            <div id="selectedDayHeading">Tap a day to see details.</div>
+
+            <div id="dayStatusControls" class="day-status-controls hidden">
+              <p class="muted mini">Set day status</p>
+              <div class="status-buttons">
+                <button id="markRestBtn" class="status-btn rest-btn" type="button">Rest Day</button>
+                <button id="markMissedBtn" class="status-btn missed-btn" type="button">Missed Day</button>
+                <button id="clearStatusBtn" class="status-btn clear-btn" type="button">Clear</button>
+              </div>
+            </div>
+
+            <div id="selectedDayWorkouts"></div>
+          </div>
         </section>
 
         <section id="workoutsPanel" class="history-panel hidden">
@@ -194,8 +210,8 @@
           </div>
           <div class="card progress-placeholder">
             <p class="eyebrow">GRAPHS</p>
-            <h3>Strength, reps, volume, body weight, estimated 1RM, workout frequency, and consistency</h3>
-            <p class="muted">The graph engine will be added after this stable feature-restoration round passes testing.</p>
+            <h3>Strength, reps, volume, body weight, estimated 1RM, frequency, and consistency</h3>
+            <p class="muted">The graph engine comes after this round is stable.</p>
           </div>
         </section>
       </section>
@@ -225,7 +241,7 @@
     <div id="toast" class="toast hidden"></div>
   </main>
 
-  <script src="ui.js?v=stable2"></script>
-  <script type="module" src="app.js?v=stable2"></script>
+  <script src="ui.js?v=stable3"></script>
+  <script type="module" src="app.js?v=stable3"></script>
 </body>
 </html>
