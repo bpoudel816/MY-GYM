@@ -1659,3 +1659,63 @@ input,textarea,select{background:var(--input)!important;color:var(--text)!import
     padding:0 5px;
   }
 }
+
+
+/* ===== PROGRESS PERIOD BUTTON FINAL STYLE ===== */
+.progress-filter-wrap{
+  display:flex !important;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:9px;
+}
+.progress-period-toggle{
+  display:flex !important;
+  align-items:center;
+  gap:5px;
+  padding:4px !important;
+  background:var(--surface-2) !important;
+  border:1px solid var(--border) !important;
+  border-radius:14px !important;
+}
+.progress-period-btn{
+  appearance:none;
+  -webkit-appearance:none;
+  border:0 !important;
+  min-height:38px;
+  padding:0 13px !important;
+  border-radius:10px !important;
+  background:transparent !important;
+  color:var(--muted) !important;
+  font:inherit;
+  font-size:11px !important;
+  font-weight:900 !important;
+  cursor:pointer;
+}
+.progress-period-btn.active{
+  background:linear-gradient(135deg,#7c3aed,#c026d3) !important;
+  color:#fff !important;
+  box-shadow:0 6px 16px #7c3aed38 !important;
+}
+:root[data-theme="light"] .progress-period-toggle{
+  background:#f3f6fa !important;
+  border-color:#d4dce7 !important;
+}
+:root[data-theme="light"] .progress-period-btn{
+  color:#5b6678 !important;
+}
+:root[data-theme="light"] .progress-period-btn.active{
+  color:#fff !important;
+}
+@media(max-width:650px){
+  .progress-filter-wrap{
+    width:100%;
+    align-items:stretch;
+  }
+  .progress-period-toggle{
+    display:grid !important;
+    grid-template-columns:repeat(4,1fr);
+  }
+  .progress-period-btn{
+    padding:0 4px !important;
+  }
+}

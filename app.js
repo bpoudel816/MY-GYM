@@ -1971,6 +1971,20 @@ function exerciseHistory(name){
 }
 
 
+
+function formatNumber(value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return "—";
+  if(Math.abs(n-Math.round(n))<0.000001)return String(Math.round(n));
+  return n.toFixed(1).replace(/\.0$/,"");
+}
+
+function weightUnitLabel(){
+  // MY GYM currently records strength loads in pounds.
+  // Imported body-weight entries may carry their own unit, but exercise loads use lb.
+  return "lb";
+}
+
 function updateSelectedExerciseMetrics(){
   const select=$("progressExerciseSelect");
   const name=select?.value||"";
@@ -2084,7 +2098,11 @@ function createChartSafe(key,canvas,config){
 }
 
 function renderAllCharts(){
-  updateSelectedExerciseMetrics();
+  try{
+    updateSelectedExerciseMetrics();
+  }catch(err){
+    console.error("Progress metric calculation failed:",err);
+  }
   if(typeof window.Chart==="undefined"){
     console.error("Chart.js is not loaded.");
     document.querySelectorAll(".graph-card").forEach(card=>{
