@@ -1793,21 +1793,109 @@ function renderBodyWeightProfile(){
 }
 
 let charts={};
+let progressPeriod="all";
 
 function destroyChart(name){
   if(charts[name]){charts[name].destroy();charts[name]=null}
 }
 
+
+function normalizeStrengthSet(raw){
+  if(!raw || typeof raw!=="object")return null;
+  const weight=Number(
+    raw.weight ?? raw.lbs ?? raw.lb ?? raw.kg ?? raw.load ?? raw.value ?? 0
+  );
+  const reps=Number(
+    raw.reps ?? raw.rep ?? raw.repetitions ?? raw.repetition ?? raw.count ?? 0
+  );
+  if(!Number.isFinite(weight) || !Number.isFinite(reps))return null;
+  if(weight<=0 && reps<=0)return null;
+  return {weight:Math.max(0,weight),reps:Math.max(0,reps)};
+}
+
+function normalizeExerciseSets(ex){
+  const candidates=[];
+  if(Array.isArray(ex?.sets))candidates.push(...ex.sets);
+  if(Array.isArray(ex?.entries))candidates.push(...ex.entries);
+  if(Array.isArray(ex?.setData))candidates.push(...ex.setData);
+  if(Array.isArray(ex?.history))candidates.push(...ex.history);
+  return candidates.map(normalizeStrengthSet).filter(Boolean);
+}
+
+function normalizeCardioRecord(ex){
+  const c=ex?.cardio || ex?.cardioData || {};
+  const name=String(ex?.name||"").toLowerCase();
+  const n=v=>{
+    const x=Number(v);
+    return Number.isFinite(x)?x:0;
+  };
+  const minutes=
+    n(c.minutes) ||
+    n(c.timeMinutes) +
+      n(c.timeSeconds)/60 ||
+    (typeof c.time==="string" && c.time.includes(":")
+      ? (()=>{const [m,s]=c.time.split(":").map(Number);return (m||0)+(s||0)/60})()
+      : n(c.time));
+  return {
+    minutes,
+    distance:n(c.distance),
+    incline:n(c.incline),
+    resistance:n(c.resistance ?? c.level),
+    stairs:n(c.stairs),
+    floors:n(c.floors),
+    pace:n(c.pace)
+  };
+}
+
+function progressCutoffDate(period){
+  const now=new Date();
+  if(period==="week")return new Date(now.getFullYear(),now.getMonth(),now.getDate()-6,0,0,0,0);
+  if(period==="month")return new Date(now.getFullYear(),now.getMonth()-1,now.getDate(),0,0,0,0);
+  if(period==="year")return new Date(now.getFullYear()-1,now.getMonth(),now.getDate(),0,0,0,0);
+  return null;
+}
+
+function inProgressPeriod(date){
+  if(!date)return false;
+  const cutoff=progressCutoffDate(progressPeriod);
+  return !cutoff || date>=cutoff;
+}
+
+function filteredProgressWorkouts(){
+  return workoutsCache.filter(w=>{
+    const d=toDate(w.startedAt);
+    return d && inProgressPeriod(d);
+  });
+}
+
+function applyProgressPeriodButtons(){
+  document.querySelectorAll(".progress-period-btn").forEach(btn=>{
+    btn.classList.toggle("active",btn.dataset.period===progressPeriod);
+  });
+}
+
+document.querySelectorAll(".progress-period-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    progressPeriod=btn.dataset.period||"all";
+    applyProgressPeriodButtons();
+    updateProgressMetrics();
+    renderProgressControls();
+    updateSelectedExerciseMetrics();
+    renderProgressChartsSoon();
+  });
+});
+
 function renderProgressControls(){
   const select=$("progressExerciseSelect");
   if(!select)return;
-  const names=[...new Set(workoutsCache.flatMap(w=>(Array.isArray(w.exercises)?w.exercises:[]).map(ex=>ex?.name)).filter(Boolean))].sort();
+  const source=filteredProgressWorkouts();
+  const names=[...new Set(source.flatMap(w=>(Array.isArray(w.exercises)?w.exercises:[]).map(ex=>ex?.name)).filter(Boolean))].sort();
   const current=select.value;
   select.innerHTML="";
   if(!names.length){
     const opt=document.createElement("option");
     opt.value="";
-    opt.textContent="No exercise history yet";
+    opt.textContent="No exercise history in this period";
     select.appendChild(opt);
     return;
   }
@@ -1816,6 +1904,7 @@ function renderProgressControls(){
     opt.value=name;opt.textContent=name;select.appendChild(opt);
   });
   if(current&&names.includes(current))select.value=current;
+  applyProgressPeriodButtons();
 }
 
 $("progressExerciseSelect").addEventListener("change",()=>{
@@ -1824,31 +1913,31 @@ $("progressExerciseSelect").addEventListener("change",()=>{
 });
 
 function selectedExerciseIsCardio(name){
-  return workoutsCache.some(w=>(w.exercises||[]).some(ex=>ex.name===name && Boolean(ex.cardio)));
+  return filteredProgressWorkouts().some(w=>(w.exercises||[]).some(ex=>ex.name===name && Boolean(ex.cardio||ex.cardioData)));
 }
 
 function strengthExerciseHistory(name){
   const rows=[];
-  workoutsCache.slice().reverse().forEach(w=>{
-    const d=toDate(w.startedAt);
-    (w.exercises||[]).filter(ex=>ex.name===name && !ex.cardio).forEach(ex=>{
-      const sets=Array.isArray(ex.sets)?ex.sets.filter(Boolean):[];
-      if(!sets.length)return;
-      const maxSet=sets.reduce((best,s)=>Number(s.weight??s.lbs??0)>Number(best.weight??best.lbs??0)?s:best,sets[0]);
-      const totalVolume=sets.reduce((sum,s)=>sum+(Number(s.weight??s.lbs??0)*Number(s.reps??s.rep??0)),0);
-      const best1rm=Math.max(...sets.map(s=>{
-        const wt=Number(s.weight??s.lbs??0),reps=Number(s.reps??s.rep??0);
-        return wt>0?wt*(1+reps/30):0;
-      }));
-      rows.push({
-        date:d,
-        weight:Number(maxSet.weight??maxSet.lbs??0),
-        reps:Number(maxSet.reps??maxSet.rep??0),
-        volume:totalVolume,
-        oneRm:best1rm
+  filteredProgressWorkouts()
+    .slice()
+    .sort((a,b)=>(toDate(a.startedAt)||0)-(toDate(b.startedAt)||0))
+    .forEach(w=>{
+      const d=toDate(w.startedAt);
+      (w.exercises||[]).filter(ex=>ex.name===name && !(ex.cardio||ex.cardioData)).forEach(ex=>{
+        const sets=normalizeExerciseSets(ex);
+        if(!sets.length)return;
+        const maxSet=sets.reduce((best,s)=>s.weight>best.weight?s:best,sets[0]);
+        const totalVolume=sets.reduce((sum,s)=>sum+(s.weight*s.reps),0);
+        const best1rm=Math.max(...sets.map(s=>s.weight>0?s.weight*(1+s.reps/30):0));
+        rows.push({
+          date:d,
+          weight:maxSet.weight,
+          reps:maxSet.reps,
+          volume:totalVolume,
+          oneRm:best1rm
+        });
       });
     });
-  });
   return rows;
 }
 
@@ -1859,14 +1948,21 @@ function cardioProgressFields(name){
 function cardioExerciseHistory(name){
   const fields=cardioProgressFields(name);
   const rows=[];
-  workoutsCache.slice().reverse().forEach(w=>{
-    const d=toDate(w.startedAt);
-    (w.exercises||[]).filter(ex=>ex.name===name && ex.cardio).forEach(ex=>{
-      const row={date:d};
-      fields.forEach(f=>row[f.key]=Number(ex.cardio?.[f.key]||0));
-      rows.push(row);
+  filteredProgressWorkouts()
+    .slice()
+    .sort((a,b)=>(toDate(a.startedAt)||0)-(toDate(b.startedAt)||0))
+    .forEach(w=>{
+      const d=toDate(w.startedAt);
+      (w.exercises||[]).filter(ex=>ex.name===name && (ex.cardio||ex.cardioData)).forEach(ex=>{
+        const norm=normalizeCardioRecord(ex);
+        const row={date:d};
+        fields.forEach(f=>{
+          if(f.key==="minutes")row[f.key]=norm.minutes;
+          else row[f.key]=Number(norm[f.key]||0);
+        });
+        rows.push(row);
+      });
     });
-  });
   return rows;
 }
 
@@ -1929,11 +2025,8 @@ function renderProgressChartsSoon(){
       });
     });
   };
-  if(document.fonts?.ready){
-    document.fonts.ready.then(run).catch(run);
-  }else{
-    run();
-  }
+  if(document.fonts?.ready)document.fonts.ready.then(run).catch(run);
+  else run();
 }
 
 function chartDefaults(){
@@ -1983,7 +2076,7 @@ function createChartSafe(key,canvas,config){
       card.querySelector(".chart-runtime-error")?.remove();
       const msg=document.createElement("p");
       msg.className="chart-runtime-error";
-      msg.textContent=`Could not draw this graph: ${err?.message||"unknown chart error"}`;
+      msg.textContent=`Could not draw graph: ${err?.message||"unknown error"}`;
       card.appendChild(msg);
     }
     return null;
@@ -2004,19 +2097,34 @@ function renderAllCharts(){
     return;
   }
   document.querySelectorAll(".chart-load-error").forEach(el=>el.remove());
-  document.querySelectorAll(".chart-runtime-error").forEach(el=>el.remove());
   resizeProgressCharts();
   const select=$("progressExerciseSelect");
   const name=select?.value||"";
   const cardio=name&&selectedExerciseIsCardio(name);
   const hist=name?exerciseHistory(name):[];
   const labels=hist.map(r=>r.date?r.date.toLocaleDateString(undefined,{month:"short",day:"numeric"}):"");
+  document.querySelectorAll(".chart-no-data,.chart-runtime-error").forEach(el=>el.remove());
+  const showNoData=(id,text)=>{
+    const canvas=$(id); if(!canvas)return;
+    const card=canvas.closest(".graph-card");
+    if(!card||card.querySelector(".chart-no-data"))return;
+    const p=document.createElement("p");
+    p.className="chart-no-data";
+    p.textContent=text;
+    card.appendChild(p);
+  };
 
   destroyChart("strength");
   destroyChart("volume");
   destroyChart("oneRm");
   destroyChart("bodyWeight");
   destroyChart("frequency");
+
+  if(name && !hist.length){
+    showNoData("strengthChart","No saved data for this exercise in the selected period.");
+    showNoData("volumeChart","No saved data for this exercise in the selected period.");
+    showNoData("oneRmChart","No saved data for this exercise in the selected period.");
+  }
 
   if(cardio){
     const fields=cardioProgressFields(name);
@@ -2098,7 +2206,7 @@ function renderAllCharts(){
 
   if($("frequencyChart")){
     const weekly={};
-    visibleWorkouts().forEach(w=>{
+    filteredProgressWorkouts().forEach(w=>{
       const d=toDate(w.startedAt);
       if(!d)return;
       const monday=new Date(d);
@@ -2194,10 +2302,10 @@ function updateMetrics(){
   }else{$("lastWorkoutMetric").textContent="—";$("lastWorkoutDate").textContent="No workouts"}
 }
 function updateProgressMetrics(){
-  const visible=visibleWorkouts();
+  const visible=filteredProgressWorkouts();
   $("progressWorkoutCount").textContent=visible.length;
-  $("progressSetCount").textContent=visible.reduce((n,w)=>n+(w.exercises||[]).reduce((m,e)=>m+(e.sets?.length||0),0),0);
-  const names=new Set();visible.forEach(w=>(w.exercises||[]).forEach(e=>names.add(e.name)));
+  $("progressSetCount").textContent=visible.reduce((n,w)=>n+(w.exercises||[]).reduce((m,e)=>m+normalizeExerciseSets(e).length,0),0);
+  const names=new Set();visible.forEach(w=>(w.exercises||[]).forEach(e=>{if(e?.name)names.add(e.name)}));
   $("progressExerciseCount").textContent=names.size;
 }
 function calculateStreak(list){

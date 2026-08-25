@@ -1590,64 +1590,72 @@ input,textarea,select{background:var(--input)!important;color:var(--text)!import
 }
 
 
-/* ===== FINAL LIGHT MODE WORKOUT ROW FIX ===== */
-:root[data-theme="light"] .exercise-summary-row{
-  background:#f7f9fc !important;
-  border:1px solid #d8e0eb !important;
-  color:#111827 !important;
+/* ===== PROGRESS PERIOD FILTER ===== */
+.progress-filter-wrap{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
 }
-:root[data-theme="light"] .exercise-summary-row strong{
-  color:#111827 !important;
-  -webkit-text-fill-color:#111827 !important;
-  opacity:1 !important;
+.progress-period-toggle{
+  display:flex;
+  gap:6px;
+  padding:4px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--surface-2);
 }
-:root[data-theme="light"] .exercise-summary-row .set-summary{
-  color:#475569 !important;
-  -webkit-text-fill-color:#475569 !important;
-  opacity:1 !important;
+.progress-period-btn{
+  min-height:38px;
+  padding:0 12px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:900;
 }
-:root[data-theme="light"] .workout-card{
-  background:#ffffff !important;
-  border-color:#d8e0eb !important;
+.progress-period-btn.active{
+  background:linear-gradient(135deg,#7c3aed,#d946ef);
+  color:#fff;
+  box-shadow:0 6px 16px #7c3aed33;
 }
-:root[data-theme="light"] .workout-card .pill{
-  color:#64748b !important;
-  background:#f8fafc !important;
-  border-color:#d8e0eb !important;
-}
-
-/* ===== PROGRESS CHART VISIBILITY FIX ===== */
-.graph-card{
-  min-height:340px;
-}
-.graph-card canvas{
-  display:block !important;
-  width:100% !important;
-  height:260px !important;
-  min-height:260px !important;
-}
-.graph-card.full-width canvas{
-  height:230px !important;
-  min-height:230px !important;
-}
-:root[data-theme="light"] .graph-card{
-  background:#ffffff !important;
-  border-color:#d8e0eb !important;
-}
-:root[data-theme="light"] .graph-card h3,
-:root[data-theme="light"] .graph-card .eyebrow{
-  color:#111827 !important;
-}
-
-
-/* ===== GRAPH RUNTIME FIX ===== */
-.chart-load-error{
-  margin:16px 0 0;
-  padding:12px;
+.chart-no-data,
+.chart-runtime-error{
+  margin:18px 0 0;
+  padding:12px 14px;
   border-radius:12px;
+  font-size:12px;
+  font-weight:800;
+}
+.chart-no-data{
+  background:var(--surface-2);
+  border:1px dashed var(--border);
+  color:var(--muted);
+}
+.chart-runtime-error{
   background:#ef444414;
   border:1px solid #ef444433;
   color:#ef4444;
-  font-size:12px;
-  font-weight:800;
+}
+@media(max-width:650px){
+  .progress-controls{
+    align-items:stretch!important;
+  }
+  .progress-filter-wrap{
+    width:100%;
+    justify-content:stretch;
+  }
+  .progress-filter-wrap select{
+    width:100%;
+  }
+  .progress-period-toggle{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+  }
+  .progress-period-btn{
+    padding:0 5px;
+  }
 }

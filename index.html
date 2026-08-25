@@ -293,7 +293,15 @@
               <p class="eyebrow">EXERCISE PROGRESS</p>
               <h3>Choose an exercise</h3>
             </div>
-            <select id="progressExerciseSelect"></select>
+            <div class="progress-filter-wrap">
+              <select id="progressExerciseSelect"></select>
+              <div class="progress-period-toggle" role="group" aria-label="Progress period">
+                <button type="button" class="progress-period-btn" data-period="week">Weekly</button>
+                <button type="button" class="progress-period-btn" data-period="month">Monthly</button>
+                <button type="button" class="progress-period-btn" data-period="year">Yearly</button>
+                <button type="button" class="progress-period-btn active" data-period="all">Total</button>
+              </div>
+            </div>
           </div>
 
           <div class="graph-grid">
@@ -638,7 +646,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="ui.js?v=graphfix13"></script>
-  <script type="module" src="app.js?v=graphfix13"></script>
+  <script src="ui.js?v=graphfinal11"></script>
+  <script type="module" src="app.js?v=progressperiod14"></script>
 </body>
 </html>
