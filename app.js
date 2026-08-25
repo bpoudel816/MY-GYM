@@ -448,15 +448,16 @@ async function loadIncomingRequests(){
 
 async function approveFriendRequest(requesterUid,request){
   try{
-    const batch=writeBatch(db);
     const requestRef=doc(db,"users",user.uid,"friendRequests",requesterUid);
 
-    batch.update(requestRef,{
+    // Step 1: the receiver approves the request first.
+    await updateDoc(requestRef,{
       status:"accepted",
       acceptedAt:serverTimestamp()
     });
 
-    batch.set(doc(db,"connections",`${user.uid}_${requesterUid}`),{
+    // Step 2: requester may view the receiver's progress.
+    await setDoc(doc(db,"connections",`${user.uid}_${requesterUid}`),{
       ownerUid:user.uid,
       viewerUid:requesterUid,
       ownerName:currentDisplayName,
@@ -467,7 +468,8 @@ async function approveFriendRequest(requesterUid,request){
       createdAt:serverTimestamp()
     });
 
-    batch.set(doc(db,"connections",`${requesterUid}_${user.uid}`),{
+    // Step 3: receiver may also view requester's progress.
+    await setDoc(doc(db,"connections",`${requesterUid}_${user.uid}`),{
       ownerUid:requesterUid,
       viewerUid:user.uid,
       ownerName:request.fromName||"MY GYM User",
@@ -478,15 +480,13 @@ async function approveFriendRequest(requesterUid,request){
       createdAt:serverTimestamp()
     });
 
-    await batch.commit();
     await loadConnectionsArea();
     showToast("Friend request approved.","success");
   }catch(err){
-    console.error(err);
-    showToast("Could not approve request. Check Firestore rules.","error");
+    console.error("Friend approval failed:",err);
+    showToast(`Could not approve request (${err.code||"unknown error"}).`,"error");
   }
 }
-
 async function declineFriendRequest(requesterUid){
   if(!confirm("Decline this friend request?"))return;
   try{
