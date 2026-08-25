@@ -30,7 +30,7 @@
           <strong>MY GYM</strong>
         </span>
       </a>
-      <span class="day-pill">WORKOUT UX</span>
+      <span class="day-pill">HISTORY+</span>
     </header>
 
     <section id="authView" class="auth-layout">
@@ -38,11 +38,6 @@
         <div class="mini-pill">CLOUD FITNESS TRACKER</div>
         <h1>Your gym life,<br><span>beautifully tracked.</span></h1>
         <p>Log workouts, sync them across devices, and later share read-only progress with friends you approve.</p>
-        <div class="feature-row">
-          <article><div class="feature-icon">↗</div><strong>Progress</strong><span>Strength, history & trends</span></article>
-          <article><div class="feature-icon">☁</div><strong>Cloud Sync</strong><span>Use the same account anywhere</span></article>
-          <article><div class="feature-icon">◎</div><strong>Connections</strong><span>Approved friends, view only</span></article>
-        </div>
       </div>
 
       <div class="auth-card">
@@ -64,9 +59,9 @@
         <section id="registerPanel" class="panel">
           <div class="panel-heading"><p class="eyebrow">NEW TO MY GYM?</p><h2>Create your account</h2></div>
           <form id="registerForm">
-            <label>Display name<input id="registerName" type="text" autocomplete="name" maxlength="40" placeholder="Your name" required /></label>
-            <label>Email<input id="registerEmail" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
-            <label>Password<input id="registerPassword" type="password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters" required /></label>
+            <label>Display name<input id="registerName" type="text" maxlength="40" placeholder="Your name" required /></label>
+            <label>Email<input id="registerEmail" type="email" placeholder="you@example.com" required /></label>
+            <label>Password<input id="registerPassword" type="password" minlength="6" placeholder="At least 6 characters" required /></label>
             <button class="primary" type="submit">Create account <span>→</span></button>
           </form>
         </section>
@@ -74,13 +69,13 @@
         <section id="resetPanel" class="panel">
           <div class="panel-heading"><p class="eyebrow">PASSWORD RESET</p><h2>Reset your password</h2><p class="muted small">Enter your MY GYM email. Firebase will send you a reset link.</p></div>
           <form id="resetForm">
-            <label>Email<input id="resetEmail" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+            <label>Email<input id="resetEmail" type="email" placeholder="you@example.com" required /></label>
             <button class="primary" type="submit">Send reset email <span>→</span></button>
           </form>
           <button id="backToLoginBtn" class="text-button" type="button">← Back to login</button>
         </section>
 
-        <div id="authMessage" class="message" aria-live="polite"></div>
+        <div id="authMessage" class="message"></div>
       </div>
     </section>
 
@@ -101,7 +96,7 @@
         <div class="dashboard-grid">
           <article class="start-card">
             <div class="orb">MG</div>
-            <div><p class="eyebrow">TODAY</p><h3>Ready to train?</h3><p>Start a workout, complete exercises one by one, then end the overall workout when you are done.</p></div>
+            <div><p class="eyebrow">TODAY</p><h3>Ready to train?</h3><p>Finish each exercise, return to body parts, then end the whole workout when your session is complete.</p></div>
             <button id="startWorkoutBtn" class="primary" type="button">Start workout <span>→</span></button>
           </article>
           <article class="metric"><span>WORKOUTS</span><strong id="workoutCount">0</strong><small>Saved</small></article>
@@ -115,64 +110,119 @@
 
       <section id="workoutScreen" class="app-screen hidden">
         <div id="workoutLanding">
-          <div class="page-heading"><div><p class="eyebrow">WORKOUT</p><h2>Choose a body part</h2><p class="muted">Choose a category, then select a machine or exercise.</p></div></div>
+          <div id="activeWorkoutBar" class="whole-workout-bar hidden">
+            <div><p class="eyebrow">ACTIVE WORKOUT</p><strong id="wholeWorkoutStatus">Workout in progress</strong><span id="workoutTimer" class="timer-pill">00:00</span></div>
+            <div class="whole-workout-actions">
+              <button id="finishWholeWorkoutBtn" class="finish-workout-top" type="button">Finish Whole Workout</button>
+              <button id="cancelWorkoutBtn" class="danger-ghost" type="button">Cancel</button>
+            </div>
+          </div>
+
+          <div class="page-heading"><div><p class="eyebrow">WORKOUT</p><h2>Choose a body part</h2><p class="muted">Finish one exercise, then you will return here automatically.</p></div></div>
           <div id="categoryGrid" class="category-grid"></div>
         </div>
 
         <div id="exercisePicker" class="hidden">
-          <div class="page-heading exercise-picker-heading">
+          <div class="page-heading">
             <button id="backToCategoriesBtn" class="ghost compact" type="button">← Body parts</button>
             <div><p class="eyebrow" id="selectedCategoryLabel">CATEGORY</p><h2>Choose an exercise</h2></div>
           </div>
           <div id="exerciseGrid" class="exercise-grid"></div>
         </div>
 
-        <div id="activeWorkout" class="hidden">
-          <div class="workout-topbar">
-            <div class="workout-title-block">
-              <p class="eyebrow">ACTIVE WORKOUT</p>
-              <div class="active-title-row">
-                <h2 id="activeWorkoutTitle">Workout</h2>
-                <span id="workoutTimer" class="timer-pill">00:00</span>
+        <div id="activeExercise" class="hidden">
+          <div class="exercise-session single-exercise">
+            <div class="exercise-session-head">
+              <div>
+                <p class="eyebrow" id="activeExerciseMeta">EXERCISE</p>
+                <h2 id="activeExerciseName">Exercise</h2>
               </div>
-              <p class="muted">Finish this exercise when its sets are done. You will return to body parts automatically.</p>
+              <button id="removeCurrentExerciseBtn" class="remove-exercise" type="button">Remove</button>
             </div>
-            <div class="top-workout-actions">
-              <button id="finishWorkoutBtn" class="finish-workout-top" type="button">Finish Whole Workout</button>
-              <button id="cancelWorkoutBtn" class="danger-ghost" type="button">Cancel</button>
-            </div>
-          </div>
 
-          <div id="exerciseSessionList" class="session-list"></div>
+            <div id="weightModeWrap" class="weight-mode-wrap hidden">
+              <span>Weight mode</span>
+              <div class="mode-toggle">
+                <button id="perArmBtn" class="mode-btn active" type="button">Per Arm</button>
+                <button id="totalBtn" class="mode-btn" type="button">Total / Both Arms</button>
+              </div>
+            </div>
+
+            <div class="set-header"><span>SET</span><span>WEIGHT</span><span>REPS</span><span>✓</span></div>
+            <div id="currentSets"></div>
+            <button id="addSetBtn" class="add-set-btn" type="button">+ Add set</button>
+            <button id="finishThisExerciseBtn" class="finish-exercise-main" type="button">Finish This Exercise</button>
+          </div>
         </div>
       </section>
 
       <section id="historyScreen" class="app-screen hidden">
-        <div class="page-heading"><div><p class="eyebrow">HISTORY</p><h2>Your workouts</h2><p class="muted">Completed workouts stored in your Firebase cloud account.</p></div></div>
-        <div id="historyList" class="workout-list empty-state">No workouts saved yet.</div>
+        <div class="page-heading">
+          <div><p class="eyebrow">HISTORY</p><h2>Your training</h2><p class="muted">Calendar, completed workouts, and progress in one place.</p></div>
+        </div>
+
+        <div class="history-tabs">
+          <button class="history-tab active" data-history-tab="calendar" type="button">Calendar</button>
+          <button class="history-tab" data-history-tab="workouts" type="button">Workouts</button>
+          <button class="history-tab" data-history-tab="progress" type="button">Progress</button>
+        </div>
+
+        <div id="calendarTab" class="history-panel">
+          <div class="calendar-card">
+            <div class="calendar-head">
+              <button id="prevMonthBtn" class="ghost compact" type="button">←</button>
+              <h3 id="calendarTitle">Month</h3>
+              <button id="nextMonthBtn" class="ghost compact" type="button">→</button>
+            </div>
+            <div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+            <div class="calendar-legend"><span><i class="dot workout-dot"></i> Workout</span><span><i class="dot rest-dot"></i> Rest</span><span><i class="dot skipped-dot"></i> Skipped</span></div>
+          </div>
+          <div id="selectedDayWorkouts" class="selected-day-panel empty-state">Tap a workout day to see details.</div>
+        </div>
+
+        <div id="workoutsTab" class="history-panel hidden">
+          <div id="historyList" class="workout-list empty-state">No workouts saved yet.</div>
+        </div>
+
+        <div id="progressTab" class="history-panel hidden">
+          <div class="progress-summary-grid">
+            <article class="setting-card"><span>TOTAL WORKOUTS</span><strong id="progressTotalWorkouts">0</strong><small>Saved workouts</small></article>
+            <article class="setting-card"><span>TOTAL SETS</span><strong id="progressTotalSets">0</strong><small>Across your history</small></article>
+            <article class="setting-card"><span>EXERCISES</span><strong id="progressExerciseCount">0</strong><small>Unique exercises</small></article>
+          </div>
+          <div class="progress-coming">
+            <p class="eyebrow">GRAPHS</p>
+            <h3>Strength, volume, body weight, 1RM and consistency graphs</h3>
+            <p class="muted">The graph engine comes in the next progress-focused round. This tab is now reserved for it.</p>
+          </div>
+        </div>
       </section>
 
       <section id="profileScreen" class="app-screen hidden">
         <div class="page-heading"><div><p class="eyebrow">PROFILE</p><h2 id="profileName">Athlete</h2><p id="profileEmail" class="muted"></p></div></div>
-        <div class="profile-grid">
-          <article class="setting-card"><span>Weight unit</span><strong>lb</strong><small>Weight tracking comes next.</small></article>
-          <article class="setting-card"><span>Theme</span><strong>Dark</strong><small>Light/system modes come later.</small></article>
-          <article class="setting-card"><span>Connections</span><strong>Coming soon</strong><small>Friends request + approval + read-only sharing.</small></article>
-        </div>
       </section>
     </section>
 
-    <div id="workoutEditor" class="editor-overlay hidden">
-      <div class="editor-card">
-        <div class="editor-head"><div><p class="eyebrow">EDIT SAVED WORKOUT</p><h2>Edit workout</h2></div><button id="closeEditorBtn" class="ghost compact" type="button">Close</button></div>
-        <label>Workout date & time<input id="editWorkoutDate" type="datetime-local"></label>
-        <div id="editExerciseList" class="session-list"></div>
-        <div class="editor-actions"><button id="editorAddExerciseBtn" class="ghost" type="button">+ Add exercise</button><button id="saveWorkoutEditsBtn" class="finish-workout-top" type="button">Save Changes</button></div>
+    <div id="editModal" class="modal hidden">
+      <div class="modal-backdrop" id="editBackdrop"></div>
+      <div class="modal-card">
+        <div class="modal-head">
+          <div><p class="eyebrow">EDIT WORKOUT</p><h3 id="editWorkoutTitle">Workout</h3></div>
+          <button id="closeEditBtn" class="ghost compact" type="button">Close</button>
+        </div>
+        <label>Workout date & time<input id="editWorkoutDateTime" type="datetime-local" /></label>
+        <div id="editExerciseList" class="edit-exercise-list"></div>
+        <div class="modal-actions">
+          <button id="saveWorkoutChangesBtn" class="primary" type="button">Save Changes <span>✓</span></button>
+        </div>
       </div>
     </div>
+
     <div id="toast" class="toast hidden"></div>
-    <footer>MY GYM • Workout UX upgrade</footer>
+    <footer>MY GYM • History + weight mode upgrade</footer>
   </main>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>
