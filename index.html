@@ -10,7 +10,7 @@
   <title>MY GYM</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="my-gym-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=visual1">
+  <link rel="stylesheet" href="styles.css?v=friends1">
 </head>
 <body>
   <main class="shell">
@@ -81,6 +81,7 @@
         <button data-screen="workout" class="navbtn">Workout</button>
         <button data-screen="history" class="navbtn">History</button>
         <button data-screen="calories" class="navbtn">Calories</button>
+        <button data-screen="connections" class="navbtn">Connections</button>
         <button data-screen="profile" class="navbtn">Profile</button>
       </nav>
 
@@ -349,6 +350,84 @@
         </div>
       </section>
 
+
+      <section id="connectionsScreen" class="screen hidden">
+        <div class="section-hero">
+          <div>
+            <p class="eyebrow">CONNECTIONS</p>
+            <h2>Friends & shared progress</h2>
+            <p class="muted">Friends you approve can view your workout progress only. They cannot change your data.</p>
+          </div>
+          <span class="section-hero-badge">READ ONLY</span>
+        </div>
+
+        <div class="connections-grid">
+          <div class="card">
+            <p class="eyebrow">YOUR FRIEND CODE</p>
+            <h3>Share this code with a friend</h3>
+            <div class="friend-code-box">
+              <strong id="myFriendCode">--------</strong>
+              <button id="copyFriendCodeBtn" class="secondary" type="button">Copy</button>
+            </div>
+            <p class="muted mini">Only people you approve can view your workout progress.</p>
+          </div>
+
+          <div class="card">
+            <p class="eyebrow">ADD FRIEND</p>
+            <h3>Enter their MY GYM code</h3>
+            <div class="friend-request-row">
+              <input id="friendCodeInput" maxlength="12" autocomplete="off" placeholder="AB12CD34">
+              <button id="sendFriendRequestBtn" class="primary" type="button">Send Request</button>
+            </div>
+            <p class="muted mini">Friend codes are not passwords. Never share your MY GYM password.</p>
+          </div>
+        </div>
+
+        <div class="connections-content-grid">
+          <div class="card">
+            <div class="list-section-head">
+              <div>
+                <p class="eyebrow">REQUESTS</p>
+                <h3>Incoming requests</h3>
+              </div>
+              <span id="friendRequestCount" class="pill">0</span>
+            </div>
+            <div id="incomingFriendRequests" class="connections-list empty">No pending requests.</div>
+          </div>
+
+          <div class="card">
+            <div class="list-section-head">
+              <div>
+                <p class="eyebrow">FRIENDS</p>
+                <h3>Approved connections</h3>
+              </div>
+              <span id="connectionCount" class="pill">0</span>
+            </div>
+            <div id="approvedConnections" class="connections-list empty">No approved friends yet.</div>
+          </div>
+        </div>
+
+        <div id="friendProgressPanel" class="card friend-progress-panel hidden">
+          <div class="row">
+            <div>
+              <p class="eyebrow">READ-ONLY PROGRESS</p>
+              <h2 id="friendProgressName">Friend</h2>
+              <p class="muted">You can view this progress, but you cannot edit it.</p>
+            </div>
+            <button id="closeFriendProgressBtn" class="secondary" type="button">Close</button>
+          </div>
+
+          <div class="friend-metrics">
+            <div class="metric-mini"><span>Workouts</span><strong id="friendWorkoutCount">0</strong></div>
+            <div class="metric-mini"><span>Total Sets</span><strong id="friendSetCount">0</strong></div>
+            <div class="metric-mini"><span>Exercises</span><strong id="friendExerciseCount">0</strong></div>
+          </div>
+
+          <h3>Recent workouts</h3>
+          <div id="friendWorkoutList" class="list empty">No workouts shared yet.</div>
+        </div>
+      </section>
+
       <section id="profileScreen" class="screen hidden">
         <div class="card">
           <p class="eyebrow">PROFILE</p>
@@ -420,7 +499,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="ui.js?v=visual1"></script>
-  <script type="module" src="app.js?v=visual1"></script>
+  <script src="ui.js?v=friends1"></script>
+  <script type="module" src="app.js?v=friends1"></script>
 </body>
 </html>

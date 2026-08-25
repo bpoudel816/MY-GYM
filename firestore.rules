@@ -3,41 +3,108 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isApprovedViewer(ownerId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/connections/$(ownerId + "_" + request.auth.uid))
+        && get(/databases/$(database)/documents/connections/$(ownerId + "_" + request.auth.uid)).data.status == "accepted";
+    }
+
     match /users/{userId} {
-      allow create, read, update: if request.auth != null
-                                  && request.auth.uid == userId;
+      // Profile remains private to the account owner.
+      allow create, read, update: if isSelf(userId);
       allow delete: if false;
 
+      // Workout owner can fully manage their own workout.
+      // Approved friends can READ only.
       match /workouts/{workoutId} {
-        allow create, read, update, delete:
-          if request.auth != null
-          && request.auth.uid == userId;
+        allow create, update, delete: if isSelf(userId);
+        allow read: if isSelf(userId) || isApprovedViewer(userId);
       }
 
-      // Calendar day status: rest / missed
-      match /calendarDays/{dayId} {
-        allow create, read, update, delete:
-          if request.auth != null
-          && request.auth.uid == userId;
-      }
-
+      // Body weight can also be viewed by approved friends for progress charts,
+      // but friends cannot modify it.
       match /bodyWeights/{entryId} {
-        allow create, read, update, delete:
-          if request.auth != null
-          && request.auth.uid == userId;
+        allow create, update, delete: if isSelf(userId);
+        allow read: if isSelf(userId) || isApprovedViewer(userId);
       }
 
+      // Calendar is private.
+      match /calendarDays/{dayId} {
+        allow create, read, update, delete: if isSelf(userId);
+      }
+
+      // Nutrition stays private.
       match /meals/{mealId} {
-        allow create, read, update, delete:
-          if request.auth != null
-          && request.auth.uid == userId;
+        allow create, read, update, delete: if isSelf(userId);
       }
 
       match /settings/{settingId} {
-        allow create, read, update, delete:
-          if request.auth != null
-          && request.auth.uid == userId;
+        allow create, read, update, delete: if isSelf(userId);
       }
+
+      // Requester may create ONE request addressed to this user.
+      // Target user can read/update/delete requests they received.
+      match /friendRequests/{requesterId} {
+        allow create: if signedIn()
+          && request.auth.uid == requesterId
+          && request.resource.data.fromUid == requesterId
+          && request.resource.data.targetUid == userId
+          && request.resource.data.status == "pending";
+
+        allow read, update, delete: if isSelf(userId);
+      }
+    }
+
+    // Exact friend-code lookup is available only to signed-in users.
+    match /friendCodes/{code} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+
+      allow update, delete: if signedIn()
+        && resource.data.uid == request.auth.uid;
+    }
+
+    // Directional accepted connection:
+    // ownerUid = whose progress is visible
+    // viewerUid = who may read it
+    match /connections/{connectionId} {
+      allow read: if signedIn()
+        && (resource.data.ownerUid == request.auth.uid
+            || resource.data.viewerUid == request.auth.uid);
+
+      // Only the person APPROVING a pending request may create accepted connection docs.
+      allow create: if signedIn()
+        && request.resource.data.status == "accepted"
+        && request.resource.data.acceptedBy == request.auth.uid
+        && exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)/friendRequests/$(request.resource.data.requestedBy)
+        )
+        && get(
+          /databases/$(database)/documents/users/$(request.auth.uid)/friendRequests/$(request.resource.data.requestedBy)
+        ).data.status == "pending"
+        && (
+          (request.resource.data.ownerUid == request.auth.uid
+            && request.resource.data.viewerUid == request.resource.data.requestedBy)
+          ||
+          (request.resource.data.viewerUid == request.auth.uid
+            && request.resource.data.ownerUid == request.resource.data.requestedBy)
+        );
+
+      allow update: if false;
+
+      allow delete: if signedIn()
+        && (resource.data.ownerUid == request.auth.uid
+            || resource.data.viewerUid == request.auth.uid);
     }
 
     match /{document=**} {

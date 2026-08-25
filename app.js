@@ -6,7 +6,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import {
   getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc,
-  collection, query, orderBy, limit, getDocs, serverTimestamp, Timestamp
+  collection, query, where, orderBy, limit, getDocs, serverTimestamp, Timestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 const firebaseApp = initializeApp(firebaseConfig);
@@ -95,7 +95,7 @@ const EXERCISES = {
   ]
 };
 
-let user=null, workout=null, activeExercise=null, timerHandle=null;
+let user=null, workout=null, activeExercise=null, timerHandle=null, currentDisplayName="Athlete", myFriendCode="";
 let workoutsCache=[], calendarStatuses={}, bodyWeightCache=[], mealCache=[], calorieTarget=0, calorieSelectedDate=new Date(), calendarCursor=new Date();
 let selectedCalendarKey=null, editingWorkout=null;
 
@@ -112,11 +112,12 @@ function showToast(text,type=""){
   el.classList.remove("hidden");
 }
 function showScreen(name){
-  ["homeScreen","workoutScreen","historyScreen","caloriesScreen","profileScreen"].forEach(id=>$(id).classList.add("hidden"));
+  ["homeScreen","workoutScreen","historyScreen","caloriesScreen","connectionsScreen","profileScreen"].forEach(id=>$(id).classList.add("hidden"));
   $(`${name}Screen`).classList.remove("hidden");
   document.querySelectorAll(".navbtn").forEach(btn=>btn.classList.toggle("active",btn.dataset.screen===name));
   if(name==="history"){showHistoryPanel("calendar");renderCalendar();}
   if(name==="calories"){initializeCaloriesScreen();}
+  if(name==="connections"){loadConnectionsArea();}
 }
 document.querySelectorAll(".navbtn").forEach(btn=>btn.addEventListener("click",()=>showScreen(btn.dataset.screen)));
 
@@ -159,11 +160,13 @@ onAuthStateChanged(auth,async currentUser=>{
     const snap=await getDoc(doc(db,"users",currentUser.uid));
     if(snap.exists()&&snap.data().displayName)name=snap.data().displayName;
   }catch(_){}
+  currentDisplayName=name;
   $("userName").textContent=name;$("profileName").textContent=name;
   $("userEmail").textContent=currentUser.email||"";$("profileEmail").textContent=currentUser.email||"";
   $("authView").classList.add("hidden");$("appView").classList.remove("hidden");
   showScreen("home");
   await loadAllData();
+  await ensureFriendCode();
 });
 
 
@@ -307,6 +310,331 @@ function machineArtwork(item,category){
     </svg>
     <span class="machine-badge">${item.type}${item.independent?" • Independent":""}</span>
   </div>`;
+}
+
+
+function randomFriendCode(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out="";
+  for(let i=0;i<8;i++)out+=chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+
+async function ensureFriendCode(){
+  if(!user)return;
+  try{
+    const profileRef=doc(db,"users",user.uid);
+    const snap=await getDoc(profileRef);
+    let code=snap.exists()?String(snap.data().friendCode||""):"";
+
+    if(!code){
+      for(let attempt=0;attempt<8;attempt++){
+        const candidate=randomFriendCode();
+        const codeRef=doc(db,"friendCodes",candidate);
+        const existing=await getDoc(codeRef);
+        if(existing.exists())continue;
+
+        await setDoc(codeRef,{
+          uid:user.uid,
+          displayName:currentDisplayName,
+          createdAt:serverTimestamp()
+        });
+        await setDoc(profileRef,{friendCode:candidate},{merge:true});
+        code=candidate;
+        break;
+      }
+    }else{
+      await setDoc(doc(db,"friendCodes",code),{
+        uid:user.uid,
+        displayName:currentDisplayName,
+        updatedAt:serverTimestamp()
+      },{merge:true});
+    }
+
+    myFriendCode=code;
+    if($("myFriendCode"))$("myFriendCode").textContent=code||"UNAVAILABLE";
+  }catch(err){
+    console.error("Friend code setup failed",err);
+    if($("myFriendCode"))$("myFriendCode").textContent="UNAVAILABLE";
+  }
+}
+
+$("copyFriendCodeBtn").addEventListener("click",async()=>{
+  if(!myFriendCode){showToast("Friend code is not ready yet.","error");return}
+  try{
+    await navigator.clipboard.writeText(myFriendCode);
+    showToast("Friend code copied.","success");
+  }catch(_){
+    prompt("Copy your MY GYM friend code:",myFriendCode);
+  }
+});
+
+$("sendFriendRequestBtn").addEventListener("click",async()=>{
+  const code=$("friendCodeInput").value.trim().toUpperCase();
+  if(!code){showToast("Enter a friend code.","error");return}
+  if(code===myFriendCode){showToast("That is your own friend code.","error");return}
+
+  try{
+    const codeSnap=await getDoc(doc(db,"friendCodes",code));
+    if(!codeSnap.exists()){showToast("No MY GYM user was found with that code.","error");return}
+
+    const target=codeSnap.data();
+    if(target.uid===user.uid){showToast("That is your own friend code.","error");return}
+
+    const existingConnection=await getDoc(doc(db,"connections",`${target.uid}_${user.uid}`));
+    if(existingConnection.exists()){
+      showToast("You are already connected.","success");
+      return;
+    }
+
+    await setDoc(doc(db,"users",target.uid,"friendRequests",user.uid),{
+      fromUid:user.uid,
+      targetUid:target.uid,
+      fromName:currentDisplayName,
+      targetName:target.displayName||"MY GYM User",
+      friendCode:code,
+      status:"pending",
+      createdAt:serverTimestamp()
+    });
+
+    $("friendCodeInput").value="";
+    showToast(`Friend request sent to ${target.displayName||"that user"}.`,"success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not send friend request. Check Firestore rules.","error");
+  }
+});
+
+async function loadConnectionsArea(){
+  if(!user)return;
+  await ensureFriendCode();
+  await Promise.all([loadIncomingRequests(),loadApprovedConnections()]);
+}
+
+async function loadIncomingRequests(){
+  const wrap=$("incomingFriendRequests");
+  if(!wrap)return;
+
+  try{
+    const q=query(collection(db,"users",user.uid,"friendRequests"),where("status","==","pending"));
+    const snap=await getDocs(q);
+    $("friendRequestCount").textContent=String(snap.size);
+    wrap.innerHTML="";
+    wrap.classList.remove("empty");
+
+    if(snap.empty){
+      wrap.classList.add("empty");
+      wrap.textContent="No pending requests.";
+      return;
+    }
+
+    snap.docs.forEach(requestDoc=>{
+      const request=requestDoc.data();
+      const row=document.createElement("div");
+      row.className="connection-row";
+      row.innerHTML=`
+        <div>
+          <strong>${request.fromName||"MY GYM User"}</strong>
+          <span class="muted">Wants to view your workout progress</span>
+        </div>
+        <div class="connection-actions">
+          <button class="approve-btn" type="button">Approve</button>
+          <button class="decline-btn" type="button">Decline</button>
+        </div>`;
+      row.querySelector(".approve-btn").addEventListener("click",()=>approveFriendRequest(requestDoc.id,request));
+      row.querySelector(".decline-btn").addEventListener("click",()=>declineFriendRequest(requestDoc.id));
+      wrap.appendChild(row);
+    });
+  }catch(err){
+    console.error(err);
+    wrap.className="connections-list empty";
+    wrap.textContent="Could not load requests.";
+  }
+}
+
+async function approveFriendRequest(requesterUid,request){
+  try{
+    const batch=writeBatch(db);
+    const requestRef=doc(db,"users",user.uid,"friendRequests",requesterUid);
+
+    batch.update(requestRef,{
+      status:"accepted",
+      acceptedAt:serverTimestamp()
+    });
+
+    batch.set(doc(db,"connections",`${user.uid}_${requesterUid}`),{
+      ownerUid:user.uid,
+      viewerUid:requesterUid,
+      ownerName:currentDisplayName,
+      viewerName:request.fromName||"MY GYM User",
+      requestedBy:requesterUid,
+      acceptedBy:user.uid,
+      status:"accepted",
+      createdAt:serverTimestamp()
+    });
+
+    batch.set(doc(db,"connections",`${requesterUid}_${user.uid}`),{
+      ownerUid:requesterUid,
+      viewerUid:user.uid,
+      ownerName:request.fromName||"MY GYM User",
+      viewerName:currentDisplayName,
+      requestedBy:requesterUid,
+      acceptedBy:user.uid,
+      status:"accepted",
+      createdAt:serverTimestamp()
+    });
+
+    await batch.commit();
+    await loadConnectionsArea();
+    showToast("Friend request approved.","success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not approve request. Check Firestore rules.","error");
+  }
+}
+
+async function declineFriendRequest(requesterUid){
+  if(!confirm("Decline this friend request?"))return;
+  try{
+    await updateDoc(doc(db,"users",user.uid,"friendRequests",requesterUid),{
+      status:"declined",
+      updatedAt:serverTimestamp()
+    });
+    await loadIncomingRequests();
+    showToast("Friend request declined.","success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not decline request.","error");
+  }
+}
+
+async function loadApprovedConnections(){
+  const wrap=$("approvedConnections");
+  if(!wrap)return;
+
+  try{
+    const q=query(collection(db,"connections"),
+      where("viewerUid","==",user.uid),
+      where("status","==","accepted")
+    );
+    const snap=await getDocs(q);
+    $("connectionCount").textContent=String(snap.size);
+    wrap.innerHTML="";
+    wrap.classList.remove("empty");
+
+    if(snap.empty){
+      wrap.classList.add("empty");
+      wrap.textContent="No approved friends yet.";
+      return;
+    }
+
+    snap.docs.forEach(connectionDoc=>{
+      const c=connectionDoc.data();
+      const row=document.createElement("div");
+      row.className="connection-row";
+      row.innerHTML=`
+        <div>
+          <strong>${c.ownerName||"MY GYM Friend"}</strong>
+          <span class="muted">Progress sharing approved</span>
+        </div>
+        <div class="connection-actions">
+          <button class="view-progress-btn" type="button">View Progress</button>
+          <button class="remove-friend-btn" type="button">Remove</button>
+        </div>`;
+      row.querySelector(".view-progress-btn").addEventListener("click",()=>openFriendProgress(c.ownerUid,c.ownerName||"Friend"));
+      row.querySelector(".remove-friend-btn").addEventListener("click",()=>removeConnection(c.ownerUid));
+      wrap.appendChild(row);
+    });
+  }catch(err){
+    console.error(err);
+    wrap.className="connections-list empty";
+    wrap.textContent="Could not load friends.";
+  }
+}
+
+async function openFriendProgress(friendUid,friendName){
+  const panel=$("friendProgressPanel");
+  panel.classList.remove("hidden");
+  $("friendProgressName").textContent=friendName;
+  $("friendWorkoutList").className="list empty";
+  $("friendWorkoutList").textContent="Loading shared workouts...";
+
+  try{
+    const q=query(collection(db,"users",friendUid,"workouts"),orderBy("startedAt","desc"),limit(30));
+    const snap=await getDocs(q);
+    const list=snap.docs.map(d=>({id:d.id,...d.data()})).filter(w=>!isEmptyWorkout(w));
+
+    $("friendWorkoutCount").textContent=String(list.length);
+    $("friendSetCount").textContent=String(list.reduce((n,w)=>n+workoutSetCount(w),0));
+    const names=new Set();
+    list.forEach(w=>(w.exercises||[]).forEach(ex=>names.add(ex.name)));
+    $("friendExerciseCount").textContent=String(names.size);
+
+    renderReadOnlyFriendWorkouts($("friendWorkoutList"),list);
+    panel.scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(err){
+    console.error(err);
+    $("friendWorkoutList").className="list empty";
+    $("friendWorkoutList").textContent="Could not load this friend's shared progress.";
+  }
+}
+
+function renderReadOnlyFriendWorkouts(container,list){
+  container.innerHTML="";
+  container.classList.remove("empty");
+
+  if(!list.length){
+    container.classList.add("empty");
+    container.textContent="No workouts shared yet.";
+    return;
+  }
+
+  list.forEach(w=>{
+    const d=toDate(w.startedAt);
+    const sets=workoutSetCount(w);
+    const card=document.createElement("article");
+    card.className="workout-card readonly-card";
+    const details=(w.exercises||[]).map(ex=>`
+      <div class="exercise-summary-row">
+        <strong>${ex.name}</strong>
+        <div class="set-summary">${compactSetText(ex)||"No set details"}</div>
+      </div>`).join("");
+
+    card.innerHTML=`
+      <div class="workout-top-line">
+        <div>
+          <h4>${d?d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}):"Workout"}</h4>
+          <span class="muted mini">${d?d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):""}</span>
+        </div>
+        <span class="pill">Read only</span>
+      </div>
+      <div class="summary">
+        <span class="pill">${w.exercises?.length||0} exercises</span>
+        <span class="pill">${sets} sets</span>
+      </div>
+      <div class="exercise-summary">${details}</div>`;
+    container.appendChild(card);
+  });
+}
+
+$("closeFriendProgressBtn").addEventListener("click",()=>{
+  $("friendProgressPanel").classList.add("hidden");
+});
+
+async function removeConnection(friendUid){
+  if(!confirm("Remove this friend connection? You will no longer be able to view each other's shared progress."))return;
+  try{
+    const batch=writeBatch(db);
+    batch.delete(doc(db,"connections",`${friendUid}_${user.uid}`));
+    batch.delete(doc(db,"connections",`${user.uid}_${friendUid}`));
+    await batch.commit();
+    $("friendProgressPanel").classList.add("hidden");
+    await loadApprovedConnections();
+    showToast("Friend removed.","success");
+  }catch(err){
+    console.error(err);
+    showToast("Could not remove friend.","error");
+  }
 }
 
 function renderCategories(){
