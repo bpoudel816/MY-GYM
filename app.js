@@ -1819,8 +1819,8 @@ function renderProgressControls(){
 }
 
 $("progressExerciseSelect").addEventListener("change",()=>{
-  renderAllCharts();
   updateSelectedExerciseMetrics();
+  renderProgressChartsSoon();
 });
 
 function selectedExerciseIsCardio(name){
@@ -1907,6 +1907,30 @@ function updateSelectedExerciseMetrics(){
 }
 
 
+
+function resizeProgressCharts(){
+  ["strengthChart","volumeChart","oneRmChart","bodyWeightChart","frequencyChart"].forEach(id=>{
+    const canvas=$(id);
+    if(!canvas)return;
+    const card=canvas.closest(".graph-card");
+    if(!card)return;
+    const available=Math.max(260,card.clientWidth-32);
+    canvas.style.width="100%";
+    canvas.style.maxWidth=`${available}px`;
+  });
+}
+
+function renderProgressChartsSoon(){
+  // Progress panel may have just changed from display:none to visible.
+  // Wait for the browser to lay it out before Chart.js measures the canvases.
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      resizeProgressCharts();
+      renderAllCharts();
+    });
+  });
+}
+
 function chartDefaults(){
   const light=document.documentElement.dataset.theme==="light";
   const text=light?"#334155":"#cbd5e1";
@@ -1957,8 +1981,16 @@ function renderAllCharts(){
   updateSelectedExerciseMetrics();
   if(typeof Chart==="undefined"){
     console.error("Chart.js is not loaded.");
+    document.querySelectorAll(".graph-card").forEach(card=>{
+      if(card.querySelector(".chart-load-error"))return;
+      const msg=document.createElement("p");
+      msg.className="chart-load-error";
+      msg.textContent="Graph library did not load. Refresh the page once.";
+      card.appendChild(msg);
+    });
     return;
   }
+  document.querySelectorAll(".chart-load-error").forEach(el=>el.remove());
   resizeProgressCharts();
   const select=$("progressExerciseSelect");
   const name=select?.value||"";
@@ -2170,8 +2202,20 @@ function showHistoryPanel(name){
   document.querySelectorAll(".history-tab").forEach(btn=>btn.classList.toggle("active",btn.dataset.history===name));
   ["calendarPanel","workoutsPanel","progressPanel"].forEach(id=>$(id).classList.add("hidden"));
   $(`${name}Panel`).classList.remove("hidden");
-  if(name==="workouts")renderWorkoutList($("historyList"),visibleWorkouts());
-  if(name==="calendar")renderCalendar();
+
+  if(name==="workouts"){
+    renderWorkoutList($("historyList"),visibleWorkouts());
+  }
+
+  if(name==="calendar"){
+    renderCalendar();
+  }
+
+  if(name==="progress"){
+    renderProgressControls();
+    updateProgressMetrics();
+    renderProgressChartsSoon();
+  }
 }
 $("prevMonthBtn").addEventListener("click",()=>{calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()-1,1);renderCalendar()});
 $("nextMonthBtn").addEventListener("click",()=>{calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,1);renderCalendar()});

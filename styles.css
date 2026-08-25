@@ -1638,3 +1638,16 @@ input,textarea,select{background:var(--input)!important;color:var(--text)!import
 :root[data-theme="light"] .graph-card .eyebrow{
   color:#111827 !important;
 }
+
+
+/* ===== GRAPH RUNTIME FIX ===== */
+.chart-load-error{
+  margin:16px 0 0;
+  padding:12px;
+  border-radius:12px;
+  background:#ef444414;
+  border:1px solid #ef444433;
+  color:#ef4444;
+  font-size:12px;
+  font-weight:800;
+}
