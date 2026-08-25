@@ -840,118 +840,44 @@ input:focus,select:focus{
   .rep-center{height:42px;font-size:15px!important}
 }
 
-
-/* ===== FINAL SIMPLIFIED APP STRUCTURE ===== */
+/* ===== SIMPLIFIED FINAL NAV + CURRENT WORKOUT ===== */
 .nav{max-width:520px}
-.profile-tools-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;
-}
-.profile-tool-card{
-  min-height:180px;display:flex;flex-direction:column;align-items:flex-start;
-}
-.profile-tool-card h3{margin:4px 0 7px}
-.profile-tool-card p.muted{line-height:1.5;flex:1}
+.profile-tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.profile-tool-card{min-height:170px;display:flex;flex-direction:column;align-items:flex-start}
+.profile-tool-card p.muted{flex:1;line-height:1.5}
 .wide{width:100%}
 
 .current-workout-summary{
-  margin:0 0 16px;
-  padding:16px;
+  margin-bottom:16px;padding:16px;border-radius:20px;
   border:1px solid #53dfba22;
-  border-radius:20px;
-  background:
-    radial-gradient(circle at 100% 0,#53dfba12,transparent 36%),
-    linear-gradient(150deg,#121b27,#0b111b);
+  background:radial-gradient(circle at 100% 0,#53dfba12,transparent 36%),linear-gradient(150deg,#121b27,#0b111b);
   box-shadow:0 14px 34px #0004;
 }
-.current-workout-summary-head{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  margin-bottom:10px;
-}
+.current-workout-summary-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
 .current-workout-summary-head h3{margin:3px 0 0}
 .current-workout-items{display:grid;gap:7px}
 .current-workout-chip{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:10px 11px;border-radius:12px;
-  border:1px solid #ffffff0d;background:#090f18;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:10px 11px;border-radius:12px;background:#090f18;border:1px solid #ffffff0d;
 }
 .current-workout-chip strong{font-size:12px}
 .current-workout-chip small{color:#7f8ca0}
 .current-workout-chip .complete{color:#59dfbb;font-weight:900}
 .current-workout-chip .active-now{color:#a99eff;font-weight:900}
 
+/* More vivid artwork */
+.category:hover .category-art svg,.exercise:hover .machine-visual svg{transform:scale(1.035);filter:drop-shadow(0 16px 16px #0008) saturate(1.18)}
+.category-art svg,.machine-visual svg{transition:transform .2s ease,filter .2s ease}
+.exercise[data-category="Chest"] .machine-visual{border-color:#a968ff2b}
+.exercise[data-category="Back"] .machine-visual{border-color:#409cff2b}
+.exercise[data-category="Shoulders"] .machine-visual{border-color:#ffb84b2b}
+.exercise[data-category="Arms"] .machine-visual{border-color:#dc61ff2b}
+.exercise[data-category="Legs"] .machine-visual{border-color:#3de0a42b}
+.exercise[data-category="Core"] .machine-visual{border-color:#ff855c2b}
+.exercise[data-category="Cardio"] .machine-visual{border-color:#40d7df2b}
+
 @media(max-width:650px){
-  .nav{left:8px;right:8px}
-  .navbtn{font-size:11px}
   .profile-tools-grid{grid-template-columns:1fr}
-  .profile-tool-card{min-height:150px}
+  .profile-tool-card{min-height:145px}
   .current-workout-summary{padding:13px;border-radius:17px}
-}
-
-
-/* ===== FINAL ALL-ICONS POLISH ===== */
-.category-art svg,
-.machine-visual svg{
-  overflow:visible;
-}
-
-.category-art svg path,
-.machine-visual svg path,
-.category-art svg rect,
-.machine-visual svg rect,
-.category-art svg circle,
-.machine-visual svg circle,
-.category-art svg ellipse,
-.machine-visual svg ellipse{
-  transition:filter .2s ease, transform .2s ease;
-  transform-origin:center;
-}
-
-.category:hover .category-art svg,
-.exercise:hover .machine-visual svg{
-  transform:scale(1.035);
-  filter:drop-shadow(0 16px 16px #0008) saturate(1.18);
-}
-
-/* Category-specific vivid accents */
-.category[data-category="Chest"] .category-art{
-  background:radial-gradient(circle at 70% 15%,#a968ff42,transparent 40%),linear-gradient(145deg,#211a33,#0b111b);
-}
-.category[data-category="Back"] .category-art{
-  background:radial-gradient(circle at 70% 15%,#409cff42,transparent 40%),linear-gradient(145deg,#14263a,#0b111b);
-}
-.category[data-category="Shoulders"] .category-art{
-  background:radial-gradient(circle at 70% 15%,#ffb84b42,transparent 40%),linear-gradient(145deg,#2a2114,#0b111b);
-}
-.category[data-category="Arms"] .category-art{
-  background:radial-gradient(circle at 70% 15%,#dc61ff42,transparent 40%),linear-gradient(145deg,#291630,#0b111b);
-}
-.category[data-category="Legs"] .category-art{
-  background:radial-gradient(circle at 70% 15%,#3de0a442,transparent 40%),linear-gradient(145deg,#142922,#0b111b);
-}
-.category[data-category="Core"] .category-art{
-  background:radial-gradient(circle at 70% 15%,#ff855c42,transparent 40%),linear-gradient(145deg,#2b1b17,#0b111b);
-}
-.category[data-category="Cardio"] .category-art{
-  background:radial-gradient(circle at 70% 15%,#40d7df42,transparent 40%),linear-gradient(145deg,#13282c,#0b111b);
-}
-
-/* Machine cards become clearer and more colorful */
-.exercise[data-category="Chest"] .machine-visual{border-color:#a968ff24}
-.exercise[data-category="Back"] .machine-visual{border-color:#409cff24}
-.exercise[data-category="Shoulders"] .machine-visual{border-color:#ffb84b24}
-.exercise[data-category="Arms"] .machine-visual{border-color:#dc61ff24}
-.exercise[data-category="Legs"] .machine-visual{border-color:#3de0a424}
-.exercise[data-category="Core"] .machine-visual{border-color:#ff855c24}
-.exercise[data-category="Cardio"] .machine-visual{border-color:#40d7df24}
-
-.machine-badge{
-  font-weight:950;
-  letter-spacing:.08em;
-  color:#f0f4fb;
-}
-
-/* Better image contrast on phone */
-@media(max-width:650px){
-  .category-art svg{width:94%;height:94%}
-  .machine-visual svg{width:100%;height:100%}
 }

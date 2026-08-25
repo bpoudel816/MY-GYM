@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="my-gym-icon-192.png">
   <link rel="icon" href="my-gym-icon-192.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=allicons1">
+  <link rel="stylesheet" href="styles.css?v=simplified-loginfix1">
 </head>
 <body>
   <main class="shell">
@@ -85,6 +85,35 @@
         <button data-screen="profile" class="navbtn">Profile</button>
       </nav>
 
+      <section id="homeScreen" class="screen">
+        <div class="card welcome">
+          <div>
+            <p class="eyebrow">MY GYM ACCOUNT</p>
+            <h2>Welcome, <span id="userName">Athlete</span>.</h2>
+            <p id="userEmail" class="muted"></p>
+          </div>
+          <button id="logoutBtn" class="secondary">Log out</button>
+        </div>
+
+        <div class="home-section-title">
+          <div>
+            <p class="eyebrow">DASHBOARD</p>
+            <h3>Your training today</h3>
+          </div>
+          <span class="live-dot"><i></i> Cloud synced</span>
+        </div>
+        <div class="home-grid">
+          <div class="card hero-card">
+            <p class="eyebrow">TODAY</p>
+            <h2>Ready to train?</h2>
+            <p class="muted">Finish each exercise, return to body parts, then finish the whole workout.</p>
+            <button id="startWorkoutBtn" class="primary">Start workout</button>
+          </div>
+          <div class="card metric"><small>WORKOUTS</small><strong id="workoutCount">0</strong></div>
+          <div class="card metric"><small>STREAK</small><strong id="streakCount">0</strong></div>
+          <div class="card metric"><small>LAST</small><strong id="lastWorkoutMetric">—</strong><span id="lastWorkoutDate" class="muted mini">No workouts</span></div>
+        </div>
+
         <h3>Latest workouts</h3>
         <div id="recentList" class="list empty">No workouts saved yet.</div>
       </section>
@@ -102,9 +131,6 @@
           </div>
         </div>
 
-        <div id="categoryView">
-          <div class="section-hero">
-            
         <div id="currentWorkoutSummary" class="current-workout-summary hidden">
           <div class="current-workout-summary-head">
             <div>
@@ -115,7 +141,10 @@
           </div>
           <div id="currentWorkoutItems" class="current-workout-items"></div>
         </div>
-<div>
+
+        <div id="categoryView">
+          <div class="section-hero">
+            <div>
               <p class="eyebrow">WORKOUT LIBRARY</p>
               <h2>Choose a body part</h2>
               <p class="muted">Finish one exercise and MY GYM brings you back here for the next one.</p>
@@ -445,7 +474,22 @@
           </div>
         </div>
 
-        <div class="card danger-zone">
+                <div class="profile-tools-grid">
+          <div class="card profile-tool-card">
+            <p class="eyebrow">WORKOUT</p>
+            <h3>Workout & exercises</h3>
+            <p class="muted">Start or review the exercise library from your profile.</p>
+            <button id="profileWorkoutBtn" class="secondary wide" type="button">Open Workout Exercises</button>
+          </div>
+          <div class="card profile-tool-card">
+            <p class="eyebrow">CONNECTIONS</p>
+            <h3>Friends & shared progress</h3>
+            <p class="muted">Manage friend requests and approved read-only connections.</p>
+            <button id="profileConnectionsBtn" class="secondary wide" type="button">Open Connections</button>
+          </div>
+        </div>
+
+<div class="card danger-zone">
           <p class="eyebrow danger-eyebrow">DANGER ZONE</p>
           <h3>Testing & data cleanup</h3>
           <p class="muted">These tools clean your Firebase data but keep your MY GYM login account.</p>
@@ -487,26 +531,11 @@
       </div>
     </div>
 
-    
-        <div class="profile-tools-grid">
-          <div class="card profile-tool-card">
-            <p class="eyebrow">WORKOUT</p>
-            <h3>Workout & exercises</h3>
-            <p class="muted">Choose body parts and manage the exercises you use during training.</p>
-            <button id="profileWorkoutBtn" class="secondary wide" type="button">Open Workout Exercises</button>
-          </div>
-          <div class="card profile-tool-card">
-            <p class="eyebrow">CONNECTIONS</p>
-            <h3>Friends & shared progress</h3>
-            <p class="muted">Manage friend requests and view approved friends' progress.</p>
-            <button id="profileConnectionsBtn" class="secondary wide" type="button">Open Connections</button>
-          </div>
-        </div>
-<div id="toast" class="toast hidden"></div>
+    <div id="toast" class="toast hidden"></div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="ui.js?v=fixnav1"></script>
-  <script type="module" src="app.js?v=allicons1"></script>
+  <script type="module" src="app.js?v=simplified-loginfix1"></script>
 </body>
 </html>

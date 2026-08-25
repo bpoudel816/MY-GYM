@@ -111,7 +111,6 @@ function showToast(text,type=""){
   showToast._t=setTimeout(()=>el.classList.add("hidden"),2600);
   el.classList.remove("hidden");
 }
-
 function showScreen(name){
   ["homeScreen","workoutScreen","historyScreen","caloriesScreen","connectionsScreen","profileScreen"].forEach(id=>$(id).classList.add("hidden"));
   $(`${name}Screen`).classList.remove("hidden");
@@ -120,30 +119,23 @@ function showScreen(name){
     btn.classList.toggle("active",btn.dataset.screen===name);
   });
 
-  // Workout is launched from Home/Profile; Connections lives under Profile.
-  if(name==="workout"||name==="connections"){
-    document.querySelectorAll(".navbtn[data-screen]").forEach(btn=>btn.classList.remove("active"));
-    const parent=name==="connections"?"profile":"home";
-    document.querySelector(`.navbtn[data-screen="${parent}"]`)?.classList.add("active");
+  // Workout is launched from Home/Profile; Connections is managed from Profile.
+  if(name==="workout"){
+    document.querySelector('.navbtn[data-screen="home"]')?.classList.add("active");
+    renderCurrentWorkoutSummary();
+  }
+  if(name==="connections"){
+    document.querySelector('.navbtn[data-screen="profile"]')?.classList.add("active");
   }
 
-  if(name==="workout")renderCurrentWorkoutSummary();
   if(name==="history"){showHistoryPanel("calendar");renderCalendar();}
   if(name==="calories"){initializeCaloriesScreen();}
   if(name==="connections"){loadConnectionsArea();}
 }
 document.querySelectorAll(".navbtn[data-screen]").forEach(btn=>btn.addEventListener("click",()=>showScreen(btn.dataset.screen)));
 
-$("profileWorkoutBtn")?.addEventListener("click",()=>{
-  showScreen("workout");
-});
-
-$("profileConnectionsBtn")?.addEventListener("click",()=>{
-  showScreen("connections");
-});
-
-
-
+$("profileWorkoutBtn")?.addEventListener("click",()=>showScreen("workout"));
+$("profileConnectionsBtn")?.addEventListener("click",()=>showScreen("connections"));
 
 $("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -745,7 +737,6 @@ function renderActiveExercise(){
 $("perArmBtn").addEventListener("click",()=>{activeExercise.weightMode="perArm";renderActiveExercise()});
 $("totalBtn").addEventListener("click",()=>{activeExercise.weightMode="total";renderActiveExercise()});
 
-
 function renderCurrentWorkoutSummary(){
   const box=$("currentWorkoutSummary");
   const list=$("currentWorkoutItems");
@@ -753,11 +744,11 @@ function renderCurrentWorkoutSummary(){
   if(!box||!list||!count)return;
 
   const completed=workout?.exercises||[];
-  const rows=[...completed.map(ex=>({
+  const rows=completed.map(ex=>({
     name:ex.name,
     sets:(ex.sets||[]).length,
     state:"complete"
-  }))];
+  }));
 
   if(activeExercise){
     rows.push({
@@ -776,18 +767,12 @@ function renderCurrentWorkoutSummary(){
 
   box.classList.remove("hidden");
   count.textContent=`${rows.length} exercise${rows.length===1?"":"s"}`;
-
-  if(!rows.length){
-    list.innerHTML=`<div class="empty">Choose a body part below, then select your first exercise.</div>`;
-    return;
-  }
-
-  list.innerHTML=rows.map(r=>`
+  list.innerHTML=rows.length ? rows.map(r=>`
     <div class="current-workout-chip">
       <span><strong>${r.name}</strong><small> • ${r.sets} set${r.sets===1?"":"s"}</small></span>
       <span class="${r.state==="complete"?"complete":"active-now"}">${r.state==="complete"?"✓ Added":"In progress"}</span>
-    </div>
-  `).join("");
+    </div>`).join("") :
+    `<div class="empty">Choose a body part below, then select your first exercise.</div>`;
 }
 
 function adjustWeight(setIndex,delta){
@@ -795,51 +780,6 @@ function adjustWeight(setIndex,delta){
   set.weight=Math.max(0,Number(set.weight||0)+delta);
   renderSets();
 }
-
-function renderCurrentWorkoutSummary(){
-  const box=$("currentWorkoutSummary");
-  const list=$("currentWorkoutItems");
-  const count=$("currentWorkoutCount");
-  if(!box||!list||!count)return;
-
-  const completed=workout?.exercises||[];
-  const rows=[...completed.map(ex=>({
-    name:ex.name,
-    sets:(ex.sets||[]).length,
-    state:"complete"
-  }))];
-
-  if(activeExercise){
-    rows.push({
-      name:activeExercise.name,
-      sets:(activeExercise.sets||[]).length,
-      state:"active"
-    });
-  }
-
-  if(!workout && !activeExercise){
-    box.classList.add("hidden");
-    list.innerHTML="";
-    count.textContent="0 exercises";
-    return;
-  }
-
-  box.classList.remove("hidden");
-  count.textContent=`${rows.length} exercise${rows.length===1?"":"s"}`;
-
-  if(!rows.length){
-    list.innerHTML=`<div class="empty">Choose a body part below, then select your first exercise.</div>`;
-    return;
-  }
-
-  list.innerHTML=rows.map(r=>`
-    <div class="current-workout-chip">
-      <span><strong>${r.name}</strong><small> • ${r.sets} set${r.sets===1?"":"s"}</small></span>
-      <span class="${r.state==="complete"?"complete":"active-now"}">${r.state==="complete"?"✓ Added":"In progress"}</span>
-    </div>
-  `).join("");
-}
-
 function adjustWeight(setIndex,delta){
   const set=activeExercise.sets[setIndex];
   set.weight=Math.max(0,Number(set.weight||0)+delta);
