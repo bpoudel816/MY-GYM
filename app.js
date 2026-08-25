@@ -1296,6 +1296,17 @@ function visibleWorkouts(){
 }
 
 function compactSetText(exercise){
+  if(exercise.cardio){
+    const c=exercise.cardio;
+    const parts=[];
+    if(c.time)parts.push(c.time);
+    else if(Number(c.timeMinutes||0)>0||Number(c.timeSeconds||0)>0)parts.push(`${Number(c.timeMinutes||0)}:${String(Number(c.timeSeconds||0)).padStart(2,"0")}`);
+    if(c.distance)parts.push(`${c.distance} distance`);
+    if(c.incline!=="")parts.push(`incline ${c.incline}`);
+    if(c.stairs)parts.push(`${c.stairs} stairs`);
+    if(c.level)parts.push(`level ${c.level}`);
+    return parts.join(" • ")||"Cardio";
+  }
   const unit=(exercise.weightMode||"total")==="perArm"?"lb/arm":"lb";
   return (exercise.sets||[]).map(set=>`${Number(set.weight||0)} ${unit} × ${Number(set.reps||0)}`).join(" • ");
 }
@@ -1504,6 +1515,273 @@ $("deleteWorkoutBtn").addEventListener("click",async()=>{
   await deleteEditingWorkout();
 });
 
+
+
+/* ===== TRACK IT IMPORT ===== */
+let pendingTrackItImport=null;
+
+function safeTrackItId(value,fallback="item"){
+  return String(value||fallback).replace(/[^a-zA-Z0-9_-]/g,"_").slice(0,120);
+}
+
+function validDate(value){
+  if(!value)return null;
+  const d=new Date(value);
+  return Number.isNaN(d.getTime())?null:d;
+}
+
+function normalizeTrackItExerciseName(ex){
+  const exercise=String(ex?.exercise||"").trim();
+  const machine=String(ex?.machine||"").trim();
+  const combined=`${exercise} ${machine}`.toLowerCase();
+
+  if(combined.includes("hammer mts") && combined.includes("high row")) return "Hammer Strength MTS High Row";
+  if(combined.includes("hammer mts") && combined.includes("chest press")) return "Hammer Strength MTS Chest Press";
+  if(combined.includes("hammer mts") && combined.includes("shoulder")) return "Hammer Strength MTS Shoulder Press";
+  if(combined.includes("pec deck")) return "Pec Deck / Chest Fly";
+  if(combined.includes("triceps") && combined.includes("pressdown")) return "Triceps Pushdown";
+  if(combined.includes("lat pulldown")) return "Lat Pulldown";
+  if(combined.includes("machine shoulder press")) return "Shoulder Press";
+  if(combined.includes("stair climber")) return "Stair Climber";
+  if(combined.includes("treadmill")) return "Treadmill";
+  if(combined.includes("elliptical")) return "Elliptical";
+  if(combined.includes("rowing")) return "Rowing Machine";
+  if(combined.includes("recumbent") && combined.includes("bike")) return "Recumbent Bike";
+  if(combined.includes("bike")) return "Stationary Bike";
+
+  return exercise||machine||"Imported Exercise";
+}
+
+function inferTrackItCategory(ex,name){
+  const id=String(ex?.baseMachineId||ex?.machineId||"").toLowerCase();
+  const n=String(name||"").toLowerCase();
+  if(id.startsWith("chest")||n.includes("chest")||n.includes("pec deck"))return "Chest";
+  if(id.startsWith("back")||n.includes("row")||n.includes("pulldown")||n.includes("pull-up")||n.includes("back"))return "Back";
+  if(id.startsWith("shoulder")||n.includes("shoulder")||n.includes("lateral raise")||n.includes("rear delt"))return "Shoulders";
+  if(id.startsWith("arms")||n.includes("biceps")||n.includes("curl")||n.includes("triceps")||n.includes("dip"))return "Arms";
+  if(id.startsWith("legs")||id.startsWith("leg")||n.includes("leg")||n.includes("squat")||n.includes("calf")||n.includes("hip"))return "Legs";
+  if(id.startsWith("core")||n.includes("ab")||n.includes("plank")||n.includes("torso"))return "Core";
+  if(id.startsWith("cardio")||String(ex?.type||"").toLowerCase()==="cardio")return "Cardio";
+  return "Arms";
+}
+
+function trackItWeightMode(ex){
+  const mode=String(ex?.trackingMode||ex?.weightMode||"").toLowerCase();
+  return mode.includes("per-arm")||mode.includes("per arm")||mode.includes("both-per-arm") ? "perArm" : "total";
+}
+
+function convertTrackItExercise(ex){
+  const name=normalizeTrackItExerciseName(ex);
+  const isCardio=String(ex?.type||"").toLowerCase()==="cardio" || Boolean(ex?.cardio);
+  const sets=Array.isArray(ex?.sets)?ex.sets.map(s=>({
+    weight:Number(s?.weight||0),
+    reps:Number(s?.reps||0),
+    done:true
+  })).filter(s=>s.weight>0||s.reps>0):[];
+
+  const converted={
+    name,
+    category:inferTrackItCategory(ex,name),
+    type:isCardio?"Cardio":String(ex?.machine||ex?.type||"Imported"),
+    independent:trackItWeightMode(ex)==="perArm",
+    weightMode:trackItWeightMode(ex),
+    completed:true,
+    sets,
+    legacyTrackIt:{
+      exerciseId:String(ex?.id||""),
+      machineId:String(ex?.machineId||""),
+      baseMachineId:String(ex?.baseMachineId||""),
+      machine:String(ex?.machine||""),
+      trackingMode:String(ex?.trackingMode||"")
+    }
+  };
+
+  if(isCardio){
+    const c=ex.cardio||{};
+    converted.cardio={
+      timeMinutes:Number(c.timeMinutes||0),
+      timeSeconds:Number(c.timeSeconds||0),
+      time:String(c.time||""),
+      distance:String(c.distance??""),
+      incline:String(c.incline??""),
+      pace:String(c.pace??""),
+      stairs:String(c.stairs??""),
+      level:String(c.level??"")
+    };
+  }
+  return converted;
+}
+
+function convertTrackItWorkout(w,index){
+  const started=validDate(w?.startedAt);
+  const ended=validDate(w?.endedAt);
+  if(!started)return null;
+
+  const exercises=(Array.isArray(w?.exercises)?w.exercises:[])
+    .map(convertTrackItExercise)
+    .filter(ex=>(ex.sets?.length||0)>0 || ex.cardio);
+
+  if(!exercises.length)return null;
+
+  const durationSeconds=ended
+    ?Math.max(1,Math.round((ended-started)/1000))
+    :Math.max(1,exercises.length*60);
+
+  return {
+    docId:`trackit_${safeTrackItId(w?.id||`${started.toISOString()}_${index}`)}`,
+    data:{
+      startedAt:Timestamp.fromDate(started),
+      endedAt:Timestamp.fromDate(ended||new Date(started.getTime()+durationSeconds*1000)),
+      createdAt:serverTimestamp(),
+      durationSeconds,
+      exerciseCount:exercises.length,
+      exercises,
+      sourceApp:"Track IT",
+      sourceWorkoutId:String(w?.id||""),
+      importedAt:serverTimestamp()
+    }
+  };
+}
+
+function parseTrackItBodyWeights(raw){
+  const list=Array.isArray(raw)?raw:[];
+  return list.map((entry,index)=>{
+    if(entry==null)return null;
+    const obj=typeof entry==="number"?{weight:entry}:entry;
+    const weight=Number(obj.weight??obj.value??obj.bodyWeight??0);
+    const date=validDate(obj.loggedAt||obj.date||obj.createdAt||obj.timestamp);
+    if(!(weight>0)||!date)return null;
+    return {
+      docId:`trackit_bw_${safeTrackItId(obj.id||`${date.toISOString()}_${index}`)}`,
+      data:{
+        weight,
+        unit:String(obj.unit||"lb"),
+        loggedAt:Timestamp.fromDate(date),
+        createdAt:serverTimestamp(),
+        sourceApp:"Track IT",
+        importedAt:serverTimestamp()
+      }
+    };
+  }).filter(Boolean);
+}
+
+function analyzeTrackItBackup(data){
+  if(!data||typeof data!=="object"||!Array.isArray(data.workouts)){
+    throw new Error("This does not look like a Track IT backup.");
+  }
+
+  const workouts=data.workouts.map(convertTrackItWorkout).filter(Boolean);
+  const exercises=workouts.reduce((n,w)=>n+(w.data.exercises?.length||0),0);
+  const bodyWeights=parseTrackItBodyWeights(data.bodyWeights);
+  const calendarEntries=Object.entries(data.calendarStatuses||{})
+    .filter(([date,status])=>/^\d{4}-\d{2}-\d{2}$/.test(date)&&["rest","missed","skipped"].includes(String(status).toLowerCase()));
+
+  return {
+    original:data,
+    workouts,
+    exercises,
+    bodyWeights,
+    calendarEntries,
+    customMachines:Array.isArray(data.customMachines)?data.customMachines:[],
+    unit:String(data.profile?.unit||"lb")
+  };
+}
+
+function showTrackItPreview(parsed,fileName){
+  pendingTrackItImport=parsed;
+  $("trackItSelectedFile").textContent=fileName;
+  $("trackItWorkoutCount").textContent=String(parsed.workouts.length);
+  $("trackItExerciseCount").textContent=String(parsed.exercises);
+  $("trackItBodyWeightCount").textContent=String(parsed.bodyWeights.length);
+  $("trackItCalendarCount").textContent=String(parsed.calendarEntries.length);
+
+  const cardioCount=parsed.workouts.reduce((n,w)=>n+w.data.exercises.filter(ex=>ex.cardio).length,0);
+  const strengthCount=parsed.exercises-cardioCount;
+  const notes=[
+    `${strengthCount} strength exercise${strengthCount===1?"":"s"}`,
+    `${cardioCount} cardio exercise${cardioCount===1?"":"s"}`,
+    `${parsed.customMachines.length} custom machine${parsed.customMachines.length===1?"":"s"} found`,
+    "Current MY GYM data will NOT be deleted",
+    "Re-importing the same Track IT backup will update the same imported records instead of duplicating them"
+  ];
+  $("trackItPreviewNotes").innerHTML=notes.map(n=>`<div>✓ ${n}</div>`).join("");
+  $("trackItPreview").classList.remove("hidden");
+  $("trackItImportResult").classList.add("hidden");
+  $("importTrackItBtn").disabled=parsed.workouts.length===0&&parsed.bodyWeights.length===0&&parsed.calendarEntries.length===0;
+}
+
+$("chooseTrackItFileBtn")?.addEventListener("click",()=>$("trackItFileInput").click());
+
+$("trackItFileInput")?.addEventListener("change",async e=>{
+  const file=e.target.files?.[0];
+  if(!file)return;
+  try{
+    const text=await file.text();
+    const data=JSON.parse(text);
+    const parsed=analyzeTrackItBackup(data);
+    showTrackItPreview(parsed,file.name);
+  }catch(err){
+    console.error("Track IT preview failed:",err);
+    pendingTrackItImport=null;
+    $("trackItSelectedFile").textContent="Could not read this file";
+    $("trackItPreview").classList.add("hidden");
+    $("trackItImportResult").classList.remove("hidden");
+    $("trackItImportResult").className="import-result error";
+    $("trackItImportResult").textContent=err.message||"Could not read Track IT backup.";
+  }
+});
+
+$("importTrackItBtn")?.addEventListener("click",async()=>{
+  if(!user||!pendingTrackItImport)return;
+  if(!confirm(`Merge ${pendingTrackItImport.workouts.length} Track IT workout${pendingTrackItImport.workouts.length===1?"":"s"} into your MY GYM account? Your existing MY GYM data will be kept.`))return;
+
+  const btn=$("importTrackItBtn");
+  const original=btn.textContent;
+  btn.disabled=true;
+  btn.textContent="Importing...";
+
+  try{
+    let workoutsImported=0,weightsImported=0,daysImported=0;
+
+    for(const item of pendingTrackItImport.workouts){
+      await setDoc(doc(db,"users",user.uid,"workouts",item.docId),item.data,{merge:true});
+      workoutsImported++;
+    }
+
+    for(const item of pendingTrackItImport.bodyWeights){
+      await setDoc(doc(db,"users",user.uid,"bodyWeights",item.docId),item.data,{merge:true});
+      weightsImported++;
+    }
+
+    for(const [date,statusRaw] of pendingTrackItImport.calendarEntries){
+      const status=String(statusRaw).toLowerCase()==="skipped"?"missed":String(statusRaw).toLowerCase();
+      await setDoc(doc(db,"users",user.uid,"calendarDays",date),{
+        status,
+        sourceApp:"Track IT",
+        importedAt:serverTimestamp()
+      },{merge:true});
+      daysImported++;
+    }
+
+    await loadAllData();
+
+    $("trackItImportResult").classList.remove("hidden");
+    $("trackItImportResult").className="import-result success";
+    $("trackItImportResult").innerHTML=
+      `<strong>Track IT import complete.</strong>
+       <span>${workoutsImported} workouts • ${weightsImported} body weights • ${daysImported} calendar days merged.</span>`;
+    showToast("Track IT data merged into MY GYM.","success");
+  }catch(err){
+    console.error("Track IT import failed:",err);
+    $("trackItImportResult").classList.remove("hidden");
+    $("trackItImportResult").className="import-result error";
+    $("trackItImportResult").textContent=`Import stopped: ${err.code||err.message||"unknown error"}`;
+    showToast("Could not finish Track IT import.","error");
+  }finally{
+    btn.disabled=false;
+    btn.textContent=original;
+  }
+});
 
 async function deleteDocsInCollection(collectionName){
   if(!user)throw new Error("No signed-in user");

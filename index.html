@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="my-gym-icon-192.png">
   <link rel="icon" href="my-gym-icon-192.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=photostyle2">
+  <link rel="stylesheet" href="styles.css?v=trackitimport1">
 </head>
 <body>
   <main class="shell">
@@ -489,6 +489,37 @@
           </div>
         </div>
 
+        <div class="card import-card">
+          <div class="import-card-head">
+            <div>
+              <p class="eyebrow">DATA MIGRATION</p>
+              <h3>Import from Track IT</h3>
+              <p class="muted">Bring your old Track IT workouts into MY GYM without replacing your current cloud data.</p>
+            </div>
+            <span class="import-safe-badge">MERGE ONLY</span>
+          </div>
+
+          <input id="trackItFileInput" class="hidden-file-input" type="file" accept=".json,application/json">
+
+          <div class="import-actions">
+            <button id="chooseTrackItFileBtn" class="secondary" type="button">Choose Track IT Backup</button>
+            <span id="trackItSelectedFile" class="muted mini">No file selected</span>
+          </div>
+
+          <div id="trackItPreview" class="trackit-preview hidden">
+            <div class="trackit-preview-grid">
+              <div><strong id="trackItWorkoutCount">0</strong><span>Workouts</span></div>
+              <div><strong id="trackItExerciseCount">0</strong><span>Exercises</span></div>
+              <div><strong id="trackItBodyWeightCount">0</strong><span>Body weights</span></div>
+              <div><strong id="trackItCalendarCount">0</strong><span>Calendar days</span></div>
+            </div>
+            <div id="trackItPreviewNotes" class="import-notes"></div>
+            <button id="importTrackItBtn" class="primary wide" type="button" disabled>Merge Into MY GYM</button>
+          </div>
+
+          <div id="trackItImportResult" class="import-result hidden"></div>
+        </div>
+
         <div class="card danger-zone">
           <p class="eyebrow danger-eyebrow">DANGER ZONE</p>
           <h3>Testing & data cleanup</h3>
@@ -535,7 +566,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="ui.js?v=photostyle2"></script>
-  <script type="module" src="app.js?v=photostyle2"></script>
+  <script src="ui.js?v=trackitimport1"></script>
+  <script type="module" src="app.js?v=trackitimport1"></script>
 </body>
 </html>
