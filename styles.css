@@ -1588,3 +1588,53 @@ input,textarea,select{background:var(--input)!important;color:var(--text)!import
 :root[data-theme="light"] .graph-card .eyebrow{
   color:#5b21b6 !important;
 }
+
+
+/* ===== FINAL LIGHT MODE WORKOUT ROW FIX ===== */
+:root[data-theme="light"] .exercise-summary-row{
+  background:#f7f9fc !important;
+  border:1px solid #d8e0eb !important;
+  color:#111827 !important;
+}
+:root[data-theme="light"] .exercise-summary-row strong{
+  color:#111827 !important;
+  -webkit-text-fill-color:#111827 !important;
+  opacity:1 !important;
+}
+:root[data-theme="light"] .exercise-summary-row .set-summary{
+  color:#475569 !important;
+  -webkit-text-fill-color:#475569 !important;
+  opacity:1 !important;
+}
+:root[data-theme="light"] .workout-card{
+  background:#ffffff !important;
+  border-color:#d8e0eb !important;
+}
+:root[data-theme="light"] .workout-card .pill{
+  color:#64748b !important;
+  background:#f8fafc !important;
+  border-color:#d8e0eb !important;
+}
+
+/* ===== PROGRESS CHART VISIBILITY FIX ===== */
+.graph-card{
+  min-height:340px;
+}
+.graph-card canvas{
+  display:block !important;
+  width:100% !important;
+  height:260px !important;
+  min-height:260px !important;
+}
+.graph-card.full-width canvas{
+  height:230px !important;
+  min-height:230px !important;
+}
+:root[data-theme="light"] .graph-card{
+  background:#ffffff !important;
+  border-color:#d8e0eb !important;
+}
+:root[data-theme="light"] .graph-card h3,
+:root[data-theme="light"] .graph-card .eyebrow{
+  color:#111827 !important;
+}

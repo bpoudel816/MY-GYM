@@ -109,6 +109,9 @@ function applyTheme(theme){
   document.documentElement.dataset.theme=currentTheme;
   $("themeDarkBtn")?.classList.toggle("active",currentTheme==="dark");
   $("themeLightBtn")?.classList.toggle("active",currentTheme==="light");
+  if(!$("historyScreen")?.classList.contains("hidden") && !$("progressPanel")?.classList.contains("hidden")){
+    renderProgressChartsSoon();
+  }
 }
 
 async function saveTheme(theme){
@@ -1527,7 +1530,7 @@ async function loadAllData(){
   const visible = visibleWorkouts();
   renderWorkoutList($("recentList"),visible.slice(0,5));
   renderWorkoutList($("historyList"),visible);
-  updateMetrics();updateProgressMetrics();renderCalendar();renderBodyWeightProfile();renderProgressControls();renderAllCharts();renderCaloriesForSelectedDate();renderDetectedPattern();
+  updateMetrics();updateProgressMetrics();renderCalendar();renderBodyWeightProfile();renderProgressControls();renderProgressChartsSoon();renderCaloriesForSelectedDate();renderDetectedPattern();
 }
 
 async function loadWorkouts(){
@@ -1905,20 +1908,58 @@ function updateSelectedExerciseMetrics(){
 
 
 function chartDefaults(){
+  const light=document.documentElement.dataset.theme==="light";
+  const text=light?"#334155":"#cbd5e1";
+  const muted=light?"#64748b":"#7f8ba0";
+  const grid=light?"#cbd5e155":"#ffffff10";
   return {
     responsive:true,
     maintainAspectRatio:false,
-    plugins:{legend:{labels:{color:"#cbd5e1"}}},
+    animation:false,
+    plugins:{
+      legend:{
+        labels:{
+          color:text,
+          boxWidth:14,
+          usePointStyle:true
+        }
+      }
+    },
     scales:{
-      x:{ticks:{color:"#7f8ba0"},grid:{color:"#ffffff08"}},
-      y:{ticks:{color:"#7f8ba0"},grid:{color:"#ffffff08"}}
+      x:{
+        ticks:{color:muted,maxRotation:0,autoSkip:true},
+        grid:{color:grid}
+      },
+      y:{
+        beginAtZero:true,
+        ticks:{color:muted},
+        grid:{color:grid}
+      }
     }
   };
 }
 
+
+function createChartSafe(key,canvas,config){
+  if(!canvas)return null;
+  try{
+    const ctx=canvas.getContext("2d");
+    if(!ctx)return null;
+    charts[key]=new Chart(ctx,config);
+    return charts[key];
+  }catch(err){
+    console.error(`Could not render ${key} chart:`,err);
+    return null;
+  }
+}
+
 function renderAllCharts(){
   updateSelectedExerciseMetrics();
-  if(typeof Chart==="undefined")return;
+  if(typeof Chart==="undefined"){
+    console.error("Chart.js is not loaded.");
+    return;
+  }
+  resizeProgressCharts();
   const select=$("progressExerciseSelect");
   const name=select?.value||"";
   const cardio=name&&selectedExerciseIsCardio(name);
@@ -1943,7 +1984,7 @@ function renderAllCharts(){
     if($("oneRmChartTitle"))$("oneRmChartTitle").textContent="Session trend";
 
     if($("strengthChart")){
-      charts.strength=new Chart($("strengthChart"),{
+      createChartSafe("strength",$("strengthChart"),{
         type:"line",
         data:{labels,datasets:[
           {label:f1.label,data:hist.map(r=>r[f1.key]),tension:.3},
@@ -1953,14 +1994,14 @@ function renderAllCharts(){
       });
     }
     if($("volumeChart")){
-      charts.volume=new Chart($("volumeChart"),{
+      createChartSafe("volume",$("volumeChart"),{
         type:"bar",
         data:{labels,datasets:[{label:f3.label,data:hist.map(r=>r[f3.key])}]},
         options:chartDefaults()
       });
     }
     if($("oneRmChart")){
-      charts.oneRm=new Chart($("oneRmChart"),{
+      createChartSafe("oneRm",$("oneRmChart"),{
         type:"line",
         data:{labels,datasets:[{label:"Session",data:hist.map((_,i)=>i+1),tension:.3}]},
         options:chartDefaults()
@@ -1975,7 +2016,7 @@ function renderAllCharts(){
     if($("oneRmChartTitle"))$("oneRmChartTitle").textContent="Strength trend";
 
     if($("strengthChart")){
-      charts.strength=new Chart($("strengthChart"),{
+      createChartSafe("strength",$("strengthChart"),{
         type:"line",
         data:{labels,datasets:[
           {label:"Weight",data:hist.map(r=>r.weight),tension:.3},
@@ -1985,14 +2026,14 @@ function renderAllCharts(){
       });
     }
     if($("volumeChart")){
-      charts.volume=new Chart($("volumeChart"),{
+      createChartSafe("volume",$("volumeChart"),{
         type:"bar",
         data:{labels,datasets:[{label:"Volume",data:hist.map(r=>r.volume)}]},
         options:chartDefaults()
       });
     }
     if($("oneRmChart")){
-      charts.oneRm=new Chart($("oneRmChart"),{
+      createChartSafe("oneRm",$("oneRmChart"),{
         type:"line",
         data:{labels,datasets:[{label:"Estimated 1RM",data:hist.map(r=>Math.round(r.oneRm*10)/10),tension:.3}]},
         options:chartDefaults()
@@ -2002,7 +2043,7 @@ function renderAllCharts(){
 
   if($("bodyWeightChart")){
     const bw=bodyWeightCache.slice().reverse();
-    charts.bodyWeight=new Chart($("bodyWeightChart"),{
+    createChartSafe("bodyWeight",$("bodyWeightChart"),{
       type:"line",
       data:{labels:bw.map(x=>{const d=toDate(x.loggedAt);return d?d.toLocaleDateString(undefined,{month:"short",day:"numeric"}):""}),datasets:[{label:"Body weight",data:bw.map(x=>Number(x.weight||0)),tension:.3}]},
       options:chartDefaults()
@@ -2022,7 +2063,7 @@ function renderAllCharts(){
       weekly[key]=(weekly[key]||0)+1;
     });
     const keys=Object.keys(weekly).sort();
-    charts.frequency=new Chart($("frequencyChart"),{
+    createChartSafe("frequency",$("frequencyChart"),{
       type:"bar",
       data:{labels:keys.map(k=>new Date(k+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})),datasets:[{label:"Workouts",data:keys.map(k=>weekly[k])}]},
       options:chartDefaults()
@@ -2048,20 +2089,37 @@ function visibleWorkouts(){
 }
 
 function compactSetText(exercise){
-  if(exercise.cardio){
-    const c=exercise.cardio;
+  const name=String(exercise?.name||"").toLowerCase();
+  const knownCardio=
+    name.includes("treadmill")||
+    name.includes("stair")||
+    name.includes("elliptical")||
+    name.includes("bike")||
+    name.includes("rowing");
+
+  if(exercise?.cardio){
+    const c=exercise.cardio||{};
     const parts=[];
     if(c.time)parts.push(c.time);
-    else if(Number(c.timeMinutes||0)>0||Number(c.timeSeconds||0)>0)parts.push(`${Number(c.timeMinutes||0)}:${String(Number(c.timeSeconds||0)).padStart(2,"0")}`);
-    if(c.distance)parts.push(`${c.distance} distance`);
     if(c.minutes)parts.push(`${c.minutes} min`);
-    if(c.incline!==undefined&&c.incline!=="")parts.push(`incline ${c.incline}`);
-    if(c.stairs)parts.push(`${c.stairs} stairs`);
-    if(c.floors)parts.push(`${c.floors} floors`);
-    if(c.resistance)parts.push(`resistance ${c.resistance}`);
-    if(c.level)parts.push(`level ${c.level}`);
+    if(c.timeMinutes||c.timeSeconds){
+      parts.push(`${Number(c.timeMinutes||0)}:${String(Number(c.timeSeconds||0)).padStart(2,"0")}`);
+    }
+    if(c.distance!==undefined&&c.distance!=="")parts.push(`${c.distance}${name.includes("rowing")?" m":" mi"}`);
+    if(c.incline!==undefined&&c.incline!=="")parts.push(`incline ${c.incline}%`);
+    if(c.resistance!==undefined&&c.resistance!=="")parts.push(`resistance ${c.resistance}`);
+    if(c.stairs!==undefined&&c.stairs!=="")parts.push(`${c.stairs} stairs`);
+    if(c.floors!==undefined&&c.floors!=="")parts.push(`${c.floors} floors`);
+    if(c.level!==undefined&&c.level!=="")parts.push(`level ${c.level}`);
     return parts.join(" • ")||"Cardio";
   }
+
+  // Legacy cardio records from older builds were incorrectly stored as weight/reps.
+  // Keep them visible, but clearly label them as legacy instead of pretending they are strength sets.
+  if(knownCardio && Array.isArray(exercise?.sets) && exercise.sets.length){
+    return `Legacy cardio data • ${exercise.sets.length} old set${exercise.sets.length===1?"":"s"}`;
+  }
+
   const unit=(exercise.weightMode||"total")==="perArm"?"lb/arm":"lb";
   return (exercise.sets||[]).map(set=>`${Number(set.weight||0)} ${unit} × ${Number(set.reps||0)}`).join(" • ");
 }
