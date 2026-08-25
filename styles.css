@@ -858,3 +858,23 @@ input:focus,select:focus{
 .current-workout-chip .complete{color:#59dfbb;font-weight:900}
 .current-workout-chip .active-now{color:#a99eff;font-weight:900}
 @media(max-width:650px){.profile-tools-grid{grid-template-columns:1fr}}
+
+/* PHOTO-STYLE MOBILE FINAL */
+body{background:radial-gradient(circle at 10% -10%,#7c46ff22,transparent 30%),radial-gradient(circle at 100% 0,#ff3fb414,transparent 28%),#050812}
+#startWorkoutBtn{background:linear-gradient(90deg,#d832d8,#8654ff,#2f7dff);min-height:54px;font-weight:950}
+.category{border-radius:22px;overflow:hidden}.category-art{min-height:118px;background:#0a111b;display:grid;place-items:center}.category-art svg{width:90%;height:106px;filter:drop-shadow(0 10px 16px #0008) saturate(1.2)}
+.exercise{border-radius:20px;background:linear-gradient(145deg,#121b2a,#0b111b)}.machine-visual{min-height:155px;background:radial-gradient(circle at 70% 10%,#755cff20,transparent 45%),#0c1420}.machine-visual svg{height:145px;filter:drop-shadow(0 10px 12px #0007) saturate(1.2)}
+.navbtn{min-height:54px;font-size:12px;font-weight:900}.navbtn.active{background:linear-gradient(145deg,#7d47ff,#b033dd)}
+.round-step.minus{background:linear-gradient(145deg,#ff5a75,#cf314f)}.round-step.plus{background:linear-gradient(145deg,#ff647e,#ec385c)}.rep-step.rep-minus{background:linear-gradient(145deg,#ff9b2e,#e86613)}.rep-step.rep-plus{background:linear-gradient(145deg,#ffa135,#ff7c16)}
+@media(max-width:650px){
+ body{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+ .nav{left:8px;right:8px;bottom:calc(10px + env(safe-area-inset-bottom));padding:7px;border-radius:22px}
+ .navbtn{min-height:60px;padding:8px 5px;font-size:11px}
+ .set-row{display:grid!important;grid-template-columns:1fr auto!important;gap:10px!important;padding:14px!important;border-radius:18px;background:#0b121d;border:1px solid #ffffff0f;margin-bottom:10px}
+ .set-num{grid-column:1/2}.set-row>.check{grid-column:2/3;grid-row:1}
+ .set-row>div:nth-child(2),.set-row>div:nth-child(3){grid-column:1/-1}
+ .weight-stepper,.rep-stepper{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;gap:10px;width:100%}
+ .round-step,.rep-step{width:48px;height:48px;border-radius:50%;font-size:24px}
+ .weight-center,.rep-center{width:100%!important;min-width:0!important;height:50px;font-size:19px!important}
+ .category-grid{grid-template-columns:1fr 1fr!important}.category-art{min-height:108px}.category-art svg{height:100px}
+}

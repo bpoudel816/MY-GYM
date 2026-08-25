@@ -194,55 +194,19 @@ onAuthStateChanged(auth,async currentUser=>{
 
 
 function categoryArtwork(category){
-  const common=`fill="none" stroke-linecap="round" stroke-linejoin="round"`;
-  const map={
-    Chest:`<svg viewBox="0 0 180 110" aria-hidden="true">
-      <path d="M42 80V45c0-14 11-24 25-24h46c14 0 25 10 25 24v35" stroke="#8d76ff" stroke-width="8" ${common}/>
-      <path d="M61 53h58M60 53l-16-15M120 53l16-15" stroke="#d6d1ff" stroke-width="7" ${common}/>
-      <rect x="65" y="62" width="50" height="17" rx="8" fill="#6c59e6"/>
-      <path d="M48 85h84" stroke="#758397" stroke-width="8" ${common}/>
-    </svg>`,
-    Back:`<svg viewBox="0 0 180 110" aria-hidden="true">
-      <path d="M45 88V24M135 88V24M45 28h90" stroke="#7a879a" stroke-width="7" ${common}/>
-      <path d="M65 34h50M90 34v28M62 60h56" stroke="#4c9cff" stroke-width="7" ${common}/>
-      <rect x="67" y="70" width="46" height="15" rx="7" fill="#367ee7"/>
-      <path d="M90 62l-15 14M90 62l15 14" stroke="#b5d7ff" stroke-width="5" ${common}/>
-    </svg>`,
-    Shoulders:`<svg viewBox="0 0 180 110" aria-hidden="true">
-      <path d="M58 88V42M122 88V42M58 42l15-15M122 42l-15-15" stroke="#8794a7" stroke-width="7" ${common}/>
-      <path d="M73 27h34M74 27v-8M106 27v-8" stroke="#f2af49" stroke-width="8" ${common}/>
-      <rect x="70" y="58" width="40" height="16" rx="8" fill="#ca8126"/>
-      <path d="M60 91h60" stroke="#758397" stroke-width="7" ${common}/>
-    </svg>`,
-    Arms:`<svg viewBox="0 0 180 110" aria-hidden="true">
-      <path d="M50 85V30M130 85V30M50 33h80" stroke="#7a879a" stroke-width="7" ${common}/>
-      <path d="M68 42c7 18 13 30 22 30s15-12 22-30" stroke="#d064f0" stroke-width="8" ${common}/>
-      <path d="M67 80h46" stroke="#8f4dac" stroke-width="12" ${common}/>
-      <circle cx="65" cy="80" r="11" fill="#4c5260"/><circle cx="115" cy="80" r="11" fill="#4c5260"/>
-    </svg>`,
-    Legs:`<svg viewBox="0 0 180 110" aria-hidden="true">
-      <path d="M48 88h85M66 83l28-52M94 31h31M98 44l27 28" stroke="#7b899c" stroke-width="8" ${common}/>
-      <rect x="55" y="64" width="46" height="17" rx="8" transform="rotate(-16 55 64)" fill="#28b98a"/>
-      <circle cx="126" cy="30" r="14" fill="#303944" stroke="#89a096" stroke-width="5"/>
-      <circle cx="134" cy="70" r="14" fill="#303944" stroke="#89a096" stroke-width="5"/>
-    </svg>`,
-    Core:`<svg viewBox="0 0 180 110" aria-hidden="true">
-      <path d="M65 89V26h50v63" stroke="#7d8999" stroke-width="7" ${common}/>
-      <rect x="72" y="45" width="36" height="27" rx="10" fill="#e4683e"/>
-      <path d="M74 36h32M90 72v16M63 90h54" stroke="#ffb09a" stroke-width="7" ${common}/>
-      <path d="M58 30h64" stroke="#8a96a8" stroke-width="6" ${common}/>
-    </svg>`,
-    Cardio:`<svg viewBox="0 0 180 110" aria-hidden="true">
-      <path d="M48 82h87l-18-32H70z" stroke="#6f8294" stroke-width="7" ${common}/>
-      <path d="M105 50V28h22" stroke="#3bcbd0" stroke-width="7" ${common}/>
-      <rect x="108" y="23" width="27" height="17" rx="6" fill="#239da6"/>
-      <path d="M58 87h77" stroke="#7a8799" stroke-width="8" ${common}/>
-      <path d="M78 64h36" stroke="#b0eef0" stroke-width="5" ${common}/>
-    </svg>`
+  const colors={Chest:["#ff4f68","#ff7a59"],Back:["#2f7dff","#39c2ff"],Shoulders:["#ff9b2f","#ffc247"],Arms:["#d65cff","#ff66b2"],Legs:["#38d58b","#8ee650"],Core:["#ff7b39","#ffb02e"],Cardio:["#25cbe5","#4df0c3"]};
+  const [a,b]=colors[category]||colors.Chest;
+  const icons={
+    Chest:`<path d="M35 72c12-26 31-39 55-30 24-9 43 4 55 30-15 20-34 31-55 34-21-3-40-14-55-34z"/><path d="M90 43v55M55 64l35 19 35-19"/>`,
+    Back:`<path d="M38 73c11-25 30-38 52-31 22-7 41 6 52 31-14 19-31 30-52 34-21-4-38-15-52-34z"/><path d="M90 43v56M55 58l35 24 35-24M57 82l33 13 33-13"/>`,
+    Shoulders:`<circle cx="90" cy="34" r="13"/><path d="M34 78c12-20 30-30 56-30s44 10 56 30c-14 12-31 18-48 20l-8-18-8 18c-17-2-34-8-48-20z"/>`,
+    Arms:`<path d="M39 80c10-29 24-43 39-35 8 4 10 13 6 20 12-4 23 0 29 9 7 11 1 24-14 30-24 10-48 1-60-24z"/><path d="M141 80c-10-29-24-43-39-35-8 4-10 13-6 20 12-4 23 0 29 9 7 11 1 24-14 30-24 10-48 1-60-24z" opacity=".75"/>`,
+    Legs:`<path d="M64 18h22l8 38-14 48H55l14-49zM116 18H94l-8 38 14 48h25l-14-49z"/>`,
+    Core:`<path d="M63 18h54l7 21-12 64H68L56 39z"/><path d="M90 23v75M70 44h40M69 66h42M71 86h38"/>`,
+    Cardio:`<path d="M38 63c0-18 13-31 31-31 10 0 18 4 21 11 3-7 11-11 21-11 18 0 31 13 31 31 0 24-27 37-52 48-25-11-52-24-52-48z"/><path d="M49 67h22l8-19 13 37 10-25 7 7h22"/>`
   };
-  return map[category]||map.Chest;
+  return `<svg viewBox="0 0 180 110" aria-hidden="true"><defs><linearGradient id="g-${category}" x1="0" x2="1"><stop stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><g fill="url(#g-${category})" stroke="#ffffff" stroke-opacity=".45" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">${icons[category]||icons.Chest}</g></svg>`;
 }
-
 function machineKind(name){
   const n=name.toLowerCase();
   if(n.includes("treadmill")) return "treadmill";
