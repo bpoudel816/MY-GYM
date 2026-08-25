@@ -360,6 +360,54 @@ function exerciseShortTag(name){
   return map[name]||String(name||"EX").toUpperCase().slice(0,7);
 }
 
+
+function exerciseGlyph(kind,color){
+  const white="#ffffff";
+  const common=`fill="none" stroke="${white}" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"`;
+  const glyphs={
+    chestpress:`<path d="M13 29h34M18 19v20M42 19v20M13 24l-5 5 5 5M47 24l5 5-5 5" ${common}/>`,
+    inclinepress:`<path d="M14 39l12-24h12l9 24M20 32h22M31 16v19" ${common}/>`,
+    declinepress:`<path d="M14 18l12 24h12l9-24M20 26h22M31 21v21" ${common}/>`,
+    fly:`<path d="M15 15c5 7 10 11 15 11s10-4 15-11M15 45c5-7 10-11 15-11s10 4 15 11" ${common}/>`,
+    cablefly:`<path d="M11 12v36M49 12v36M11 16h11M49 16H38M22 16l8 17 8-17M30 33v10" ${common}/>`,
+    smith:`<path d="M13 10v40M47 10v40M13 15h34M18 27h24M20 38h20" ${common}/>`,
+    dumbbell:`<path d="M14 30h32M10 22v16M16 20v20M44 20v20M50 22v16" ${common}/>`,
+    pulldown:`<path d="M12 12h36M30 12v18M18 22h24M22 30l8 10 8-10" ${common}/>`,
+    highrow:`<path d="M12 44V13h36v31M18 34l12-15 12 15M18 34h24" ${common}/>`,
+    row:`<path d="M11 38h22l8-14M17 38l7-14M41 24h9M30 24l11 0" ${common}/>`,
+    pullup:`<path d="M12 12h36M18 20h24M30 20v20M22 28h16" ${common}/>`,
+    backextension:`<path d="M11 42h39M17 38l10-20h18M27 18l16 8" ${common}/>`,
+    shoulderpress:`<path d="M18 44V25M42 44V25M18 25h24M15 17h12M33 17h12M21 17v10M39 17v10" ${common}/>`,
+    lateral:`<path d="M30 16v26M30 24H14M30 24h16M14 20v8M46 20v8" ${common}/>`,
+    reardelt:`<path d="M30 16v27M17 22l13 9 13-9M13 18h8M39 18h8" ${common}/>`,
+    curl:`<path d="M12 37h36M17 28c5 0 8 3 13 9 5-6 8-9 13-9M15 23v10M45 23v10" ${common}/>`,
+    triceps:`<path d="M30 11v23M19 25h22M21 25l-7 15M39 25l7 15" ${common}/>`,
+    dip:`<path d="M14 22h13M33 22h13M18 22v21M42 22v21M22 33h16" ${common}/>`,
+    legpress:`<path d="M11 44h38M17 39l15-27M32 12h12M33 22l12 16" ${common}/>`,
+    hacksquat:`<path d="M13 45h34M18 40l13-30M31 10h12M24 25h18" ${common}/>`,
+    legextension:`<path d="M12 42h30M18 38l4-20h21M43 18l8 14M51 32h5" ${common}/>`,
+    legcurl:`<path d="M11 43h37M18 39l5-19h23M46 20l7 12M53 32h5" ${common}/>`,
+    hipmachine:`<path d="M18 44V18h24v26M22 30l-10-7M38 30l10-7M12 23v12M48 23v12" ${common}/>`,
+    calf:`<path d="M18 44V20h24v24M20 30h20M22 16h16" ${common}/>`,
+    hipthrust:`<path d="M12 43h36M17 39l7-17h23M24 22l7-10h12" ${common}/>`,
+    abs:`<path d="M19 12h22l4 8-5 27H20l-5-27zM30 14v31M21 25h18M21 35h18" ${common}/>`,
+    rotation:`<path d="M30 14v32M19 20h22M17 31c7-7 19-7 26 0M17 31l3-8M43 31l-3-8" ${common}/>`,
+    kneeraise:`<path d="M14 10h32M18 17h24M30 17v18M22 25h16M30 35l-8 10M30 35l8 10" ${common}/>`,
+    plank:`<path d="M12 41h36M17 31h28M21 31l-5 10M39 31l5 10" ${common}/>`,
+    treadmill:`<path d="M12 42h36L40 28H22zM38 28V14h10M41 10h12" ${common}/>`,
+    stairs:`<path d="M13 43h35V15H36v8H28v8H20v8h-7M39 12h10" ${common}/>`,
+    elliptical:`<ellipse cx="23" cy="38" rx="11" ry="5" ${common}/><ellipse cx="37" cy="38" rx="11" ry="5" ${common}/><path d="M30 37V18M30 18l10-8M30 18l-10-8" ${common}/>`,
+    bike:`<circle cx="19" cy="39" r="10" ${common}/><circle cx="42" cy="39" r="10" ${common}/><path d="M19 39l10-15h8l5 15M29 24l8 15H19" ${common}/>`,
+    rower:`<path d="M10 43h40M15 39l10-14h23M30 25l9-13M39 12h10" ${common}/>`,
+    generic:`<path d="M14 45V15h32v30M18 22h24M30 15v22" ${common}/>`
+  };
+  return `<g class="exercise-glyph">
+    <circle cx="31" cy="31" r="27" fill="${color}"/>
+    <circle cx="31" cy="31" r="25" fill="none" stroke="#ffffff" stroke-opacity=".18" stroke-width="1.5"/>
+    ${glyphs[kind]||glyphs.generic}
+  </g>`;
+}
+
 function machineArtwork(item,category){
   const kind=machineKind(item.name);
   const c={
@@ -407,9 +455,21 @@ function machineArtwork(item,category){
   };
   return `<div class="machine-visual" data-exercise="${item.name}">
     <svg viewBox="0 0 180 170" aria-hidden="true">
-      <circle cx="90" cy="80" r="66" fill="${c}" opacity=".055"/>
-      <path class="floor" d="M22 151h136"/>
-      ${parts[kind]||parts.generic}
+      <defs>
+        <linearGradient id="cardGrad-${kind}" x1="0" y1="0" x2="1" y2="1">
+          <stop stop-color="${c}" stop-opacity=".24"/>
+          <stop offset="1" stop-color="${c}" stop-opacity=".02"/>
+        </linearGradient>
+      </defs>
+      <rect x="5" y="5" width="170" height="160" rx="24" fill="url(#cardGrad-${kind})"/>
+      <circle cx="90" cy="88" r="63" fill="${c}" opacity=".045"/>
+      <g transform="translate(5 5) scale(.78) translate(24 28)">
+        <path class="floor" d="M22 151h136"/>
+        ${parts[kind]||parts.generic}
+      </g>
+      <g transform="translate(15 13) scale(.72)">
+        ${exerciseGlyph(kind,c)}
+      </g>
       <g class="exercise-signature">
         <rect x="111" y="12" width="56" height="25" rx="12.5" fill="${c}" opacity=".20" stroke="${c}" stroke-width="1.5"/>
         <text x="139" y="29" text-anchor="middle" fill="${c}" font-size="9" font-weight="900">${uniqueTag}</text>
