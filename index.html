@@ -208,10 +208,44 @@
             <div class="card metric"><small>TOTAL SETS</small><strong id="progressSetCount">0</strong></div>
             <div class="card metric"><small>EXERCISES</small><strong id="progressExerciseCount">0</strong></div>
           </div>
-          <div class="card progress-placeholder">
-            <p class="eyebrow">GRAPHS</p>
-            <h3>Strength, reps, volume, body weight, estimated 1RM, frequency, and consistency</h3>
-            <p class="muted">The graph engine comes after this round is stable.</p>
+          <div class="card progress-controls">
+            <div>
+              <p class="eyebrow">EXERCISE PROGRESS</p>
+              <h3>Choose an exercise</h3>
+            </div>
+            <select id="progressExerciseSelect"></select>
+          </div>
+
+          <div class="graph-grid">
+            <div class="card graph-card">
+              <p class="eyebrow">STRENGTH</p>
+              <h3>Weight & reps</h3>
+              <canvas id="strengthChart" height="240"></canvas>
+            </div>
+
+            <div class="card graph-card">
+              <p class="eyebrow">VOLUME</p>
+              <h3>Total work</h3>
+              <canvas id="volumeChart" height="240"></canvas>
+            </div>
+
+            <div class="card graph-card">
+              <p class="eyebrow">ESTIMATED 1RM</p>
+              <h3>Strength trend</h3>
+              <canvas id="oneRmChart" height="240"></canvas>
+            </div>
+
+            <div class="card graph-card">
+              <p class="eyebrow">BODY WEIGHT</p>
+              <h3>Weight trend</h3>
+              <canvas id="bodyWeightChart" height="240"></canvas>
+            </div>
+
+            <div class="card graph-card full-width">
+              <p class="eyebrow">CONSISTENCY</p>
+              <h3>Workouts by week</h3>
+              <canvas id="frequencyChart" height="220"></canvas>
+            </div>
           </div>
         </section>
       </section>
@@ -221,6 +255,24 @@
           <p class="eyebrow">PROFILE</p>
           <h2 id="profileName">Athlete</h2>
           <p id="profileEmail" class="muted"></p>
+        </div>
+
+        <div class="profile-grid">
+          <div class="card">
+            <p class="eyebrow">BODY WEIGHT</p>
+            <h3>Log your weight</h3>
+            <div class="body-weight-entry">
+              <input id="bodyWeightInput" type="number" min="0" step="0.1" placeholder="168.0">
+              <span id="bodyWeightUnitLabel">lb</span>
+              <button id="saveBodyWeightBtn" class="primary" type="button">Save</button>
+            </div>
+            <p id="latestBodyWeight" class="muted mini">No body weight logged yet.</p>
+          </div>
+
+          <div class="card">
+            <p class="eyebrow">WEIGHT HISTORY</p>
+            <div id="bodyWeightHistory" class="weight-history empty">No entries yet.</div>
+          </div>
         </div>
       </section>
     </section>
@@ -241,7 +293,8 @@
     <div id="toast" class="toast hidden"></div>
   </main>
 
-  <script src="ui.js?v=stable3"></script>
-  <script type="module" src="app.js?v=stable3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="ui.js?v=stable4"></script>
+  <script type="module" src="app.js?v=stable4"></script>
 </body>
 </html>

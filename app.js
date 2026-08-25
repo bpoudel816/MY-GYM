@@ -96,7 +96,7 @@ const EXERCISES = {
 };
 
 let user=null, workout=null, activeExercise=null, timerHandle=null;
-let workoutsCache=[], calendarStatuses={}, calendarCursor=new Date();
+let workoutsCache=[], calendarStatuses={}, bodyWeightCache=[], calendarCursor=new Date();
 let selectedCalendarKey=null, editingWorkout=null;
 
 function showMessage(text, success=false) {
@@ -319,10 +319,10 @@ function updateTimer(){
 }
 
 async function loadAllData(){
-  await Promise.all([loadWorkouts(),loadCalendarStatuses()]);
+  await Promise.all([loadWorkouts(),loadCalendarStatuses(),loadBodyWeights()]);
   renderWorkoutList($("recentList"),workoutsCache.slice(0,5));
   renderWorkoutList($("historyList"),workoutsCache);
-  updateMetrics();updateProgressMetrics();renderCalendar();
+  updateMetrics();updateProgressMetrics();renderCalendar();renderBodyWeightProfile();renderProgressControls();renderAllCharts();
 }
 
 async function loadWorkouts(){
@@ -337,6 +337,190 @@ async function loadCalendarStatuses(){
   const snap=await getDocs(collection(db,"users",user.uid,"calendarDays"));
   snap.docs.forEach(d=>calendarStatuses[d.id]=d.data());
 }
+
+async function loadBodyWeights(){
+  if(!user)return;
+  const q=query(collection(db,"users",user.uid,"bodyWeights"),orderBy("loggedAt","desc"),limit(200));
+  const snap=await getDocs(q);
+  bodyWeightCache=snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+
+
+$("saveBodyWeightBtn").addEventListener("click",async()=>{
+  const value=Number($("bodyWeightInput").value||0);
+  if(value<=0){showToast("Enter a valid body weight.","error");return}
+  try{
+    await addDoc(collection(db,"users",user.uid,"bodyWeights"),{
+      weight:value,
+      unit:"lb",
+      loggedAt:new Date(),
+      createdAt:serverTimestamp()
+    });
+    $("bodyWeightInput").value="";
+    await loadBodyWeights();
+    renderBodyWeightProfile();
+    renderAllCharts();
+    showToast("Body weight saved.","success");
+  }catch(err){console.error(err);showToast("Could not save body weight. Check Firestore rules.","error")}
+});
+
+function renderBodyWeightProfile(){
+  const latest=$("latestBodyWeight"),wrap=$("bodyWeightHistory");
+  if(!latest||!wrap)return;
+  if(!bodyWeightCache.length){
+    latest.textContent="No body weight logged yet.";
+    wrap.className="weight-history empty";
+    wrap.textContent="No entries yet.";
+    return;
+  }
+  const newest=bodyWeightCache[0];
+  latest.textContent=`Latest: ${Number(newest.weight).toFixed(1)} ${newest.unit||"lb"}`;
+  wrap.className="weight-history";
+  wrap.innerHTML="";
+  bodyWeightCache.slice(0,10).forEach(entry=>{
+    const d=toDate(entry.loggedAt);
+    const row=document.createElement("div");
+    row.className="weight-history-row";
+    row.innerHTML=`<strong>${Number(entry.weight).toFixed(1)} ${entry.unit||"lb"}</strong><span class="muted mini">${d?d.toLocaleDateString():""}</span>`;
+    wrap.appendChild(row);
+  });
+}
+
+let charts={};
+
+function destroyChart(name){
+  if(charts[name]){charts[name].destroy();charts[name]=null}
+}
+
+function renderProgressControls(){
+  const select=$("progressExerciseSelect");
+  if(!select)return;
+  const names=[...new Set(workoutsCache.flatMap(w=>(w.exercises||[]).map(ex=>ex.name)).filter(Boolean))].sort();
+  const current=select.value;
+  select.innerHTML="";
+  if(!names.length){
+    const opt=document.createElement("option");
+    opt.value="";
+    opt.textContent="No exercise history yet";
+    select.appendChild(opt);
+    return;
+  }
+  names.forEach(name=>{
+    const opt=document.createElement("option");
+    opt.value=name;opt.textContent=name;select.appendChild(opt);
+  });
+  if(current&&names.includes(current))select.value=current;
+}
+
+$("progressExerciseSelect").addEventListener("change",()=>renderAllCharts());
+
+function exerciseHistory(name){
+  const rows=[];
+  workoutsCache.slice().reverse().forEach(w=>{
+    const d=toDate(w.startedAt);
+    (w.exercises||[]).filter(ex=>ex.name===name).forEach(ex=>{
+      const sets=ex.sets||[];
+      if(!sets.length)return;
+      const maxSet=sets.reduce((best,s)=>Number(s.weight||0)>Number(best.weight||0)?s:best,sets[0]);
+      const totalVolume=sets.reduce((sum,s)=>sum+(Number(s.weight||0)*Number(s.reps||0)),0);
+      const best1rm=Math.max(...sets.map(s=>{
+        const wt=Number(s.weight||0),reps=Number(s.reps||0);
+        return wt>0?wt*(1+reps/30):0;
+      }));
+      rows.push({
+        date:d,
+        weight:Number(maxSet.weight||0),
+        reps:Number(maxSet.reps||0),
+        volume:totalVolume,
+        oneRm:best1rm
+      });
+    });
+  });
+  return rows;
+}
+
+function chartDefaults(){
+  return {
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:"#cbd5e1"}}},
+    scales:{
+      x:{ticks:{color:"#7f8ba0"},grid:{color:"#ffffff08"}},
+      y:{ticks:{color:"#7f8ba0"},grid:{color:"#ffffff08"}}
+    }
+  };
+}
+
+function renderAllCharts(){
+  if(typeof Chart==="undefined")return;
+  const select=$("progressExerciseSelect");
+  const name=select?.value||"";
+  const hist=name?exerciseHistory(name):[];
+  const labels=hist.map(r=>r.date?r.date.toLocaleDateString(undefined,{month:"short",day:"numeric"}):"");
+
+  destroyChart("strength");
+  destroyChart("volume");
+  destroyChart("oneRm");
+  destroyChart("bodyWeight");
+  destroyChart("frequency");
+
+  if($("strengthChart")){
+    charts.strength=new Chart($("strengthChart"),{
+      type:"line",
+      data:{labels,datasets:[
+        {label:"Weight",data:hist.map(r=>r.weight),tension:.3},
+        {label:"Reps",data:hist.map(r=>r.reps),tension:.3}
+      ]},
+      options:chartDefaults()
+    });
+  }
+
+  if($("volumeChart")){
+    charts.volume=new Chart($("volumeChart"),{
+      type:"bar",
+      data:{labels,datasets:[{label:"Volume",data:hist.map(r=>r.volume)}]},
+      options:chartDefaults()
+    });
+  }
+
+  if($("oneRmChart")){
+    charts.oneRm=new Chart($("oneRmChart"),{
+      type:"line",
+      data:{labels,datasets:[{label:"Estimated 1RM",data:hist.map(r=>Math.round(r.oneRm*10)/10),tension:.3}]},
+      options:chartDefaults()
+    });
+  }
+
+  if($("bodyWeightChart")){
+    const bw=bodyWeightCache.slice().reverse();
+    charts.bodyWeight=new Chart($("bodyWeightChart"),{
+      type:"line",
+      data:{labels:bw.map(x=>{const d=toDate(x.loggedAt);return d?d.toLocaleDateString(undefined,{month:"short",day:"numeric"}):""}),datasets:[{label:"Body weight",data:bw.map(x=>Number(x.weight||0)),tension:.3}]},
+      options:chartDefaults()
+    });
+  }
+
+  if($("frequencyChart")){
+    const weekly={};
+    workoutsCache.forEach(w=>{
+      const d=toDate(w.startedAt);
+      if(!d)return;
+      const monday=new Date(d);
+      const day=(monday.getDay()+6)%7;
+      monday.setDate(monday.getDate()-day);
+      monday.setHours(0,0,0,0);
+      const key=monday.toISOString().slice(0,10);
+      weekly[key]=(weekly[key]||0)+1;
+    });
+    const keys=Object.keys(weekly).sort();
+    charts.frequency=new Chart($("frequencyChart"),{
+      type:"bar",
+      data:{labels:keys.map(k=>new Date(k+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"})),datasets:[{label:"Workouts",data:keys.map(k=>weekly[k])}]},
+      options:chartDefaults()
+    });
+  }
+}
+
 
 function compactSetText(exercise){
   const unit=(exercise.weightMode||"total")==="perArm"?"lb/arm":"lb";
