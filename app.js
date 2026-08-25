@@ -1921,14 +1921,19 @@ function resizeProgressCharts(){
 }
 
 function renderProgressChartsSoon(){
-  // Progress panel may have just changed from display:none to visible.
-  // Wait for the browser to lay it out before Chart.js measures the canvases.
-  requestAnimationFrame(()=>{
+  const run=()=>{
     requestAnimationFrame(()=>{
-      resizeProgressCharts();
-      renderAllCharts();
+      requestAnimationFrame(()=>{
+        resizeProgressCharts();
+        renderAllCharts();
+      });
     });
-  });
+  };
+  if(document.fonts?.ready){
+    document.fonts.ready.then(run).catch(run);
+  }else{
+    run();
+  }
 }
 
 function chartDefaults(){
@@ -1969,17 +1974,25 @@ function createChartSafe(key,canvas,config){
   try{
     const ctx=canvas.getContext("2d");
     if(!ctx)return null;
-    charts[key]=new Chart(ctx,config);
+    charts[key]=new window.Chart(ctx,config);
     return charts[key];
   }catch(err){
     console.error(`Could not render ${key} chart:`,err);
+    const card=canvas.closest(".graph-card");
+    if(card){
+      card.querySelector(".chart-runtime-error")?.remove();
+      const msg=document.createElement("p");
+      msg.className="chart-runtime-error";
+      msg.textContent=`Could not draw this graph: ${err?.message||"unknown chart error"}`;
+      card.appendChild(msg);
+    }
     return null;
   }
 }
 
 function renderAllCharts(){
   updateSelectedExerciseMetrics();
-  if(typeof Chart==="undefined"){
+  if(typeof window.Chart==="undefined"){
     console.error("Chart.js is not loaded.");
     document.querySelectorAll(".graph-card").forEach(card=>{
       if(card.querySelector(".chart-load-error"))return;
@@ -1991,6 +2004,7 @@ function renderAllCharts(){
     return;
   }
   document.querySelectorAll(".chart-load-error").forEach(el=>el.remove());
+  document.querySelectorAll(".chart-runtime-error").forEach(el=>el.remove());
   resizeProgressCharts();
   const select=$("progressExerciseSelect");
   const name=select?.value||"";
