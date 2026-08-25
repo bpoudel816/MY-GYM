@@ -166,12 +166,161 @@ onAuthStateChanged(auth,async currentUser=>{
   await loadAllData();
 });
 
+
+function categoryArtwork(category){
+  const common=`fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+  const map={
+    Chest:`<svg viewBox="0 0 180 110" aria-hidden="true">
+      <path d="M42 80V45c0-14 11-24 25-24h46c14 0 25 10 25 24v35" stroke="#8d76ff" stroke-width="8" ${common}/>
+      <path d="M61 53h58M60 53l-16-15M120 53l16-15" stroke="#d6d1ff" stroke-width="7" ${common}/>
+      <rect x="65" y="62" width="50" height="17" rx="8" fill="#6c59e6"/>
+      <path d="M48 85h84" stroke="#758397" stroke-width="8" ${common}/>
+    </svg>`,
+    Back:`<svg viewBox="0 0 180 110" aria-hidden="true">
+      <path d="M45 88V24M135 88V24M45 28h90" stroke="#7a879a" stroke-width="7" ${common}/>
+      <path d="M65 34h50M90 34v28M62 60h56" stroke="#4c9cff" stroke-width="7" ${common}/>
+      <rect x="67" y="70" width="46" height="15" rx="7" fill="#367ee7"/>
+      <path d="M90 62l-15 14M90 62l15 14" stroke="#b5d7ff" stroke-width="5" ${common}/>
+    </svg>`,
+    Shoulders:`<svg viewBox="0 0 180 110" aria-hidden="true">
+      <path d="M58 88V42M122 88V42M58 42l15-15M122 42l-15-15" stroke="#8794a7" stroke-width="7" ${common}/>
+      <path d="M73 27h34M74 27v-8M106 27v-8" stroke="#f2af49" stroke-width="8" ${common}/>
+      <rect x="70" y="58" width="40" height="16" rx="8" fill="#ca8126"/>
+      <path d="M60 91h60" stroke="#758397" stroke-width="7" ${common}/>
+    </svg>`,
+    Arms:`<svg viewBox="0 0 180 110" aria-hidden="true">
+      <path d="M50 85V30M130 85V30M50 33h80" stroke="#7a879a" stroke-width="7" ${common}/>
+      <path d="M68 42c7 18 13 30 22 30s15-12 22-30" stroke="#d064f0" stroke-width="8" ${common}/>
+      <path d="M67 80h46" stroke="#8f4dac" stroke-width="12" ${common}/>
+      <circle cx="65" cy="80" r="11" fill="#4c5260"/><circle cx="115" cy="80" r="11" fill="#4c5260"/>
+    </svg>`,
+    Legs:`<svg viewBox="0 0 180 110" aria-hidden="true">
+      <path d="M48 88h85M66 83l28-52M94 31h31M98 44l27 28" stroke="#7b899c" stroke-width="8" ${common}/>
+      <rect x="55" y="64" width="46" height="17" rx="8" transform="rotate(-16 55 64)" fill="#28b98a"/>
+      <circle cx="126" cy="30" r="14" fill="#303944" stroke="#89a096" stroke-width="5"/>
+      <circle cx="134" cy="70" r="14" fill="#303944" stroke="#89a096" stroke-width="5"/>
+    </svg>`,
+    Core:`<svg viewBox="0 0 180 110" aria-hidden="true">
+      <path d="M65 89V26h50v63" stroke="#7d8999" stroke-width="7" ${common}/>
+      <rect x="72" y="45" width="36" height="27" rx="10" fill="#e4683e"/>
+      <path d="M74 36h32M90 72v16M63 90h54" stroke="#ffb09a" stroke-width="7" ${common}/>
+      <path d="M58 30h64" stroke="#8a96a8" stroke-width="6" ${common}/>
+    </svg>`,
+    Cardio:`<svg viewBox="0 0 180 110" aria-hidden="true">
+      <path d="M48 82h87l-18-32H70z" stroke="#6f8294" stroke-width="7" ${common}/>
+      <path d="M105 50V28h22" stroke="#3bcbd0" stroke-width="7" ${common}/>
+      <rect x="108" y="23" width="27" height="17" rx="6" fill="#239da6"/>
+      <path d="M58 87h77" stroke="#7a8799" stroke-width="8" ${common}/>
+      <path d="M78 64h36" stroke="#b0eef0" stroke-width="5" ${common}/>
+    </svg>`
+  };
+  return map[category]||map.Chest;
+}
+
+function machineKind(name){
+  const n=name.toLowerCase();
+  if(n.includes("treadmill")) return "treadmill";
+  if(n.includes("stair")) return "stairs";
+  if(n.includes("elliptical")) return "elliptical";
+  if(n.includes("bike")) return "bike";
+  if(n.includes("rowing machine")) return "rower";
+  if(n.includes("leg press")) return "legpress";
+  if(n.includes("hack squat")) return "hacksquat";
+  if(n.includes("leg extension")) return "legextension";
+  if(n.includes("leg curl")) return "legcurl";
+  if(n.includes("hip abductor")||n.includes("hip adductor")) return "hipmachine";
+  if(n.includes("calf")) return "calf";
+  if(n.includes("glute")||n.includes("hip thrust")) return "hipthrust";
+  if(n.includes("pec deck")||n.includes("chest fly")) return "fly";
+  if(n.includes("cable fly")) return "cablefly";
+  if(n.includes("smith")) return "smith";
+  if(n.includes("dumbbell")) return "dumbbell";
+  if(n.includes("incline")&&n.includes("press")) return "inclinepress";
+  if(n.includes("decline")&&n.includes("press")) return "declinepress";
+  if(n.includes("chest press")) return "chestpress";
+  if(n.includes("lat pulldown")||n.includes("front pulldown")) return "pulldown";
+  if(n.includes("high row")) return "highrow";
+  if(n.includes("seated row")||n.includes("low row")||n.includes("iso-lateral row")||n.includes("cable row")) return "row";
+  if(n.includes("assisted pull")) return "pullup";
+  if(n.includes("back extension")) return "backextension";
+  if(n.includes("shoulder press")) return "shoulderpress";
+  if(n.includes("lateral raise")||n.includes("front raise")) return "lateral";
+  if(n.includes("rear delt")) return "reardelt";
+  if(n.includes("biceps")||n.includes("preacher")||n.includes("cable curl")) return "curl";
+  if(n.includes("triceps")||n.includes("pushdown")) return "triceps";
+  if(n.includes("dip")) return "dip";
+  if(n.includes("abdominal")||n.includes("cable crunch")) return "abs";
+  if(n.includes("torso rotation")) return "rotation";
+  if(n.includes("hanging knee")) return "kneeraise";
+  if(n.includes("plank")) return "plank";
+  return "generic";
+}
+
+function machineArtwork(item,category){
+  const kind=machineKind(item.name);
+  const c={
+    Chest:"#8b6cff",Back:"#4297ff",Shoulders:"#eca23a",Arms:"#c55ae6",
+    Legs:"#34c99a",Core:"#f47a50",Cardio:"#36cbd0"
+  }[category]||"#8b6cff";
+  const steel="#8d9bad",dark="#303947",light="#d2d9e2";
+  const parts={
+    chestpress:`<path d="M47 145V52M133 145V52M47 55h86" stroke="${steel}" stroke-width="7"/><rect x="69" y="81" width="42" height="52" rx="12" fill="${c}"/><rect x="67" y="134" width="46" height="15" rx="7" fill="${c}"/><path d="M72 84L50 68M108 84l22-16M49 68H32M131 68h17" stroke="${light}" stroke-width="7" stroke-linecap="round"/>`,
+    inclinepress:`<path d="M50 146V51M130 146V51M50 54h80" stroke="${steel}" stroke-width="7"/><rect x="73" y="77" width="38" height="58" rx="11" fill="${c}" transform="rotate(-15 73 77)"/><path d="M74 81L51 58M107 76l23-24M50 58H33M130 52h16" stroke="${light}" stroke-width="7" stroke-linecap="round"/><path d="M65 144h55" stroke="${steel}" stroke-width="8"/>`,
+    declinepress:`<path d="M48 145V55M132 145V55M48 58h84" stroke="${steel}" stroke-width="7"/><rect x="68" y="90" width="44" height="48" rx="11" fill="${c}" transform="rotate(13 68 90)"/><path d="M72 91L51 77M108 91l22-14M50 77H32M131 77h17" stroke="${light}" stroke-width="7" stroke-linecap="round"/>`,
+    fly:`<path d="M48 145V46M132 145V46M48 49h84" stroke="${steel}" stroke-width="7"/><rect x="69" y="81" width="42" height="51" rx="12" fill="${c}"/><path d="M70 84L43 69l-11 22M110 84l27-15 11 22" stroke="${light}" stroke-width="7" stroke-linecap="round"/><circle cx="31" cy="93" r="8" fill="${dark}"/><circle cx="149" cy="93" r="8" fill="${dark}"/>`,
+    cablefly:`<path d="M35 145V35M145 145V35M35 38h110" stroke="${steel}" stroke-width="7"/><path d="M43 57h19M137 57h-19M62 57l28 43M118 57L90 100" stroke="${light}" stroke-width="5"/><circle cx="90" cy="102" r="9" fill="${c}"/><path d="M51 145h78" stroke="${steel}" stroke-width="7"/>`,
+    smith:`<path d="M42 145V30M138 145V30M42 34h96M55 63h70" stroke="${steel}" stroke-width="7"/><circle cx="52" cy="63" r="11" fill="${dark}"/><circle cx="128" cy="63" r="11" fill="${dark}"/><rect x="62" y="112" width="58" height="13" rx="6" fill="${c}"/><path d="M80 125v20M105 125v20" stroke="${steel}" stroke-width="6"/>`,
+    dumbbell:`<path d="M48 120h84" stroke="${light}" stroke-width="8" stroke-linecap="round"/><rect x="61" y="77" width="58" height="21" rx="10" fill="${c}"/><path d="M77 98v31M105 98v31" stroke="${steel}" stroke-width="7"/><path d="M55 67h70" stroke="${light}" stroke-width="7"/><rect x="38" y="55" width="17" height="25" rx="6" fill="${dark}"/><rect x="125" y="55" width="17" height="25" rx="6" fill="${dark}"/>`,
+    pulldown:`<path d="M46 145V31M134 145V31M46 34h88" stroke="${steel}" stroke-width="7"/><path d="M65 48h50M90 48v35M64 81h52" stroke="${light}" stroke-width="6"/><rect x="66" y="107" width="48" height="15" rx="7" fill="${c}"/><path d="M72 122v22M108 122v22" stroke="${steel}" stroke-width="6"/>`,
+    highrow:`<path d="M47 145V48M133 145V48M47 51h86" stroke="${steel}" stroke-width="7"/><rect x="67" y="92" width="46" height="42" rx="11" fill="${c}"/><path d="M73 94L49 61M107 94l24-33M49 61l-13 17M131 61l13 17" stroke="${light}" stroke-width="7" stroke-linecap="round"/>`,
+    row:`<path d="M48 145h84M62 140l23-42M85 98h44" stroke="${steel}" stroke-width="7"/><rect x="56" y="104" width="44" height="16" rx="7" fill="${c}"/><path d="M129 98l20-20M149 78h12" stroke="${light}" stroke-width="7" stroke-linecap="round"/><circle cx="153" cy="78" r="7" fill="${dark}"/>`,
+    pullup:`<path d="M42 145V29M138 145V29M42 32h96M62 45h56" stroke="${steel}" stroke-width="7"/><rect x="69" y="109" width="42" height="13" rx="6" fill="${c}"/><path d="M90 55v37M75 70h30" stroke="${light}" stroke-width="6"/><path d="M68 122v22M112 122v22" stroke="${steel}" stroke-width="6"/>`,
+    backextension:`<path d="M46 142h91M70 136l18-46M88 90h42" stroke="${steel}" stroke-width="7"/><rect x="78" y="69" width="56" height="18" rx="8" fill="${c}" transform="rotate(18 78 69)"/><path d="M65 137h40" stroke="${light}" stroke-width="6"/>`,
+    shoulderpress:`<path d="M52 145V51M128 145V51M52 54h76" stroke="${steel}" stroke-width="7"/><rect x="69" y="90" width="42" height="43" rx="11" fill="${c}"/><path d="M72 92V62M108 92V62M62 60h20M98 60h20" stroke="${light}" stroke-width="7" stroke-linecap="round"/>`,
+    lateral:`<path d="M49 145V50M131 145V50M49 53h82" stroke="${steel}" stroke-width="7"/><rect x="70" y="89" width="40" height="42" rx="11" fill="${c}"/><path d="M70 89L43 83M110 89l27-6M43 83l-13 12M137 83l13 12" stroke="${light}" stroke-width="7" stroke-linecap="round"/>`,
+    reardelt:`<path d="M47 145V45M133 145V45M47 48h86" stroke="${steel}" stroke-width="7"/><rect x="68" y="91" width="44" height="41" rx="11" fill="${c}"/><path d="M68 94L45 73M112 94l23-21M44 72h-15M136 72h15" stroke="${light}" stroke-width="7" stroke-linecap="round"/>`,
+    curl:`<path d="M55 145V50M125 145V50M55 53h70" stroke="${steel}" stroke-width="7"/><rect x="62" y="93" width="56" height="16" rx="8" fill="${c}" transform="rotate(-9 62 93)"/><path d="M70 112l20 18 20-18" stroke="${light}" stroke-width="7" stroke-linecap="round"/><circle cx="67" cy="112" r="10" fill="${dark}"/><circle cx="113" cy="112" r="10" fill="${dark}"/>`,
+    triceps:`<path d="M47 145V32M133 145V32M47 35h86" stroke="${steel}" stroke-width="7"/><path d="M90 42v45M70 88h40M72 88l-12 28M108 88l12 28" stroke="${light}" stroke-width="6"/><rect x="63" y="120" width="54" height="14" rx="7" fill="${c}"/>`,
+    dip:`<path d="M53 145V46M127 145V46M53 49h74" stroke="${steel}" stroke-width="7"/><path d="M64 80h24M116 80H92M66 80v35M114 80v35" stroke="${light}" stroke-width="7"/><rect x="67" y="119" width="46" height="13" rx="6" fill="${c}"/>`,
+    legpress:`<path d="M43 145h98M59 136l32-77M91 59h34M96 73l27 37" stroke="${steel}" stroke-width="8"/><rect x="54" y="104" width="49" height="17" rx="8" transform="rotate(-18 54 104)" fill="${c}"/><circle cx="128" cy="52" r="15" fill="${dark}" stroke="${light}" stroke-width="4"/><circle cx="136" cy="107" r="15" fill="${dark}" stroke="${light}" stroke-width="4"/>`,
+    hacksquat:`<path d="M48 145h84M60 137l34-93M94 44h28M80 83h40" stroke="${steel}" stroke-width="8"/><rect x="78" y="64" width="42" height="18" rx="8" fill="${c}"/><circle cx="126" cy="47" r="14" fill="${dark}" stroke="${light}" stroke-width="4"/>`,
+    legextension:`<path d="M54 145h72M65 138l10-55M75 83h43" stroke="${steel}" stroke-width="7"/><rect x="66" y="65" width="48" height="18" rx="8" fill="${c}"/><path d="M112 82l20 32M132 114h18" stroke="${light}" stroke-width="7" stroke-linecap="round"/><circle cx="150" cy="114" r="10" fill="${dark}"/>`,
+    legcurl:`<path d="M45 145h92M63 138l14-50M77 88h48" stroke="${steel}" stroke-width="7"/><rect x="68" y="70" width="58" height="17" rx="8" fill="${c}"/><path d="M126 86l16 27M142 113h13" stroke="${light}" stroke-width="7"/><circle cx="155" cy="113" r="10" fill="${dark}"/>`,
+    hipmachine:`<path d="M55 145V59M125 145V59M55 62h70" stroke="${steel}" stroke-width="7"/><rect x="70" y="93" width="40" height="35" rx="11" fill="${c}"/><path d="M70 99L48 89M110 99l22-10M48 89v25M132 89v25" stroke="${light}" stroke-width="7"/>`,
+    calf:`<path d="M52 145V48M128 145V48M52 51h76" stroke="${steel}" stroke-width="7"/><rect x="69" y="89" width="42" height="35" rx="11" fill="${c}"/><path d="M70 78h40M70 78v15M110 78v15M64 136h52" stroke="${light}" stroke-width="7"/>`,
+    hipthrust:`<path d="M43 144h94M57 136l15-47M72 89h60" stroke="${steel}" stroke-width="7"/><rect x="62" y="105" width="56" height="16" rx="8" fill="${c}"/><path d="M82 89l10-24M92 65h30" stroke="${light}" stroke-width="7"/><circle cx="126" cy="65" r="13" fill="${dark}"/>`,
+    abs:`<path d="M58 145V42M122 145V42M58 45h64" stroke="${steel}" stroke-width="7"/><rect x="70" y="78" width="40" height="42" rx="11" fill="${c}"/><path d="M70 80L58 62M110 80l12-18M90 119v22" stroke="${light}" stroke-width="7"/>`,
+    rotation:`<path d="M52 145V54M128 145V54M52 57h76" stroke="${steel}" stroke-width="7"/><rect x="70" y="92" width="40" height="33" rx="11" fill="${c}"/><path d="M70 85h40M58 79c15-14 49-14 64 0" stroke="${light}" stroke-width="7" stroke-linecap="round"/>`,
+    kneeraise:`<path d="M48 145V31M132 145V31M48 34h84M63 55h54" stroke="${steel}" stroke-width="7"/><path d="M90 58v41M75 76h30M90 99l-17 23M90 99l17 23" stroke="${light}" stroke-width="6"/><circle cx="90" cy="52" r="8" fill="${c}"/>`,
+    plank:`<path d="M44 127h92" stroke="${steel}" stroke-width="8"/><path d="M57 108h62M66 108l-10 19M109 108l12 19" stroke="${light}" stroke-width="7"/><circle cx="122" cy="104" r="9" fill="${c}"/>`,
+    treadmill:`<path d="M42 133h96L119 91H66z" stroke="${steel}" stroke-width="8"/><path d="M108 92V50h25" stroke="${light}" stroke-width="7"/><rect x="112" y="39" width="31" height="20" rx="6" fill="${c}"/><path d="M57 139h81" stroke="${steel}" stroke-width="8"/>`,
+    stairs:`<path d="M54 137h79M61 128h58V45H96V60H83V75H70V90H57" stroke="${steel}" stroke-width="8" stroke-linejoin="round"/><path d="M106 42h28M113 42v-15" stroke="${light}" stroke-width="7"/><rect x="116" y="19" width="27" height="18" rx="6" fill="${c}"/>`,
+    elliptical:`<path d="M55 132h70M90 126V56M90 56l24-24M90 56L66 32" stroke="${steel}" stroke-width="7"/><ellipse cx="75" cy="108" rx="28" ry="13" fill="none" stroke="${c}" stroke-width="7"/><ellipse cx="107" cy="108" rx="28" ry="13" fill="none" stroke="${light}" stroke-width="6"/>`,
+    bike:`<circle cx="63" cy="112" r="27" fill="none" stroke="${steel}" stroke-width="7"/><circle cx="123" cy="112" r="27" fill="none" stroke="${steel}" stroke-width="7"/><path d="M63 112l23-38h21l16 38M86 74l20 38H63M87 74l-9-14M107 74h17" stroke="${light}" stroke-width="6" stroke-linecap="round"/><circle cx="94" cy="94" r="7" fill="${c}"/>`,
+    rower:`<path d="M44 132h94M57 125l25-33h52M94 92l22-34" stroke="${steel}" stroke-width="7"/><rect x="52" y="106" width="43" height="14" rx="7" fill="${c}"/><path d="M116 58h23M126 58l13-17" stroke="${light}" stroke-width="6"/>`,
+    generic:`<path d="M50 145V48M130 145V48M50 51h80" stroke="${steel}" stroke-width="7"/><rect x="69" y="87" width="42" height="42" rx="11" fill="${c}"/><path d="M65 78h50M90 51v35" stroke="${light}" stroke-width="7"/>`
+  };
+  return `<div class="machine-visual">
+    <svg viewBox="0 0 180 170" aria-hidden="true">
+      <path class="floor" d="M22 151h136"/>
+      ${parts[kind]||parts.generic}
+    </svg>
+    <span class="machine-badge">${item.type}${item.independent?" • Independent":""}</span>
+  </div>`;
+}
+
 function renderCategories(){
   const grid=$("categoryGrid");grid.innerHTML="";
   for(const [category,items] of Object.entries(EXERCISES)){
     const btn=document.createElement("button");
     btn.className="category";
-    btn.innerHTML=`<strong>${category}</strong><span>${items.length} exercises</span>`;
+    btn.dataset.category=category;
+    btn.innerHTML=`
+      <div class="category-art">${categoryArtwork(category)}</div>
+      <div class="category-copy">
+        <strong>${category}</strong>
+        <span>${items.length} exercises</span>
+      </div>`;
     btn.addEventListener("click",()=>openCategory(category));
     grid.appendChild(btn);
   }
@@ -193,7 +342,7 @@ function openCategory(category){
   const grid=$("exerciseGrid");grid.innerHTML="";
   EXERCISES[category].forEach(item=>{
     const btn=document.createElement("button");btn.className="exercise";
-    btn.innerHTML=`<strong>${item.name}</strong><span>${category} • ${item.type}${item.independent?" • Independent arms":""}</span>`;
+    btn.dataset.category=category;btn.innerHTML=`${machineArtwork(item,category)}<div class="exercise-info"><strong>${item.name}</strong><span>${category} • ${item.type}${item.independent?" • Independent arms":""}</span></div>`;
     btn.addEventListener("click",()=>startExercise(category,item));
     grid.appendChild(btn);
   });

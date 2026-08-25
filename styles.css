@@ -67,3 +67,203 @@
   .danger-action button{width:100%}
   .edit-workout-actions{grid-template-columns:1fr}
 }
+
+
+/* ===== VISUAL + UX FINALIZATION ===== */
+:root{
+  --panel:#121a27;
+  --panel2:#0c121d;
+  --border:#ffffff12;
+  --purple:#806cff;
+  --mint:#54dfbc;
+  --text2:#8f9aac;
+}
+body{
+  background:
+    radial-gradient(circle at 12% -10%,#5f4dce1a,transparent 30%),
+    radial-gradient(circle at 100% 18%,#1fa88912,transparent 28%),
+    #090d16;
+}
+.shell{max-width:1220px}
+.topbar{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(145deg,#7c67ff,#4bcfb1);box-shadow:0 14px 30px #6c59ff2b,inset 0 1px #ffffff55}
+.brand-mark svg{width:31px;fill:white;filter:drop-shadow(0 4px 7px #0005)}
+.brand-copy{display:flex;flex-direction:column;gap:1px}
+.brand-copy strong{font-size:21px;letter-spacing:.1em}
+.brand-copy small{font-size:9px;color:#8290a6;letter-spacing:.16em;font-weight:900}
+
+.nav{
+  position:sticky;top:12px;z-index:30;
+  width:max-content;
+  background:#090e17e8;
+  border:1px solid #ffffff10;
+  backdrop-filter:blur(20px);
+  box-shadow:0 16px 45px #0005;
+}
+.navbtn{position:relative;min-width:94px;transition:.2s ease}
+.navbtn:hover{color:#fff}
+.navbtn.active{box-shadow:inset 0 0 0 1px #ffffff0d,0 6px 20px #0003}
+
+.card,.workout-card,.category,.exercise{
+  box-shadow:0 12px 32px #00000024,inset 0 1px #ffffff05;
+}
+.section-hero{
+  display:flex;justify-content:space-between;align-items:flex-end;gap:18px;
+  margin-bottom:20px;padding:4px 2px;
+}
+.section-hero h2,.exercise-view-head h2{font-size:30px;letter-spacing:-.04em;margin:5px 0}
+.section-hero-badge{
+  font-size:10px;font-weight:900;letter-spacing:.14em;color:#a89dff;
+  padding:9px 11px;border-radius:999px;border:1px solid #806cff32;background:#806cff10;
+}
+.exercise-view-head{display:flex;gap:18px;align-items:center;margin-bottom:20px}
+
+.category-grid{grid-template-columns:repeat(4,1fr);gap:14px}
+.category{
+  position:relative;overflow:hidden;min-height:205px;padding:18px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  transition:transform .18s ease,border-color .18s ease;
+}
+.category:hover{transform:translateY(-3px);border-color:#ffffff28}
+.category:before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 72% 18%,var(--cat-glow,#7d69ff33),transparent 35%);
+  pointer-events:none;
+}
+.category-art{
+  position:absolute;left:14px;right:14px;top:14px;height:112px;border-radius:18px;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#182235,#0b111b);
+  border:1px solid #ffffff0b;
+  overflow:hidden;
+}
+.category-art svg{width:90%;height:90%;filter:drop-shadow(0 12px 12px #0006)}
+.category-copy{position:relative;z-index:2}
+.category-copy strong{font-size:19px;margin-bottom:5px}
+.category-copy span{font-size:11px}
+.category[data-category="Chest"]{--cat-glow:#a25cff42}
+.category[data-category="Back"]{--cat-glow:#398cff42}
+.category[data-category="Shoulders"]{--cat-glow:#f0a2383b}
+.category[data-category="Arms"]{--cat-glow:#c250e53b}
+.category[data-category="Legs"]{--cat-glow:#2bd29b3b}
+.category[data-category="Core"]{--cat-glow:#ff7b503b}
+.category[data-category="Cardio"]{--cat-glow:#2bcbd23b}
+
+.exercise-grid{grid-template-columns:repeat(3,1fr);gap:14px}
+.exercise{
+  min-height:285px;padding:13px;display:flex;flex-direction:column;justify-content:space-between;
+  overflow:hidden;transition:transform .18s ease,border-color .18s ease;
+}
+.exercise:hover{transform:translateY(-3px);border-color:#ffffff28}
+.machine-visual{
+  height:180px;border-radius:18px;overflow:hidden;position:relative;
+  background:
+    radial-gradient(circle at 75% 15%,var(--machine-glow,#7c67ff2e),transparent 34%),
+    linear-gradient(145deg,#182235,#0a1019);
+  border:1px solid #ffffff0c;
+}
+.machine-visual svg{width:100%;height:100%;filter:drop-shadow(0 14px 11px #0007)}
+.machine-visual .floor{stroke:#ffffff13;stroke-width:2}
+.machine-badge{
+  position:absolute;left:10px;bottom:10px;z-index:3;
+  font-size:9px;letter-spacing:.11em;font-weight:900;color:#cbd5e1;
+  border:1px solid #ffffff14;background:#060a10b8;backdrop-filter:blur(8px);
+  padding:6px 8px;border-radius:999px;
+}
+.exercise-info{padding:11px 4px 3px}
+.exercise-info strong{font-size:16px;line-height:1.3;margin-bottom:5px}
+.exercise-info span{font-size:11px}
+.exercise[data-category="Chest"]{--machine-glow:#a25cff38}
+.exercise[data-category="Back"]{--machine-glow:#398cff38}
+.exercise[data-category="Shoulders"]{--machine-glow:#f0a23834}
+.exercise[data-category="Arms"]{--machine-glow:#c250e534}
+.exercise[data-category="Legs"]{--machine-glow:#2bd29b34}
+.exercise[data-category="Core"]{--machine-glow:#ff7b5034}
+.exercise[data-category="Cardio"]{--machine-glow:#2bcbd234}
+
+.active-card{
+  border-color:#806cff27;
+  background:linear-gradient(150deg,#151d2b,#0b111b);
+}
+.weight-stepper{align-items:center}
+.round-step{
+  border:1px solid #ffffff18;
+  background:linear-gradient(145deg,#232d3e,#111824);
+  box-shadow:0 7px 18px #0005,inset 0 1px #ffffff12;
+}
+.round-step:hover{border-color:#806cff55}
+.weight-center{
+  background:radial-gradient(circle at 50% -20%,#806cff32,transparent 52%),linear-gradient(145deg,#182235,#0b111b)!important;
+}
+.finish-exercise{
+  min-height:50px;letter-spacing:.01em;box-shadow:0 12px 28px #705cff28;
+}
+.finish-whole{box-shadow:0 11px 25px #2ccaa128}
+
+.workout-card{
+  padding:17px;
+  transition:transform .15s ease,border-color .15s ease;
+}
+.workout-card:hover{transform:translateY(-2px)}
+.exercise-summary-row{
+  border-left:3px solid #806cff55;
+  padding-left:12px;
+}
+.set-summary{font-variant-numeric:tabular-nums}
+
+.history-tabs{border:1px solid #ffffff0e}
+.calendar-card{background:linear-gradient(145deg,#141d2b,#0a1019)}
+.calendar-day{transition:transform .12s ease,border-color .12s ease}
+.calendar-day:hover{transform:scale(1.04);border-color:#ffffff25}
+
+.graph-card{
+  background:
+    radial-gradient(circle at 100% 0,#806cff0e,transparent 36%),
+    linear-gradient(145deg,#141c29,#0b111b);
+}
+.graph-card h3{margin:5px 0 14px}
+
+.calorie-total-card{
+  background:
+    radial-gradient(circle at 80% 10%,#56e0bc1c,transparent 38%),
+    linear-gradient(145deg,#151d2b,#0b111b);
+}
+.calorie-total-line strong{font-variant-numeric:tabular-nums}
+.meal-row{transition:border-color .15s ease}
+.meal-row:hover{border-color:#ffffff20}
+
+.profile-grid .card{min-height:185px}
+.danger-zone{margin-bottom:30px}
+
+@media(max-width:1000px){
+  .category-grid{grid-template-columns:repeat(2,1fr)}
+  .exercise-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:650px){
+  .shell{width:min(100% - 18px,1180px);padding-top:14px}
+  .topbar{margin-bottom:18px}
+  .brand-mark{width:42px;height:42px;border-radius:14px}
+  .brand-copy strong{font-size:18px}
+  .nav{
+    position:fixed;left:8px;right:8px;bottom:8px;top:auto;
+    width:auto;margin:0;padding:5px;z-index:80;
+    border-radius:17px;
+  }
+  .navbtn{min-width:0;padding:11px 5px;font-size:11px}
+  .shell{padding-bottom:95px}
+  .section-hero{align-items:flex-start}
+  .section-hero-badge{display:none}
+  .category-grid{grid-template-columns:1fr 1fr;gap:9px}
+  .category{min-height:175px;padding:11px;border-radius:17px}
+  .category-art{left:9px;right:9px;top:9px;height:102px}
+  .category-copy strong{font-size:16px}
+  .exercise-grid{grid-template-columns:1fr 1fr;gap:9px}
+  .exercise{min-height:230px;padding:9px;border-radius:17px}
+  .machine-visual{height:145px;border-radius:14px}
+  .exercise-info{padding:8px 2px 2px}
+  .exercise-info strong{font-size:13px}
+  .exercise-info span{font-size:9.5px}
+  .exercise-view-head{align-items:flex-start}
+  .exercise-view-head h2{font-size:24px}
+}

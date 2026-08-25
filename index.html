@@ -4,15 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MY GYM">
   <title>MY GYM</title>
-  <link rel="stylesheet" href="styles.css?v=stable3">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="my-gym-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=visual1">
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
       <div class="brand">
-        <strong>MY GYM</strong>
-        <small>TRAIN • TRACK • CONNECT</small>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <path d="M12 24h7v16h-7zM21 18h8v28h-8zM35 18h8v28h-8zM45 24h7v16h-7zM27 29h10v6H27z"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <strong>MY GYM</strong>
+          <small>TRAIN • TRACK • CONNECT</small>
+        </span>
       </div>
     </header>
 
@@ -112,14 +124,25 @@
         </div>
 
         <div id="categoryView">
-          <h2>Choose a body part</h2>
-          <p class="muted">After finishing an exercise, you return here automatically.</p>
+          <div class="section-hero">
+            <div>
+              <p class="eyebrow">WORKOUT LIBRARY</p>
+              <h2>Choose a body part</h2>
+              <p class="muted">Finish one exercise and MY GYM brings you back here for the next one.</p>
+            </div>
+            <span class="section-hero-badge">7 GROUPS</span>
+          </div>
           <div id="categoryGrid" class="category-grid"></div>
         </div>
 
         <div id="exerciseView" class="hidden">
-          <button id="backBtn" class="secondary">← Body parts</button>
-          <h2 id="categoryTitle">Exercises</h2>
+          <div class="exercise-view-head">
+            <button id="backBtn" class="secondary">← Body parts</button>
+            <div>
+              <p class="eyebrow">EXERCISES</p>
+              <h2 id="categoryTitle">Exercises</h2>
+            </div>
+          </div>
           <div id="exerciseGrid" class="exercise-grid"></div>
         </div>
 
@@ -397,7 +420,7 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="ui.js?v=final1"></script>
-  <script type="module" src="app.js?v=final1"></script>
+  <script src="ui.js?v=visual1"></script>
+  <script type="module" src="app.js?v=visual1"></script>
 </body>
 </html>
