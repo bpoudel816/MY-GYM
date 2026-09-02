@@ -1798,3 +1798,218 @@ input,textarea,select{background:var(--input)!important;color:var(--text)!import
   background:#dff7ed !important;
   border-color:#9de3ca !important;
 }
+
+/* ===== SEPT 2026 GLOBAL LIGHT MODE CONTRAST FIX v17 =====
+   Intentionally broad: prevents white/transparent dark-theme text from surviving
+   inside light cards on Home, History, Calories, Profile, and Workout screens. */
+:root[data-theme="light"]{
+  color-scheme:light;
+}
+:root[data-theme="light"] .screen:not(#authScreen) .card,
+:root[data-theme="light"] .screen:not(#authScreen) .workout-card,
+:root[data-theme="light"] .screen:not(#authScreen) .exercise-summary-row,
+:root[data-theme="light"] .screen:not(#authScreen) .current-workout-summary,
+:root[data-theme="light"] .screen:not(#authScreen) .current-workout-chip{
+  color:#111827 !important;
+}
+:root[data-theme="light"] .screen:not(#authScreen) .card h1,
+:root[data-theme="light"] .screen:not(#authScreen) .card h2,
+:root[data-theme="light"] .screen:not(#authScreen) .card h3,
+:root[data-theme="light"] .screen:not(#authScreen) .card h4,
+:root[data-theme="light"] .screen:not(#authScreen) .card h5,
+:root[data-theme="light"] .screen:not(#authScreen) .card h6,
+:root[data-theme="light"] .screen:not(#authScreen) .card strong,
+:root[data-theme="light"] .screen:not(#authScreen) .workout-card h4,
+:root[data-theme="light"] .screen:not(#authScreen) .workout-card strong,
+:root[data-theme="light"] .screen:not(#authScreen) .exercise-summary-row strong,
+:root[data-theme="light"] #homeScreen h2,
+:root[data-theme="light"] #homeScreen h3,
+:root[data-theme="light"] #homeScreen h4,
+:root[data-theme="light"] #homeScreen strong{
+  color:#111827 !important;
+  -webkit-text-fill-color:#111827 !important;
+  opacity:1 !important;
+  text-shadow:none !important;
+}
+:root[data-theme="light"] .screen:not(#authScreen) .card p:not(.eyebrow),
+:root[data-theme="light"] .screen:not(#authScreen) .card small,
+:root[data-theme="light"] .screen:not(#authScreen) .card .mini,
+:root[data-theme="light"] .screen:not(#authScreen) .card .muted,
+:root[data-theme="light"] .screen:not(#authScreen) .workout-card .set-summary,
+:root[data-theme="light"] #homeScreen .muted,
+:root[data-theme="light"] #homeScreen .mini{
+  color:#526174 !important;
+  -webkit-text-fill-color:#526174 !important;
+  opacity:1 !important;
+  text-shadow:none !important;
+}
+/* Keep intentionally colored labels/buttons readable after the broad rule above. */
+:root[data-theme="light"] .primary,
+:root[data-theme="light"] .navbtn.active,
+:root[data-theme="light"] .history-tab.active,
+:root[data-theme="light"] .mode.active,
+:root[data-theme="light"] .theme-choice.active,
+:root[data-theme="light"] .progress-period-btn.active,
+:root[data-theme="light"] .pattern-chip:not(.muted-chip),
+:root[data-theme="light"] .calendar-day.workout-day,
+:root[data-theme="light"] .calendar-day.rest-day,
+:root[data-theme="light"] .calendar-day.missed-day{
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+}
+:root[data-theme="light"] .finish-whole{
+  color:#06110e !important;
+  -webkit-text-fill-color:#06110e !important;
+}
+:root[data-theme="light"] .eyebrow{
+  color:#6d28d9 !important;
+  -webkit-text-fill-color:#6d28d9 !important;
+  opacity:1 !important;
+}
+:root[data-theme="light"] .pill,
+:root[data-theme="light"] .machine-badge,
+:root[data-theme="light"] .muted-chip{
+  color:#526174 !important;
+  -webkit-text-fill-color:#526174 !important;
+  opacity:1 !important;
+}
+
+/* =========================================================
+   MY GYM REALISTIC UI — V20
+   UI-only redesign. Firestore/data structure is unchanged.
+   ========================================================= */
+:root{
+  --mg-purple:#6d35f2;
+  --mg-purple-2:#8a44ff;
+  --mg-ink:#151426;
+  --mg-muted:#737b90;
+  --mg-surface:#ffffff;
+  --mg-page:#f6f7fb;
+  --mg-line:#e8eaf1;
+  --mg-shadow:0 12px 32px rgba(31,25,63,.08);
+}
+html{-webkit-text-size-adjust:100%;overscroll-behavior-y:none}
+body{background:#080b13}
+button,.round-step,.rep-step,.cardio-step,.mode,.navbtn{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+
+/* New icon + brand */
+.brand{align-items:center}
+.brand-mark{overflow:hidden;padding:0;background:#0b0d16!important;border:1px solid #ffffff1c!important}
+.brand-mark img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
+.brand-copy strong{font-weight:950;letter-spacing:.06em}
+
+/* Premium cards */
+.card,.auth-card,.modal-card{box-shadow:0 18px 45px rgba(0,0,0,.16)}
+.home-section-title{display:flex;justify-content:space-between;align-items:end;gap:14px;margin:24px 0 12px}
+.home-section-title h3{margin:3px 0 0;font-size:27px;letter-spacing:-.03em}
+.live-dot{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:850;color:#6edec0}
+.live-dot i{width:8px;height:8px;background:#53d7af;border-radius:50%;box-shadow:0 0 0 5px #53d7af14}
+.hero-card{background:linear-gradient(135deg,#6132e8 0%,#823ef4 58%,#9b50ff 100%);border:0;box-shadow:0 20px 45px #7435ef38}
+.hero-card .eyebrow,.hero-card .muted,.hero-card h2{color:white!important}.hero-card .muted{opacity:.82}
+.hero-card .primary{background:white;color:#5c2ad8;box-shadow:0 8px 18px #35116f38}
+.metric{position:relative;overflow:hidden}.metric:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-35px;top:-30px;background:#783cff10}
+
+/* Realistic body-part cards */
+.category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.category{position:relative;min-height:0;padding:0;overflow:hidden;border-radius:22px;background:#111723;border:1px solid #ffffff12;box-shadow:0 14px 30px #0002;transition:.18s ease}
+.category:active{transform:scale(.985)}
+.realistic-body-art{height:170px;overflow:hidden;background:#151823}
+.realistic-body-art img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease}
+.category:hover .realistic-body-art img{transform:scale(1.025)}
+.category-copy{padding:15px 42px 16px 16px}.category-copy strong{font-size:20px;letter-spacing:-.02em}.category-copy span{display:block;margin-top:3px;color:#8f9aae}
+.category-arrow{position:absolute;right:16px;bottom:20px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#ffffff0d;color:#ae9cff;font-size:24px}
+
+/* Realistic machine library */
+.exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.exercise{position:relative;padding:0;overflow:hidden;border-radius:22px;min-height:0;background:#111723;border:1px solid #ffffff12;box-shadow:0 12px 28px #0002}
+.realistic-machine-art{height:165px;background:#f6f6f8;overflow:hidden}
+.realistic-machine-art img{width:100%;height:100%;object-fit:cover;display:block}
+.exercise-info{padding:13px 38px 15px 14px}.exercise-info strong{font-size:15px;line-height:1.15}.exercise-info span{display:block;margin-top:5px;font-size:10px;color:#8d98aa;line-height:1.25}
+.exercise-arrow{position:absolute;right:13px;bottom:17px;font-size:22px;color:#9a86ff}
+.exercise-view-head{margin-bottom:16px;display:flex;align-items:center;gap:15px}.exercise-view-head h2{margin:2px 0;font-size:30px;letter-spacing:-.04em}
+
+/* Active workout: feels like a native fitness app */
+.active-card{max-width:760px;border-radius:28px;padding:18px}
+.active-card>.row{align-items:flex-start}
+.active-card h2{font-size:30px;letter-spacing:-.04em;margin:4px 0}
+.active-exercise-visual{width:100%;height:250px;border-radius:22px;overflow:hidden;background:#f5f5f8;margin:16px 0 18px;border:1px solid #ffffff13;box-shadow:inset 0 0 0 1px #ffffff0a}
+.active-exercise-visual img{width:100%;height:100%;object-fit:contain;display:block;background:#f7f7f9}
+.weight-mode{padding:7px;border-radius:16px}.mode-toggle{width:100%}.mode{min-height:42px}
+.set-row{border-radius:20px!important}
+.round-step,.rep-step,.cardio-step{box-shadow:none!important;border:0!important;background:linear-gradient(145deg,#7640f3,#5c2bd8)!important;color:white!important}
+.round-step:active,.rep-step:active,.cardio-step:active{transform:scale(.92)!important}
+.weight-center,.rep-center,.cardio-center{font-variant-numeric:tabular-nums}
+.finish-exercise{min-height:54px;font-size:16px;border-radius:16px}
+
+/* Sticky active workout bar */
+.workout-top{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 16px 35px #0003}
+.timer{font-variant-numeric:tabular-nums;font-size:14px;font-weight:900}
+.current-workout-summary{border-radius:22px!important}
+.current-workout-chip{border-radius:14px!important}
+
+/* Workout history cards */
+.workout-card{border-radius:23px;padding:18px;box-shadow:0 10px 28px #0001}
+.exercise-summary-row{border-radius:16px;padding:12px 14px}
+.workout-card h4{font-size:18px;letter-spacing:-.02em}
+
+/* Calendar + progress */
+.calendar-card{border-radius:26px}.calendar-day{border-radius:50%;aspect-ratio:1/1;font-weight:800}.calendar-day.workout-day{background:#1f9d67!important;color:white;border-color:#1f9d67!important}.calendar-day.rest-day{background:#4a8fe7!important;color:white;border-color:#4a8fe7!important}.calendar-day.missed-day{background:#e84f61!important;color:white;border-color:#e84f61!important}
+.calendar-day.workout-day:after,.calendar-day.rest-day:after,.calendar-day.missed-day:after{display:none}
+.chart-card,.progress-card{border-radius:22px!important}
+
+/* Bottom navigation: iPhone friendly */
+@media(max-width:650px){
+  .shell{width:100%;padding:12px 14px calc(102px + env(safe-area-inset-bottom));}
+  .topbar{margin-bottom:14px;padding:0 2px}.topbar-badge{display:none}
+  .brand-copy small{display:none}.brand-copy strong{font-size:18px}.brand-mark{width:42px;height:42px}
+  #appView{padding-bottom:4px}
+  .nav{position:fixed!important;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:95;width:auto!important;margin:0!important;padding:8px!important;border-radius:25px!important;background:rgba(255,255,255,.95)!important;border:1px solid #e7e9f0!important;box-shadow:0 14px 45px rgba(29,25,55,.17)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  .navbtn{height:58px;border-radius:18px!important;color:#737b90!important;font-size:12px!important;min-width:0!important;position:relative;padding-top:27px!important}
+  .navbtn:before{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:18px;line-height:1}
+  .navbtn[data-screen="home"]:before{content:"⌂"}.navbtn[data-screen="history"]:before{content:"▣"}.navbtn[data-screen="calories"]:before{content:"◒"}.navbtn[data-screen="profile"]:before{content:"♙"}
+  .navbtn.active{background:linear-gradient(135deg,#6d35f2,#a23cff)!important;color:white!important;box-shadow:0 8px 20px #7839ee46}
+  .welcome{border-radius:22px;padding:16px}.welcome #logoutBtn{padding:9px 10px;font-size:11px}.profile-avatar-home{width:48px;height:48px}
+  .home-section-title{margin-top:18px}.home-section-title h3{font-size:24px}.live-dot{display:none}
+  .home-grid{grid-template-columns:repeat(3,1fr);gap:9px}.hero-card{grid-column:1/-1;min-height:210px;border-radius:25px}.metric{padding:14px 10px;border-radius:19px}.metric strong{font-size:26px;margin-top:8px}.metric small{font-size:9px}.metric .mini{font-size:9px}
+  .home-insight-grid{grid-template-columns:1fr!important}.daily-quote-card,.pattern-card{border-radius:23px}
+  .category-grid,.exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+  .realistic-body-art{height:145px}.category-copy{padding:12px 34px 13px 13px}.category-copy strong{font-size:17px}.category-copy span{font-size:10px}.category-arrow{right:11px;bottom:14px}
+  .realistic-machine-art{height:145px}.exercise-info strong{font-size:13px}.exercise-info span{font-size:9px}
+  .section-hero{padding:17px!important;border-radius:22px!important}.section-hero h2{font-size:28px!important}
+  .exercise-view-head{position:sticky;top:4px;z-index:30;background:rgba(246,247,251,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:8px 0 10px;margin-bottom:10px}
+  .active-card{padding:15px;border-radius:24px}.active-card h2{font-size:25px}.active-exercise-visual{height:205px;border-radius:20px}
+  .workout-top{top:6px!important;border-radius:21px!important;padding:12px!important}.workout-top-actions{gap:7px}.finish-whole,.danger{min-height:42px;font-size:11px}
+  .set-row{padding:13px!important}.round-step,.rep-step{min-width:44px;min-height:44px}
+  .workout-card{padding:15px;border-radius:22px}.exercise-summary-row{padding:11px}
+}
+
+/* Light mode — intentionally high contrast everywhere */
+:root[data-theme="light"] body{background:var(--mg-page)!important;color:var(--mg-ink)!important}
+:root[data-theme="light"] .shell{color:var(--mg-ink)!important}
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .auth-card,
+:root[data-theme="light"] .modal-card,
+:root[data-theme="light"] .workout-card,
+:root[data-theme="light"] .exercise-summary-row,
+:root[data-theme="light"] .current-workout-summary,
+:root[data-theme="light"] .current-workout-chip,
+:root[data-theme="light"] .set-row,
+:root[data-theme="light"] .weight-mode,
+:root[data-theme="light"] .selected-day,
+:root[data-theme="light"] .calendar-card{background:#fff!important;color:var(--mg-ink)!important;border-color:var(--mg-line)!important;box-shadow:var(--mg-shadow)!important}
+:root[data-theme="light"] .category,:root[data-theme="light"] .exercise{background:#fff!important;color:var(--mg-ink)!important;border-color:var(--mg-line)!important;box-shadow:var(--mg-shadow)!important}
+:root[data-theme="light"] .category strong,:root[data-theme="light"] .exercise strong,:root[data-theme="light"] .workout-card h4,:root[data-theme="light"] .exercise-summary-row strong,:root[data-theme="light"] .active-card h2,:root[data-theme="light"] h1,:root[data-theme="light"] h2,:root[data-theme="light"] h3,:root[data-theme="light"] h4{color:#171525!important}
+:root[data-theme="light"] .category span,:root[data-theme="light"] .exercise span,:root[data-theme="light"] .set-summary,:root[data-theme="light"] .muted,:root[data-theme="light"] .mini{color:#6e778c!important}
+:root[data-theme="light"] .exercise-summary-row{background:#f8f9fc!important}
+:root[data-theme="light"] .workout-top{background:rgba(255,255,255,.94)!important;color:#171525!important;border-color:#e6e8ef!important;box-shadow:0 14px 35px rgba(32,27,61,.12)!important}
+:root[data-theme="light"] .weight-center,:root[data-theme="light"] .rep-center,:root[data-theme="light"] .cardio-center{background:#f5f6fa!important;color:#171525!important;border-color:#dfe2ea!important;box-shadow:none!important}
+:root[data-theme="light"] input{background:#f7f8fb;color:#171525;border-color:#dfe2ea}
+:root[data-theme="light"] .secondary{background:#f3f4f8!important;color:#29263a!important;border-color:#e1e4ec!important}
+:root[data-theme="light"] .mode-toggle,:root[data-theme="light"] .tabs,:root[data-theme="light"] .history-tabs{background:#f1f2f6!important}
+:root[data-theme="light"] .mode,:root[data-theme="light"] .tab,:root[data-theme="light"] .history-tab{color:#737b8c!important}
+:root[data-theme="light"] .mode.active,:root[data-theme="light"] .tab.active,:root[data-theme="light"] .history-tab.active{background:#fff!important;color:#6330dd!important;box-shadow:0 5px 14px rgba(49,39,86,.09)!important}
+:root[data-theme="light"] .hero-card,:root[data-theme="light"] .hero-card h2,:root[data-theme="light"] .hero-card .muted,:root[data-theme="light"] .hero-card .eyebrow{color:#fff!important}
+:root[data-theme="light"] .category-arrow,:root[data-theme="light"] .exercise-arrow{color:#6d35f2!important}
+:root[data-theme="light"] .active-exercise-visual{border-color:#e6e8ef!important}
+:root[data-theme="light"] .eyebrow{color:#6d35f2!important}
+:root[data-theme="light"] .hero-card .eyebrow{color:#fff!important}

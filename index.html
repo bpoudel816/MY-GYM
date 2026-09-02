@@ -11,17 +11,13 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="my-gym-icon-192.png">
   <link rel="icon" href="my-gym-icon-192.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=stabilityfix16">
+  <link rel="stylesheet" href="styles.css?v=realistic20">
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
       <div class="brand">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 64 64">
-            <path d="M12 24h7v16h-7zM21 18h8v28h-8zM35 18h8v28h-8zM45 24h7v16h-7zM27 29h10v6H27z"/>
-          </svg>
-        </span>
+        <span class="brand-mark" aria-hidden="true"><img src="my-gym-icon-192.png" alt=""></span>
         <span class="brand-copy">
           <strong>MY GYM</strong>
           <small>TRAIN • TRACK • CONNECT</small>
@@ -209,6 +205,8 @@
               </div>
               <button id="removeCurrentExerciseBtn" class="danger">Remove</button>
             </div>
+
+            <div id="activeExerciseVisual" class="active-exercise-visual"></div>
 
             <div id="weightModeWrap" class="weight-mode hidden">
               <span>Weight mode</span>
@@ -647,6 +645,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="ui.js?v=graphfinal11"></script>
-  <script type="module" src="app.js?v=stabilityfix16"></script>
+  <script type="module" src="app.js?v=realistic20"></script>
 </body>
 </html>

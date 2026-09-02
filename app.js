@@ -159,6 +159,11 @@ document.addEventListener("visibilitychange",()=>{
 });
 window.addEventListener("pagehide",persistActiveWorkoutDraft);
 
+// iPhone: rapid taps on +/- should change values, not zoom the page.
+document.addEventListener("dblclick",event=>{
+  if(event.target.closest(".round-step,.rep-step,.cardio-step,.status-btn,.mode")) event.preventDefault();
+},{passive:false});
+
 
 function applyTheme(theme){
   currentTheme=theme==="light"?"light":"dark";
@@ -1244,6 +1249,31 @@ async function removeConnection(friendUid){
   }
 }
 
+
+function realisticCategoryImage(category){
+  const key=String(category||"Chest").toLowerCase();
+  return `assets/body-${key}.jpg`;
+}
+function realisticMachineImage(item,category){
+  if(category==="Cardio") return "assets/body-cardio.jpg";
+  const kind=machineKind(item?.name||"");
+  const map={
+    chestpress:"machine-chestpress", inclinepress:"machine-inclinepress", declinepress:"machine-inclinepress",
+    fly:"machine-fly", cablefly:"machine-fly", smith:"machine-chestpress", dumbbell:"machine-chestpress",
+    pulldown:"machine-pulldown", highrow:"machine-pulldown", pullup:"machine-pulldown",
+    row:"machine-row", backextension:"machine-row", shoulderpress:"machine-chestpress", lateral:"machine-row", reardelt:"machine-fly",
+    curl:"machine-row", triceps:"machine-pulldown", dip:"machine-chestpress",
+    legpress:"machine-legpress", hacksquat:"machine-legpress", legextension:"machine-legextension", legcurl:"machine-legcurl",
+    hipmachine:"machine-legextension", calf:"machine-legcurl", hipthrust:"machine-legpress",
+    abs:"machine-row", rotation:"machine-row", kneeraise:"machine-pulldown", plank:"machine-row",
+    treadmill:"body-cardio", stairs:"body-cardio", elliptical:"body-cardio", bike:"body-cardio", rower:"machine-row"
+  };
+  return `assets/${map[kind]||"machine-chestpress"}.jpg`;
+}
+function realisticExercisePicture(item,category,extraClass=""){
+  return `<div class="realistic-machine-art ${extraClass}"><img src="${realisticMachineImage(item,category)}" alt="${item?.name||category}" loading="lazy"></div>`;
+}
+
 function renderCategories(){
   const grid=$("categoryGrid");grid.innerHTML="";
   for(const [category,items] of Object.entries(EXERCISES)){
@@ -1251,11 +1281,12 @@ function renderCategories(){
     btn.className="category";
     btn.dataset.category=category;
     btn.innerHTML=`
-      <div class="category-art">${categoryArtwork(category)}</div>
+      <div class="category-art realistic-body-art"><img src="${realisticCategoryImage(category)}" alt="${category}" loading="lazy"></div>
       <div class="category-copy">
         <strong>${category}</strong>
         <span>${items.length} exercises</span>
-      </div>`;
+      </div>
+      <span class="category-arrow">›</span>`;
     btn.addEventListener("click",()=>openCategory(category));
     grid.appendChild(btn);
   }
@@ -1277,7 +1308,7 @@ function openCategory(category){
   const grid=$("exerciseGrid");grid.innerHTML="";
   EXERCISES[category].forEach(item=>{
     const btn=document.createElement("button");btn.className="exercise";
-    btn.dataset.category=category;btn.innerHTML=`${machineArtwork(item,category)}<div class="exercise-info"><strong>${item.name}</strong><span>${category} • ${item.type}${item.independent?" • Independent arms":""}</span></div>`;
+    btn.dataset.category=category;btn.innerHTML=`${realisticExercisePicture(item,category)}<div class="exercise-info"><strong>${item.name}</strong><span>${item.type}${item.independent?" • Independent arms":""}</span></div><span class="exercise-arrow">›</span>`;
     btn.addEventListener("click",()=>startExercise(category,item));
     grid.appendChild(btn);
   });
@@ -1393,6 +1424,10 @@ function renderActiveExercise(){
   $("categoryView").classList.add("hidden");$("exerciseView").classList.add("hidden");$("activeView").classList.remove("hidden");
   $("activeExerciseMeta").textContent=`${activeExercise.category.toUpperCase()} • ${activeExercise.type}`;
   $("activeExerciseName").textContent=activeExercise.name;
+  const activeVisual=$("activeExerciseVisual");
+  if(activeVisual){
+    activeVisual.innerHTML=`<img src="${realisticMachineImage({name:activeExercise.name},activeExercise.category)}" alt="${activeExercise.name}">`;
+  }
   $("weightModeWrap").classList.toggle("hidden",isCardioExercise()||!activeExercise.independent);
   $("perArmBtn").classList.toggle("active",activeExercise.weightMode==="perArm");
   $("totalBtn").classList.toggle("active",activeExercise.weightMode==="total");
