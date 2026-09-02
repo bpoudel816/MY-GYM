@@ -103,6 +103,62 @@ let celebrationAudioContext=null;
 let calendarTrackingStart=null;
 let currentTheme="dark";
 
+// ===== ACTIVE WORKOUT SAFETY =====
+// Keep the in-progress workout on-device so iOS/Safari can reload the page
+// without losing exercises that have already been entered.
+function activeWorkoutStorageKey(){
+  return user?.uid?`mygym_active_workout_v3_${user.uid}`:null;
+}
+function persistActiveWorkoutDraft(){
+  const key=activeWorkoutStorageKey();
+  if(!key)return;
+  try{
+    if(!workout){
+      localStorage.removeItem(key);
+      return;
+    }
+    localStorage.setItem(key,JSON.stringify({
+      version:3,
+      savedAt:new Date().toISOString(),
+      workout:{
+        ...workout,
+        startedAt:(workout.startedAt instanceof Date?workout.startedAt:new Date(workout.startedAt)).toISOString()
+      },
+      activeExercise:activeExercise||null
+    }));
+  }catch(err){
+    console.warn("Could not save active workout draft:",err);
+  }
+}
+function clearActiveWorkoutDraft(){
+  const key=activeWorkoutStorageKey();
+  if(!key)return;
+  try{localStorage.removeItem(key)}catch(_){}
+}
+function restoreActiveWorkoutDraft(){
+  const key=activeWorkoutStorageKey();
+  if(!key)return false;
+  try{
+    const raw=localStorage.getItem(key);
+    if(!raw)return false;
+    const saved=JSON.parse(raw);
+    if(!saved?.workout?.startedAt)return false;
+    const startedAt=new Date(saved.workout.startedAt);
+    if(Number.isNaN(startedAt.getTime()))return false;
+    workout={...saved.workout,startedAt,exercises:Array.isArray(saved.workout.exercises)?saved.workout.exercises:[]};
+    activeExercise=saved.activeExercise||null;
+    startTimer();
+    return true;
+  }catch(err){
+    console.warn("Could not restore active workout draft:",err);
+    return false;
+  }
+}
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="hidden")persistActiveWorkoutDraft();
+});
+window.addEventListener("pagehide",persistActiveWorkoutDraft);
+
 
 function applyTheme(theme){
   currentTheme=theme==="light"?"light":"dark";
@@ -588,7 +644,8 @@ $("resetForm").addEventListener("submit",async e=>{
   catch(err){showMessage(err.code||"Could not send reset email.")}
 });
 $("logoutBtn").addEventListener("click",async()=>{
-  if(workout&&!confirm("A workout is in progress. Log out and lose unsaved workout data?"))return;
+  if(workout&&!confirm("A workout is in progress. Log out? The in-progress draft will stay saved on this device."))return;
+  persistActiveWorkoutDraft();
   workout=null;activeExercise=null;stopTimer();await signOut(auth);
 });
 
@@ -616,8 +673,15 @@ onAuthStateChanged(auth,async currentUser=>{
   $("authView").classList.add("hidden");$("appView").classList.remove("hidden");
   await loadTheme();
   await ensureCalendarTrackingStart();
-  showScreen("home");
   await loadAllData();
+  const recoveredWorkout=restoreActiveWorkoutDraft();
+  if(recoveredWorkout){
+    showScreen("workout");
+    if(activeExercise)renderActiveExercise(); else showCategoryView();
+    showToast("Your in-progress workout was recovered.","success");
+  }else{
+    showScreen("home");
+  }
   await ensureFriendCode();
 });
 
@@ -1288,10 +1352,11 @@ function adjustCardioField(key,delta){
   activeExercise.cardio=activeExercise.cardio||{};
   const next=Math.max(0,Number(activeExercise.cardio[key]||0)+delta);
   activeExercise.cardio[key]=Math.round(next*100)/100;
+  persistActiveWorkoutDraft();
   renderSets();
 }
 function startExercise(category,item){
-  if(!workout){workout={startedAt:new Date(),exercises:[]};startTimer();}
+  if(!workout){workout={startedAt:new Date(),exercises:[]};startTimer();persistActiveWorkoutDraft();}
   if(category==="Cardio"){
     const fields=cardioFieldConfig(item.name);
     const last=cardioSessionFromLast(item.name)||{};
@@ -1304,6 +1369,7 @@ function startExercise(category,item){
     $("lastWeightHint").textContent=Object.keys(last).length
       ?"Last cardio session loaded — adjust today's numbers below."
       :"Enter today's cardio results.";
+    persistActiveWorkoutDraft();
     renderActiveExercise();
     return;
   }
@@ -1320,6 +1386,7 @@ function startExercise(category,item){
     ]
   };
   $("lastWeightHint").textContent=last?`Last saved: ${last.weight} ${(last.weightMode||"total")==="perArm"?"lb/arm":"lb"} × ${last.reps}`:"First time: starting at 30 lb";
+  persistActiveWorkoutDraft();
   renderActiveExercise();
 }
 function renderActiveExercise(){
@@ -1331,8 +1398,8 @@ function renderActiveExercise(){
   $("totalBtn").classList.toggle("active",activeExercise.weightMode==="total");
   renderSets();
 }
-$("perArmBtn").addEventListener("click",()=>{activeExercise.weightMode="perArm";renderActiveExercise()});
-$("totalBtn").addEventListener("click",()=>{activeExercise.weightMode="total";renderActiveExercise()});
+$("perArmBtn").addEventListener("click",()=>{activeExercise.weightMode="perArm";persistActiveWorkoutDraft();renderActiveExercise()});
+$("totalBtn").addEventListener("click",()=>{activeExercise.weightMode="total";persistActiveWorkoutDraft();renderActiveExercise()});
 
 function renderCurrentWorkoutSummary(){
   const box=$("currentWorkoutSummary");
@@ -1367,12 +1434,14 @@ function renderCurrentWorkoutSummary(){
 function adjustWeight(setIndex,delta){
   const set=activeExercise.sets[setIndex];
   set.weight=Math.max(0,Number(set.weight||0)+delta);
+  persistActiveWorkoutDraft();
   renderSets();
 }
 
 function adjustReps(setIndex,delta){
   const set=activeExercise.sets[setIndex];
   set.reps=Math.max(0,Number(set.reps||0)+delta);
+  persistActiveWorkoutDraft();
   renderSets();
 }
 
@@ -1398,7 +1467,7 @@ function renderSets(){
         </div>`;
       box.querySelector(".cardio-minus").addEventListener("click",()=>adjustCardioField(f.key,-f.step));
       box.querySelector(".cardio-plus").addEventListener("click",()=>adjustCardioField(f.key,f.step));
-      box.querySelector("input").addEventListener("input",e=>activeExercise.cardio[f.key]=Math.max(0,Number(e.target.value||0)));
+      box.querySelector("input").addEventListener("input",e=>{activeExercise.cardio[f.key]=Math.max(0,Number(e.target.value||0));persistActiveWorkoutDraft();});
       panel.appendChild(box);
     });
     list.appendChild(panel);
@@ -1432,9 +1501,9 @@ function renderSets(){
     row.querySelector(".rep-minus").addEventListener("click",()=>adjustReps(index,-1));
     row.querySelector(".rep-plus").addEventListener("click",()=>adjustReps(index,1));
     const inputs=row.querySelectorAll("input");
-    inputs[0].addEventListener("input",e=>set.weight=Number(e.target.value||0));
-    inputs[1].addEventListener("input",e=>set.reps=Number(e.target.value||0));
-    row.querySelector(".check").addEventListener("click",()=>{set.done=!set.done;renderSets()});
+    inputs[0].addEventListener("input",e=>{set.weight=Number(e.target.value||0);persistActiveWorkoutDraft();});
+    inputs[1].addEventListener("input",e=>{set.reps=Number(e.target.value||0);persistActiveWorkoutDraft();});
+    row.querySelector(".check").addEventListener("click",()=>{set.done=!set.done;persistActiveWorkoutDraft();renderSets()});
     list.appendChild(row);
   });
 }
@@ -1442,22 +1511,23 @@ $("addSetBtn").addEventListener("click",()=>{
   if(isCardioExercise())return;
   const last=activeExercise.sets[activeExercise.sets.length-1]||{weight:30,reps:8};
   activeExercise.sets.push({weight:Number(last.weight||30),reps:Number(last.reps||8),done:false});
+  persistActiveWorkoutDraft();
   renderSets();
 });
-$("removeCurrentExerciseBtn").addEventListener("click",()=>{activeExercise=null;showCategoryView()});
+$("removeCurrentExerciseBtn").addEventListener("click",()=>{activeExercise=null;persistActiveWorkoutDraft();showCategoryView()});
 $("finishThisExerciseBtn").addEventListener("click",()=>{
   if(isCardioExercise()){
     const values=Object.values(activeExercise.cardio||{}).map(Number);
     if(!values.some(v=>v>0)){showToast("Enter your cardio results first.","error");return}
     workout.exercises.push({...activeExercise,completed:true,sets:[]});
-    activeExercise=null;showCategoryView();
+    activeExercise=null;persistActiveWorkoutDraft();showCategoryView();
     showToast("Cardio finished. Choose the next exercise or finish the whole workout.","success");
     return;
   }
   const entered=activeExercise.sets.filter(s=>Number(s.weight||0)>0||Number(s.reps||0)>0);
   if(!entered.length){showToast("Enter at least one set first.","error");return}
   workout.exercises.push({...activeExercise,completed:true,sets:entered.map(s=>({weight:Number(s.weight||0),reps:Number(s.reps||0),done:Boolean(s.done)}))});
-  activeExercise=null;showCategoryView();
+  activeExercise=null;persistActiveWorkoutDraft();showCategoryView();
   showToast("Exercise finished. Choose the next body part or finish the whole workout.","success");
 });
 $("finishWholeWorkoutBtn").addEventListener("click",async()=>{
@@ -1491,6 +1561,8 @@ $("finishWholeWorkoutBtn").addEventListener("click",async()=>{
   }
 
   // At this point the workout is definitely saved.
+  clearActiveWorkoutDraft();
+
   const completedWorkout={
     startedAt:workout.startedAt,
     endedAt,
@@ -1514,7 +1586,7 @@ $("finishWholeWorkoutBtn").addEventListener("click",async()=>{
 });
 $("cancelWorkoutBtn").addEventListener("click",()=>{
   if(!confirm("Cancel the whole workout? Unsaved data will be lost."))return;
-  workout=null;activeExercise=null;stopTimer();showCategoryView();
+  workout=null;activeExercise=null;clearActiveWorkoutDraft();stopTimer();showCategoryView();
 });
 
 function startTimer(){stopTimer();timerHandle=setInterval(updateTimer,1000);updateTimer()}
@@ -2369,10 +2441,12 @@ function workoutMap(){
 function inferredStatusForDate(d,map){
   const key=dateKey(d);
 
-  // Dates before the first day this updated MY GYM version was used stay untouched.
-  if(!calendarTrackingStart || key<calendarTrackingStart)return "clear";
-
+  // A real saved workout always wins, including Track IT workouts imported
+  // from dates before MY GYM calendar tracking began.
   if(map[key]?.length)return "workout";
+
+  // Non-workout dates before calendar tracking began stay untouched.
+  if(!calendarTrackingStart || key<calendarTrackingStart)return "clear";
 
   const manual=calendarStatuses[key]?.status;
   if(manual==="rest")return "rest";
@@ -2711,6 +2785,7 @@ function showTrackItPreview(parsed,fileName){
     `${cardioCount} cardio exercise${cardioCount===1?"":"s"}`,
     `${parsed.customMachines.length} custom machine${parsed.customMachines.length===1?"":"s"} found`,
     "Current MY GYM data will NOT be deleted",
+    "Imported workout dates will appear green on the MY GYM calendar",
     "Re-importing the same Track IT backup will update the same imported records instead of duplicating them"
   ];
   $("trackItPreviewNotes").innerHTML=notes.map(n=>`<div>✓ ${n}</div>`).join("");

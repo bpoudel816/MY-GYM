@@ -1719,3 +1719,82 @@ input,textarea,select{background:var(--input)!important;color:var(--text)!import
     padding:0 4px !important;
   }
 }
+
+/* ===== SEPT 2026 LIGHT MODE WORKOUT VISIBILITY FIX ===== */
+:root[data-theme="light"] #workoutScreen,
+:root[data-theme="light"] #workoutScreen .card,
+:root[data-theme="light"] #workoutScreen .active-card,
+:root[data-theme="light"] #workoutScreen .current-workout-summary,
+:root[data-theme="light"] #workoutScreen .weight-mode,
+:root[data-theme="light"] #workoutScreen .set-row,
+:root[data-theme="light"] #workoutScreen .cardio-field-card {
+  color:#111827 !important;
+}
+:root[data-theme="light"] #workoutScreen .workout-top{
+  background:#ffffff !important;
+  border-color:#d7dee9 !important;
+  box-shadow:0 10px 28px #26364c18 !important;
+}
+:root[data-theme="light"] #workoutScreen h2,
+:root[data-theme="light"] #workoutScreen h3,
+:root[data-theme="light"] #workoutScreen h4,
+:root[data-theme="light"] #workoutScreen strong,
+:root[data-theme="light"] #workoutScreen .set-num,
+:root[data-theme="light"] #workoutScreen #activeExerciseName,
+:root[data-theme="light"] #workoutScreen #categoryTitle,
+:root[data-theme="light"] #workoutScreen #workoutStatus {
+  color:#111827 !important;
+  -webkit-text-fill-color:#111827 !important;
+  opacity:1 !important;
+}
+:root[data-theme="light"] #workoutScreen .eyebrow,
+:root[data-theme="light"] #workoutScreen .mini,
+:root[data-theme="light"] #workoutScreen small,
+:root[data-theme="light"] #workoutScreen .exercise-info span,
+:root[data-theme="light"] #workoutScreen #activeExerciseMeta,
+:root[data-theme="light"] #workoutScreen #lastWeightHint,
+:root[data-theme="light"] #workoutScreen .weight-mode>span {
+  color:#526174 !important;
+  -webkit-text-fill-color:#526174 !important;
+  opacity:1 !important;
+}
+:root[data-theme="light"] #workoutScreen .exercise,
+:root[data-theme="light"] #workoutScreen .category,
+:root[data-theme="light"] #workoutScreen .current-workout-chip,
+:root[data-theme="light"] #workoutScreen .set-row,
+:root[data-theme="light"] #workoutScreen .weight-mode,
+:root[data-theme="light"] #workoutScreen .cardio-field-card {
+  background:#ffffff !important;
+  border-color:#d7dee9 !important;
+}
+:root[data-theme="light"] #workoutScreen .machine-visual{
+  background:radial-gradient(circle at 70% 10%,#735cff16,transparent 46%),#f4f7fb !important;
+  border-color:#d7dee9 !important;
+}
+:root[data-theme="light"] #workoutScreen .secondary,
+:root[data-theme="light"] #workoutScreen #backBtn,
+:root[data-theme="light"] #workoutScreen #addSetBtn,
+:root[data-theme="light"] #workoutScreen #removeCurrentExerciseBtn {
+  background:#eef2f7 !important;
+  color:#1f2937 !important;
+  -webkit-text-fill-color:#1f2937 !important;
+  border-color:#cbd5e1 !important;
+}
+:root[data-theme="light"] #workoutScreen .mode{
+  color:#526174 !important;
+  -webkit-text-fill-color:#526174 !important;
+}
+:root[data-theme="light"] #workoutScreen .mode.active{
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+}
+:root[data-theme="light"] #workoutScreen .check{
+  color:#475569 !important;
+  background:#eef2f7 !important;
+  border-color:#cbd5e1 !important;
+}
+:root[data-theme="light"] #workoutScreen .check.done{
+  color:#087f5b !important;
+  background:#dff7ed !important;
+  border-color:#9de3ca !important;
+}
