@@ -1254,21 +1254,10 @@ function realisticCategoryImage(category){
   const key=String(category||"Chest").toLowerCase();
   return `assets/body-${key}.jpg`;
 }
+const REALISTIC_MACHINE_ASSETS = {"Chest Press": "machine-chest-press.jpg", "Incline Chest Press": "machine-incline-chest-press.jpg", "Decline Chest Press": "machine-decline-chest-press.jpg", "Hammer Strength MTS Chest Press": "machine-hammer-strength-mts-chest-press.jpg", "Hammer Strength MTS Incline Press": "machine-hammer-strength-mts-incline-press.jpg", "Hammer Strength MTS Decline Press": "machine-hammer-strength-mts-decline-press.jpg", "Hammer Strength Plate-Loaded Chest Press": "machine-hammer-strength-plate-loaded-chest-press.jpg", "Hammer Strength Plate-Loaded Incline Press": "machine-hammer-strength-plate-loaded-incline-press.jpg", "Pec Deck / Chest Fly": "machine-pec-deck-chest-fly.jpg", "Cable Fly": "machine-cable-fly.jpg", "Smith Machine Bench Press": "machine-smith-machine-bench-press.jpg", "Dumbbell Bench Press": "machine-dumbbell-bench-press.jpg", "Lat Pulldown": "machine-lat-pulldown.jpg", "Seated Row": "machine-seated-row.jpg", "High Row": "machine-high-row.jpg", "Hammer Strength MTS High Row": "machine-hammer-strength-mts-high-row.jpg", "Hammer Strength MTS Front Pulldown": "machine-hammer-strength-mts-front-pulldown.jpg", "Hammer Strength MTS Iso-Lateral Row": "machine-hammer-strength-mts-iso-lateral-row.jpg", "Hammer Strength Plate-Loaded High Row": "machine-hammer-strength-plate-loaded-high-row.jpg", "Hammer Strength Plate-Loaded Low Row": "machine-hammer-strength-plate-loaded-low-row.jpg", "Assisted Pull-Up": "machine-assisted-pull-up.jpg", "Cable Row": "machine-cable-row.jpg", "Straight-Arm Pulldown": "machine-straight-arm-pulldown.jpg", "Back Extension": "machine-back-extension.jpg", "Shoulder Press": "machine-shoulder-press.jpg", "Hammer Strength MTS Shoulder Press": "machine-hammer-strength-mts-shoulder-press.jpg", "Hammer Strength Plate-Loaded Shoulder Press": "machine-hammer-strength-plate-loaded-shoulder-press.jpg", "Lateral Raise": "machine-lateral-raise.jpg", "Rear Delt Fly": "machine-rear-delt-fly.jpg", "Cable Lateral Raise": "machine-cable-lateral-raise.jpg", "Front Raise": "machine-front-raise.jpg", "Biceps Curl": "machine-biceps-curl.jpg", "Preacher Curl": "machine-preacher-curl.jpg", "Cable Curl": "machine-cable-curl.jpg", "Hammer Strength Biceps Curl": "machine-hammer-strength-biceps-curl.jpg", "Triceps Press": "machine-triceps-press.jpg", "Triceps Pushdown": "machine-triceps-pushdown.jpg", "Dip Machine": "machine-dip-machine.jpg", "Hammer Strength Triceps Extension": "machine-hammer-strength-triceps-extension.jpg", "Leg Press": "machine-leg-press.jpg", "45° Leg Press": "machine-45-leg-press.jpg", "Hack Squat": "machine-hack-squat.jpg", "Hammer Strength MTS Leg Press": "machine-hammer-strength-mts-leg-press.jpg", "Hammer Strength Plate-Loaded Linear Leg Press": "machine-hammer-strength-plate-loaded-linear-leg-press.jpg", "Leg Extension": "machine-leg-extension.jpg", "Seated Leg Curl": "machine-seated-leg-curl.jpg", "Lying Leg Curl": "machine-lying-leg-curl.jpg", "Standing Leg Curl": "machine-standing-leg-curl.jpg", "Hip Abductor": "machine-hip-abductor.jpg", "Hip Adductor": "machine-hip-adductor.jpg", "Seated Calf Raise": "machine-seated-calf-raise.jpg", "Standing Calf Raise": "machine-standing-calf-raise.jpg", "Glute Drive / Hip Thrust": "machine-glute-drive-hip-thrust.jpg", "Abdominal Crunch": "machine-abdominal-crunch.jpg", "Torso Rotation": "machine-torso-rotation.jpg", "Cable Crunch": "machine-cable-crunch.jpg", "Hanging Knee Raise": "machine-hanging-knee-raise.jpg", "Plank": "machine-plank.jpg", "Treadmill": "machine-treadmill.jpg", "Stair Climber": "machine-stair-climber.jpg", "Elliptical": "machine-elliptical.jpg", "Stationary Bike": "machine-stationary-bike.jpg", "Recumbent Bike": "machine-recumbent-bike.jpg", "Rowing Machine": "machine-rowing-machine.jpg"};
 function realisticMachineImage(item,category){
-  if(category==="Cardio") return "assets/body-cardio.jpg";
-  const kind=machineKind(item?.name||"");
-  const map={
-    chestpress:"machine-chestpress", inclinepress:"machine-inclinepress", declinepress:"machine-inclinepress",
-    fly:"machine-fly", cablefly:"machine-fly", smith:"machine-chestpress", dumbbell:"machine-chestpress",
-    pulldown:"machine-pulldown", highrow:"machine-pulldown", pullup:"machine-pulldown",
-    row:"machine-row", backextension:"machine-row", shoulderpress:"machine-chestpress", lateral:"machine-row", reardelt:"machine-fly",
-    curl:"machine-row", triceps:"machine-pulldown", dip:"machine-chestpress",
-    legpress:"machine-legpress", hacksquat:"machine-legpress", legextension:"machine-legextension", legcurl:"machine-legcurl",
-    hipmachine:"machine-legextension", calf:"machine-legcurl", hipthrust:"machine-legpress",
-    abs:"machine-row", rotation:"machine-row", kneeraise:"machine-pulldown", plank:"machine-row",
-    treadmill:"body-cardio", stairs:"body-cardio", elliptical:"body-cardio", bike:"body-cardio", rower:"machine-row"
-  };
-  return `assets/${map[kind]||"machine-chestpress"}.jpg`;
+  const name=String(item?.name||"");
+  return `assets/${REALISTIC_MACHINE_ASSETS[name]||"machine-chest-press.jpg"}`;
 }
 function realisticExercisePicture(item,category,extraClass=""){
   return `<div class="realistic-machine-art ${extraClass}"><img src="${realisticMachineImage(item,category)}" alt="${item?.name||category}" loading="lazy"></div>`;
@@ -2900,6 +2889,51 @@ $("importTrackItBtn")?.addEventListener("click",async()=>{
     btn.disabled=false;
     btn.textContent=original;
   }
+});
+
+
+async function getTrackItImportSummary(){
+  if(!user)throw new Error("No signed-in user");
+  const result={workouts:[],bodyWeights:[],calendarDays:[]};
+  for(const collectionName of Object.keys(result)){
+    const snap=await getDocs(collection(db,"users",user.uid,collectionName));
+    snap.docs.forEach(d=>{
+      const data=d.data()||{};
+      const imported=String(data.sourceApp||"").toLowerCase()==="track it" || d.id.startsWith("trackit_");
+      if(imported)result[collectionName].push(d.ref);
+    });
+  }
+  return result;
+}
+async function deleteRefList(refs){
+  let deleted=0;
+  for(let i=0;i<refs.length;i+=400){
+    const batch=writeBatch(db);
+    refs.slice(i,i+400).forEach(ref=>batch.delete(ref));
+    await batch.commit();
+    deleted+=Math.min(400,refs.length-i);
+  }
+  return deleted;
+}
+$("removeTrackItImportedDataBtn")?.addEventListener("click",async()=>{
+  if(!user)return;
+  const btn=$("removeTrackItImportedDataBtn");
+  const old=btn.textContent;
+  btn.disabled=true;btn.textContent="Checking imported data...";
+  try{
+    const found=await getTrackItImportSummary();
+    const wc=found.workouts.length,bw=found.bodyWeights.length,cd=found.calendarDays.length,total=wc+bw+cd;
+    if(!total){showToast("No identifiable Track IT PF imported data found.","success");return;}
+    const ok=confirm(`Track IT PF imported data found:\n\n${wc} imported workout${wc===1?"":"s"}\n${bw} imported body-weight record${bw===1?"":"s"}\n${cd} imported calendar status${cd===1?"":"es"}\n\nMY GYM workouts you created directly will NOT be removed.\n\nRemove these imported records?`);
+    if(!ok)return;
+    const typed=prompt('For safety, type REMOVE to delete only the Track IT PF imported records:');
+    if(typed!=="REMOVE"){if(typed!==null)showToast("Nothing deleted. Type REMOVE exactly to confirm.","error");return;}
+    btn.textContent="Removing Track IT data...";
+    const deleted=(await deleteRefList(found.workouts))+(await deleteRefList(found.bodyWeights))+(await deleteRefList(found.calendarDays));
+    await loadAllData();
+    showToast(`${deleted} Track IT PF imported record${deleted===1?"":"s"} removed. MY GYM-created data was kept.`,"success");
+  }catch(err){console.error("Track IT cleanup failed:",err);showToast(`Could not remove imported data (${err.code||err.message||"unknown error"}).`,"error");}
+  finally{btn.disabled=false;btn.textContent=old;}
 });
 
 async function deleteDocsInCollection(collectionName){

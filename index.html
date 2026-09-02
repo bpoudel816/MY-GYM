@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="my-gym-icon-192.png">
   <link rel="icon" href="my-gym-icon-192.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=realistic20">
+  <link rel="stylesheet" href="styles.css?v=realistic21">
 </head>
 <body>
   <main class="shell">
@@ -584,6 +584,14 @@
           </div>
 
           <div id="trackItImportResult" class="import-result hidden"></div>
+
+          <div class="trackit-remove-box">
+            <div>
+              <strong>Remove Track IT PF imported data</strong>
+              <p class="muted mini">Finds records marked as Track IT imports and removes only those records. Workouts created directly in MY GYM are kept.</p>
+            </div>
+            <button id="removeTrackItImportedDataBtn" class="danger wide" type="button">Remove Imported Track IT PF Data</button>
+          </div>
         </div>
 
         <div class="card danger-zone">
@@ -645,6 +653,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="ui.js?v=graphfinal11"></script>
-  <script type="module" src="app.js?v=realistic20"></script>
+  <script type="module" src="app.js?v=realistic21"></script>
 </body>
 </html>

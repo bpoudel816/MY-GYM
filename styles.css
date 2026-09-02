@@ -2013,3 +2013,31 @@ button,.round-step,.rep-step,.cardio-step,.mode,.navbtn{touch-action:manipulatio
 :root[data-theme="light"] .active-exercise-visual{border-color:#e6e8ef!important}
 :root[data-theme="light"] .eyebrow{color:#6d35f2!important}
 :root[data-theme="light"] .hero-card .eyebrow{color:#fff!important}
+
+/* === REALISTIC V21: safe-area + clean photo cards + Track IT cleanup === */
+html{-webkit-text-size-adjust:100%}
+body{padding-top:env(safe-area-inset-top)}
+.topbar{min-height:58px;align-items:center!important}
+.brand{align-items:center!important;min-width:0}
+.brand-mark{flex:0 0 auto}
+.brand-copy{min-width:0}.brand-copy strong{white-space:nowrap}
+.trackit-remove-box{margin-top:18px;padding-top:18px;border-top:1px solid #ffffff14;display:grid;gap:12px}
+:root[data-theme="light"] .trackit-remove-box{border-top-color:#e4e7ef}
+/* body-part photo gets its own area; text never overlays photo */
+.category{display:grid!important;grid-template-columns:1fr!important;grid-template-rows:auto auto!important;align-content:start!important}
+.realistic-body-art{position:static!important;inset:auto!important;width:100%!important;height:150px!important;border-radius:18px 18px 0 0!important;background:#0c111a!important}
+.realistic-body-art img{object-fit:cover!important;object-position:center 35%!important}
+.category-copy{position:static!important;z-index:2;background:inherit;padding:12px 40px 14px 14px!important;text-align:left!important}
+.category-arrow{bottom:15px!important}
+/* machine cards: image fully visible rather than cropped */
+.realistic-machine-art{height:160px!important;background:#f5f5f7!important;padding:5px}
+.realistic-machine-art img{object-fit:contain!important;object-position:center!important;border-radius:12px}
+@media(max-width:650px){
+  .shell{padding-top:max(12px,env(safe-area-inset-top))!important}
+  .topbar{padding-top:2px!important;margin-bottom:20px!important}
+  .brand-mark{width:44px!important;height:44px!important}
+  .category-grid{gap:10px!important}
+  .realistic-body-art{height:132px!important}
+  .category-copy strong{font-size:16px!important}.category-copy span{font-size:10px!important}
+  .realistic-machine-art{height:142px!important}
+}
