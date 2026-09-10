@@ -2284,13 +2284,75 @@ function renderAllCharts(){
     if($("oneRmChartTitle"))$("oneRmChartTitle").textContent="Strength trend";
 
     if($("strengthChart")){
+      const baseOptions=chartDefaults();
       createChartSafe("strength",$("strengthChart"),{
         type:"line",
         data:{labels,datasets:[
-          {label:"Weight",data:hist.map(r=>r.weight),tension:.3},
-          {label:"Reps",data:hist.map(r=>r.reps),tension:.3}
+          {
+            label:"Weight",
+            data:hist.map(r=>r.weight),
+            yAxisID:"yWeight",
+            tension:.3,
+            borderWidth:3,
+            pointRadius:4,
+            pointHoverRadius:6
+          },
+          {
+            label:"Reps",
+            data:hist.map(r=>r.reps),
+            yAxisID:"yReps",
+            tension:.3,
+            borderWidth:3,
+            pointRadius:4,
+            pointHoverRadius:6
+          }
         ]},
-        options:chartDefaults()
+        options:{
+          ...baseOptions,
+          interaction:{mode:"index",intersect:false},
+          scales:{
+            x:baseOptions.scales.x,
+            yWeight:{
+              ...baseOptions.scales.y,
+              position:"left",
+              beginAtZero:true,
+              title:{
+                display:true,
+                text:`Weight (${weightUnitLabel()})`,
+                color:baseOptions.scales.y.ticks.color
+              }
+            },
+            yReps:{
+              position:"right",
+              beginAtZero:true,
+              suggestedMax:Math.max(12,...hist.map(r=>Number(r.reps||0)+2)),
+              ticks:{
+                stepSize:1,
+                precision:0,
+                color:baseOptions.scales.y.ticks.color
+              },
+              grid:{drawOnChartArea:false},
+              title:{
+                display:true,
+                text:"Reps",
+                color:baseOptions.scales.y.ticks.color
+              }
+            }
+          },
+          plugins:{
+            ...baseOptions.plugins,
+            tooltip:{
+              callbacks:{
+                label:(ctx)=>{
+                  const v=ctx.parsed.y;
+                  return ctx.dataset.label==="Weight"
+                    ? `Weight: ${formatNumber(v)} ${weightUnitLabel()}`
+                    : `Reps: ${formatNumber(v)}`;
+                }
+              }
+            }
+          }
+        }
       });
     }
     if($("volumeChart")){
