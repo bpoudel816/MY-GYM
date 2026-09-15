@@ -2245,20 +2245,74 @@ function renderAllCharts(){
     const f1=fields[0],f2=fields[1],f3=fields[2];
 
     if($("strengthChartEyebrow"))$("strengthChartEyebrow").textContent="CARDIO";
-    if($("strengthChartTitle"))$("strengthChartTitle").textContent=`${f1.label} & ${f2.label}`;
+    if($("strengthChartTitle"))$("strengthChartTitle").textContent=
+      (f1.key==="stairs" && f2.key==="minutes") ? "Stairs & Duration" : `${f1.label} & ${f2.label}`;
     if($("volumeChartEyebrow"))$("volumeChartEyebrow").textContent="CARDIO";
     if($("volumeChartTitle"))$("volumeChartTitle").textContent=f3.label;
     if($("oneRmChartEyebrow"))$("oneRmChartEyebrow").textContent="SESSIONS";
     if($("oneRmChartTitle"))$("oneRmChartTitle").textContent="Session trend";
 
     if($("strengthChart")){
+      const baseOptions=chartDefaults();
       createChartSafe("strength",$("strengthChart"),{
         type:"line",
         data:{labels,datasets:[
-          {label:f1.label,data:hist.map(r=>r[f1.key]),tension:.3},
-          {label:f2.label,data:hist.map(r=>r[f2.key]),tension:.3}
+          {
+            label:f1.label,
+            data:hist.map(r=>r[f1.key]),
+            yAxisID:"yPrimary",
+            tension:.3,
+            borderWidth:3,
+            pointRadius:4,
+            pointHoverRadius:6
+          },
+          {
+            label:f2.label,
+            data:hist.map(r=>r[f2.key]),
+            yAxisID:"ySecondary",
+            tension:.3,
+            borderWidth:3,
+            pointRadius:4,
+            pointHoverRadius:6
+          }
         ]},
-        options:chartDefaults()
+        options:{
+          ...baseOptions,
+          interaction:{mode:"index",intersect:false},
+          plugins:{
+            ...baseOptions.plugins,
+            tooltip:{
+              callbacks:{
+                title:items=>items?.[0]?.label||"",
+                label:ctx=>`${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales:{
+            x:baseOptions.scales.x,
+            yPrimary:{
+              ...baseOptions.scales.y,
+              position:"left",
+              beginAtZero:true,
+              title:{
+                display:true,
+                text:f1.label,
+                color:baseOptions.scales.y.ticks.color
+              }
+            },
+            ySecondary:{
+              position:"right",
+              beginAtZero:true,
+              ticks:{color:baseOptions.scales.y.ticks.color},
+              grid:{drawOnChartArea:false},
+              title:{
+                display:true,
+                text:f2.label,
+                color:baseOptions.scales.y.ticks.color
+              }
+            }
+          }
+        }
       });
     }
     if($("volumeChart")){
