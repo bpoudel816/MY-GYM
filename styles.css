@@ -2046,9 +2046,9 @@ body{padding-top:env(safe-area-inset-top)}
 /* Dedicated chart containers keep responsive canvases from resizing their cards. */
 .graph-card{min-width:0}
 .chart-frame{position:relative;width:100%;height:320px;min-width:0}
-.chart-frame-weight{height:480px}
+.chart-frame-weight{height:360px}
 .graph-card .chart-frame canvas{display:block;width:100%!important;height:100%!important;max-height:none;max-width:100%!important}
 @media(max-width:640px){
   .chart-frame{height:280px}
-  .chart-frame-weight{height:400px}
+  .chart-frame-weight{height:320px}
 }

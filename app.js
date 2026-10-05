@@ -2151,25 +2151,33 @@ function chartDefaults(){
 }
 
 
-// Display-only scale: anchor to the first saved weight; never rewrite records.
+// Display-only scale: follow the recorded range without rewriting records.
 function bodyWeightChartOptions(entries){
   const options=chartDefaults();
   const weights=entries.map(entry=>Number(entry.weight)).filter(weight=>Number.isFinite(weight)&&weight>0);
   if(!weights.length)return options;
-  const initial=weights[0];
+  let minimum=Math.floor(Math.min(...weights))-2;
+  let maximum=Math.ceil(Math.max(...weights))+2;
+  // Give a single reading or very steady weights at least 6 lb of room.
+  if(maximum-minimum<6){
+    const center=(minimum+maximum)/2;
+    minimum=Math.floor(center-3);
+    maximum=Math.ceil(center+3);
+  }
   options.scales.y={
     ...options.scales.y,
     beginAtZero:false,
-    min:initial-40,
-    max:initial+40,
+    min:Math.max(0,minimum),
+    max:maximum,
     ticks:{
       ...options.scales.y.ticks,
       font:{size:10},
       padding:4,
       stepSize:1,
-      autoSkip:false,
-      // Keep all 1 lb gridlines, with readable numbers every 5 lb.
-      callback:value=>Number.isInteger(value)&&value%5===0?`${value} lb`:""
+      autoSkip:true,
+      maxTicksLimit:16,
+      // 1 lb labels for nearby weights; skip crowded labels on large changes.
+      callback:value=>`${Number(Number(value).toFixed(1))} lb`
     }
   };
   options.plugins.tooltip={
