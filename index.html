@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="my-gym-icon-192.png">
   <link rel="icon" href="my-gym-icon-192.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=approved22">
+  <link rel="stylesheet" href="styles.css?v=weightscale26">
 </head>
 <body>
   <main class="shell">
@@ -306,31 +306,31 @@
             <div class="card graph-card">
               <p id="strengthChartEyebrow" class="eyebrow">STRENGTH</p>
               <h3 id="strengthChartTitle">Weight & reps</h3>
-              <canvas id="strengthChart" height="240"></canvas>
+              <div class="chart-frame"><canvas id="strengthChart"></canvas></div>
             </div>
 
             <div class="card graph-card">
               <p id="volumeChartEyebrow" class="eyebrow">VOLUME</p>
               <h3 id="volumeChartTitle">Total work</h3>
-              <canvas id="volumeChart" height="240"></canvas>
+              <div class="chart-frame"><canvas id="volumeChart"></canvas></div>
             </div>
 
             <div class="card graph-card">
               <p id="oneRmChartEyebrow" class="eyebrow">ESTIMATED 1RM</p>
               <h3 id="oneRmChartTitle">Strength trend</h3>
-              <canvas id="oneRmChart" height="240"></canvas>
+              <div class="chart-frame"><canvas id="oneRmChart"></canvas></div>
             </div>
 
             <div class="card graph-card">
               <p class="eyebrow">BODY WEIGHT</p>
               <h3>Weight trend</h3>
-              <canvas id="bodyWeightChart" height="240"></canvas>
+              <div class="chart-frame chart-frame-weight"><canvas id="bodyWeightChart"></canvas></div>
             </div>
 
             <div class="card graph-card full-width">
               <p class="eyebrow">CONSISTENCY</p>
               <h3>Workouts by week</h3>
-              <canvas id="frequencyChart" height="220"></canvas>
+              <div class="chart-frame"><canvas id="frequencyChart"></canvas></div>
             </div>
           </div>
         </section>
@@ -518,13 +518,8 @@
               <span id="bodyWeightUnitLabel">lb</span>
               <button id="saveBodyWeightBtn" class="primary" type="button">Save</button>
             </div>
-            <p id="latestBodyWeight" class="muted mini">No body weight logged yet.</p>
           </div>
 
-          <div class="card">
-            <p class="eyebrow">WEIGHT HISTORY</p>
-            <div id="bodyWeightHistory" class="weight-history empty">No entries yet.</div>
-          </div>
         </div>
 
         <div class="profile-tools-grid">
@@ -653,6 +648,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="ui.js?v=graphfinal11"></script>
-  <script type="module" src="app.js?v=weightrepdualaxis23"></script>
+  <script type="module" src="app.js?v=weightscale26"></script>
 </body>
 </html>

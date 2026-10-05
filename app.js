@@ -1626,7 +1626,7 @@ async function loadAllData(){
   const visible = visibleWorkouts();
   renderWorkoutList($("recentList"),visible.slice(0,5));
   renderWorkoutList($("historyList"),visible);
-  updateMetrics();updateProgressMetrics();renderCalendar();renderBodyWeightProfile();renderProgressControls();renderProgressChartsSoon();renderCaloriesForSelectedDate();renderDetectedPattern();
+  updateMetrics();updateProgressMetrics();renderCalendar();renderProgressControls();renderProgressChartsSoon();renderCaloriesForSelectedDate();renderDetectedPattern();
 }
 
 async function loadWorkouts(){
@@ -1644,7 +1644,7 @@ async function loadCalendarStatuses(){
 
 async function loadBodyWeights(){
   if(!user)return;
-  const q=query(collection(db,"users",user.uid,"bodyWeights"),orderBy("loggedAt","desc"),limit(200));
+  const q=query(collection(db,"users",user.uid,"bodyWeights"),orderBy("loggedAt","desc"));
   const snap=await getDocs(q);
   bodyWeightCache=snap.docs.map(d=>({id:d.id,...d.data()}));
 }
@@ -1860,33 +1860,12 @@ $("saveBodyWeightBtn").addEventListener("click",async()=>{
     });
     $("bodyWeightInput").value="";
     await loadBodyWeights();
-    renderBodyWeightProfile();
+    
     renderAllCharts();
     showToast("Body weight saved.","success");
   }catch(err){console.error(err);showToast("Could not save body weight. Check Firestore rules.","error")}
 });
 
-function renderBodyWeightProfile(){
-  const latest=$("latestBodyWeight"),wrap=$("bodyWeightHistory");
-  if(!latest||!wrap)return;
-  if(!bodyWeightCache.length){
-    latest.textContent="No body weight logged yet.";
-    wrap.className="weight-history empty";
-    wrap.textContent="No entries yet.";
-    return;
-  }
-  const newest=bodyWeightCache[0];
-  latest.textContent=`Latest: ${Number(newest.weight).toFixed(1)} ${newest.unit||"lb"}`;
-  wrap.className="weight-history";
-  wrap.innerHTML="";
-  bodyWeightCache.slice(0,10).forEach(entry=>{
-    const d=toDate(entry.loggedAt);
-    const row=document.createElement("div");
-    row.className="weight-history-row";
-    row.innerHTML=`<strong>${Number(entry.weight).toFixed(1)} ${entry.unit||"lb"}</strong><span class="muted mini">${d?d.toLocaleDateString():""}</span>`;
-    wrap.appendChild(row);
-  });
-}
 
 let charts={};
 let progressPeriod="all";
@@ -2172,6 +2151,34 @@ function chartDefaults(){
 }
 
 
+// Display-only scale: anchor to the first saved weight; never rewrite records.
+function bodyWeightChartOptions(entries){
+  const options=chartDefaults();
+  const weights=entries.map(entry=>Number(entry.weight)).filter(weight=>Number.isFinite(weight)&&weight>0);
+  if(!weights.length)return options;
+  const initial=weights[0];
+  options.scales.y={
+    ...options.scales.y,
+    beginAtZero:false,
+    min:initial-40,
+    max:initial+40,
+    ticks:{
+      ...options.scales.y.ticks,
+      font:{size:10},
+      padding:4,
+      stepSize:1,
+      autoSkip:false,
+      // Keep all 1 lb gridlines, with readable numbers every 5 lb.
+      callback:value=>Number.isInteger(value)&&value%5===0?`${value} lb`:""
+    }
+  };
+  options.plugins.tooltip={
+    callbacks:{label:context=>`Body weight: ${Number(context.parsed.y).toFixed(1)} lb`}
+  };
+  return options;
+}
+
+
 function createChartSafe(key,canvas,config){
   if(!canvas)return null;
   try{
@@ -2430,7 +2437,7 @@ function renderAllCharts(){
     createChartSafe("bodyWeight",$("bodyWeightChart"),{
       type:"line",
       data:{labels:bw.map(x=>{const d=toDate(x.loggedAt);return d?d.toLocaleDateString(undefined,{month:"short",day:"numeric"}):""}),datasets:[{label:"Body weight",data:bw.map(x=>Number(x.weight||0)),tension:.3}]},
-      options:chartDefaults()
+      options:bodyWeightChartOptions(bw)
     });
   }
 
