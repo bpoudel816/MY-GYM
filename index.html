@@ -550,6 +550,27 @@
           </div>
         </div>
 
+        <div class="card import-card" id="dataExportCard">
+          <div class="import-card-head">
+            <div>
+              <p class="eyebrow">DATA & BACKUP</p>
+              <h3>Export your fitness data</h3>
+              <p class="muted">Download your own Firestore records. Exporting only reads your data; nothing is removed or changed.</p>
+            </div>
+            <span class="import-safe-badge">READ ONLY</span>
+          </div>
+          <div class="export-date-grid">
+            <label>From date (optional)<input id="exportFromDate" type="date"></label>
+            <label>To date (optional)<input id="exportToDate" type="date"></label>
+          </div>
+          <p class="muted mini">Date filters apply to workout CSV only. Leave both blank to download every workout.</p>
+          <div class="export-actions">
+            <button id="exportWorkoutsCsvBtn" class="primary" type="button">Download Workouts CSV</button>
+            <button id="exportFitnessJsonBtn" class="secondary" type="button">Download Fitness JSON Backup</button>
+          </div>
+          <p id="exportDataStatus" class="muted mini" role="status" aria-live="polite"></p>
+        </div>
+
         <div class="card import-card">
           <div class="import-card-head">
             <div>
@@ -648,6 +669,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="ui.js?v=graphfinal11"></script>
-  <script type="module" src="app.js?v=weightscale28"></script>
+  <script type="module" src="app.js?v=export29"></script>
 </body>
 </html>

@@ -2052,3 +2052,12 @@ body{padding-top:env(safe-area-inset-top)}
   .chart-frame{height:280px}
   .chart-frame-weight{height:320px}
 }
+
+/* Read-only profile exports */
+.export-date-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 8px}
+.export-date-grid label{display:grid;gap:6px;font-size:13px;font-weight:650}
+.export-date-grid input{width:100%;min-width:0}
+.export-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.export-actions button{flex:1 1 210px}
+#exportDataStatus{min-height:1.2em;margin-top:12px}
+@media(max-width:540px){.export-date-grid{grid-template-columns:1fr}}

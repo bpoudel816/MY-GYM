@@ -3023,6 +3023,104 @@ $("importTrackItBtn")?.addEventListener("click",async()=>{
 });
 
 
+
+// Download-only exports. Never call setDoc, updateDoc, deleteDoc or writeBatch here.
+function exportDateISO(value){
+  if(!value)return "";
+  const d=toDate(value);
+  if(!d||Number.isNaN(d.getTime()))return "";
+  const yyyy=d.getFullYear(),mm=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function exportTimeISO(value){
+  if(!value)return "";
+  const d=toDate(value);
+  return d&&!Number.isNaN(d.getTime())?d.toISOString():"";
+}
+function exportCsvCell(value){
+  let s=String(value??"");
+  // Prevent spreadsheet formula execution when a CSV is opened in Excel/Sheets.
+  if(/^[\s\u0000-\u001f]*[=+@-]/.test(s))s="'"+s;
+  return '"'+s.replace(/"/g,'""')+'"';
+}
+function exportDownload(filename,content,mime){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");
+  link.href=url;link.download=filename;
+  document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+function exportNormalize(value){
+  if(value===null||value===undefined)return value??null;
+  if(typeof value.toDate==="function")return value.toDate().toISOString();
+  if(value instanceof Date)return value.toISOString();
+  if(Array.isArray(value))return value.map(exportNormalize);
+  if(typeof value==="object"){
+    if(typeof value.latitude==="number"&&typeof value.longitude==="number")return {latitude:value.latitude,longitude:value.longitude};
+    const out={};for(const [key,v] of Object.entries(value))out[key]=exportNormalize(v);return out;
+  }
+  return value;
+}
+function exportExerciseText(ex){
+  const parts=[String(ex.name||ex.category||"Exercise")];
+  const sets=Array.isArray(ex.sets)?ex.sets:[];
+  if(sets.length)parts.push(sets.map(s=>`${s.reps??0} reps × ${s.weight??0} ${ex.weightUnit||"(weight units in app)"}`).join("; "));
+  if(ex.cardio){
+    const c=ex.cardio;
+    const details=[c.minutes!=null?`${c.minutes} min`:"",c.distance!=null?`${c.distance} distance`:""].filter(Boolean);
+    if(details.length)parts.push(details.join(", "));
+  }
+  return parts.join(" — ");
+}
+async function exportReadCollection(collectionName){
+  const snap=await getDocs(collection(db,"users",user.uid,collectionName));
+  return snap.docs.map(d=>({id:d.id,...exportNormalize(d.data())}));
+}
+function exportStatus(message){const el=$("exportDataStatus");if(el)el.textContent=message;}
+async function runFitnessExport(type){
+  if(!user){showToast("Sign in before exporting your data.","error");return;}
+  const csvBtn=$("exportWorkoutsCsvBtn"),jsonBtn=$("exportFitnessJsonBtn");
+  const from=$("exportFromDate").value,to=$("exportToDate").value;
+  if(type==="csv"&&from&&to&&from>to){exportStatus("The start date must be on or before the end date.");return;}
+  csvBtn.disabled=true;jsonBtn.disabled=true;
+  exportStatus("Reading your saved records from Firebase...");
+  try{
+    if(type==="csv"){
+      // Fetch directly rather than using the 300-workout on-screen cache.
+      const workouts=await exportReadCollection("workouts");
+      const selected=workouts.filter(w=>{
+        const d=exportDateISO(w.startedAt||w.endedAt||w.createdAt);
+        return (!from||d>=from)&&(!to||d<=to);
+      }).sort((a,b)=>exportTimeISO(a.startedAt).localeCompare(exportTimeISO(b.startedAt)));
+      const columns=["Date","Start time (ISO)","End time (ISO)","Duration (minutes)","Exercise count","Exercises and sets","Workout ID"];
+      const rows=selected.map(w=>[
+        exportDateISO(w.startedAt||w.endedAt||w.createdAt),exportTimeISO(w.startedAt),exportTimeISO(w.endedAt),
+        w.durationSeconds!=null?(Number(w.durationSeconds)/60).toFixed(1):"",
+        w.exerciseCount??(Array.isArray(w.exercises)?w.exercises.length:0),
+        (Array.isArray(w.exercises)?w.exercises:[]).map(exportExerciseText).join(" | "),w.id
+      ]);
+      const csv="\uFEFF"+[columns,...rows].map(row=>row.map(exportCsvCell).join(",")).join("\r\n");
+      exportDownload(`MY-GYM-workouts-${new Date().toISOString().slice(0,10)}.csv`,csv,"text/csv;charset=utf-8");
+      exportStatus(`Downloaded ${selected.length} workout records. Original Firebase data is unchanged.`);
+    }else{
+      const collectionNames=["workouts","calendarDays","bodyWeights","meals","settings"];
+      const result={app:"MY GYM",exportedAt:new Date().toISOString(),userId:user.uid,note:"Read-only fitness backup. Workout reaction subcollections and social data are not included.",collections:{}};
+      for(const name of collectionNames)result.collections[name]=await exportReadCollection(name);
+      exportDownload(`MY-GYM-fitness-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(result,null,2),"application/json;charset=utf-8");
+      const total=Object.values(result.collections).reduce((sum,records)=>sum+records.length,0);
+      exportStatus(`Downloaded ${total} fitness records across ${collectionNames.length} collections. Firebase data is unchanged.`);
+    }
+    showToast("Your data export has been downloaded.","success");
+  }catch(err){
+    console.error("MY GYM export failed:",err);
+    exportStatus(`Export failed: ${err.code||err.message||"unknown error"}. No data was changed.`);
+    showToast("Export failed. Your stored data is safe.","error");
+  }finally{csvBtn.disabled=false;jsonBtn.disabled=false;}
+}
+$("exportWorkoutsCsvBtn")?.addEventListener("click",()=>runFitnessExport("csv"));
+$("exportFitnessJsonBtn")?.addEventListener("click",()=>runFitnessExport("json"));
+
 async function getTrackItImportSummary(){
   if(!user)throw new Error("No signed-in user");
   const result={workouts:[],bodyWeights:[],calendarDays:[]};
